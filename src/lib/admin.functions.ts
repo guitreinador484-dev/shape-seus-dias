@@ -9,8 +9,12 @@ export const requireAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
-      .rpc("has_role", { _user_id: context.userId, _role: "admin" });
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .limit(1);
     if (error) throw new Error("Failed to verify admin role");
-    if (!data) throw new Error("Forbidden");
+    if (!data?.length) throw new Error("Forbidden");
     return { ok: true as const };
   });
