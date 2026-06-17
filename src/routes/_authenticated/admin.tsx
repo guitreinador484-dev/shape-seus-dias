@@ -31,7 +31,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const navItems = [
+type NavItem = {
+  title: string;
+  url: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+const navItems: NavItem[] = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
   { title: "Alunos", url: "/admin/alunos", icon: Users },
   { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
@@ -39,7 +46,7 @@ const navItems = [
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
   { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
-] as const;
+];
 
 function AdminSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
