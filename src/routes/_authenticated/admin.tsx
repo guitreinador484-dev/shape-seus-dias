@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,12 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminPage() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && role !== "admin") {
+      navigate({ to: "/plataforma", replace: true });
+    }
+  }, [loading, role, navigate]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -26,7 +33,6 @@ function AdminPage() {
   }
 
   if (role !== "admin") {
-    navigate({ to: "/plataforma", replace: true });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
