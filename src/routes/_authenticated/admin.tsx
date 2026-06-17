@@ -1,15 +1,77 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2 } from "lucide-react";
+import {
+  LogOut,
+  Loader2,
+  LayoutDashboard,
+  Users,
+  Video,
+  Dumbbell,
+  ShoppingBag,
+  ClipboardList,
+  Settings,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  component: AdminPage,
+  component: AdminLayout,
 });
 
-function AdminPage() {
+const navItems = [
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
+  { title: "Alunos", url: "/admin/alunos", icon: Users },
+  { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
+  { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
+  { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
+  { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList },
+  { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
+] as const;
+
+function AdminSidebar() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Administração</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const active = item.exact ? pathname === item.url : pathname === item.url || pathname.startsWith(item.url + "/");
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={active}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+function AdminLayout() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -24,15 +86,7 @@ function AdminPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (role !== "admin") {
+  if (loading || role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -41,31 +95,31 @@ function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-popover">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="font-display text-2xl">ADMIN</h1>
-            <span className="text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">PERSONAL</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Link to="/plataforma" className="text-muted-foreground hover:text-foreground">Ver como aluno</Link>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" /> Sair
-            </Button>
-          </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background text-foreground">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 border-b border-border bg-popover flex items-center px-3 gap-3">
+            <SidebarTrigger />
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-lg">ADMIN</h1>
+              <span className="text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">PERSONAL</span>
+            </div>
+            <div className="ml-auto flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
+              <Link to="/plataforma" className="text-muted-foreground hover:text-foreground">
+                Ver como aluno
+              </Link>
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" /> Sair
+              </Button>
+            </div>
+          </header>
+          <main className="flex-1 p-6 overflow-auto">
+            <Outlet />
+          </main>
         </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="rounded-lg border border-border bg-card p-8">
-          <h2 className="font-display text-4xl mb-3">Painel do administrador</h2>
-          <p className="text-muted-foreground">
-            Dashboard, vendas, alunos presenciais, biblioteca de aulas e editor do quiz virão nas próximas fases.
-          </p>
-        </div>
-      </main>
-    </div>
+      </div>
+    </SidebarProvider>
   );
 }
