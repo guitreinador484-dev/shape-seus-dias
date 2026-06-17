@@ -4,6 +4,12 @@ import type { User, Session } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "online" | "presencial";
 
+export const ADMIN_EMAIL = "guitreinador484@gmail.com";
+
+export function isAdminEmail(email?: string | null): boolean {
+  return email?.trim().toLowerCase() === ADMIN_EMAIL;
+}
+
 export interface AuthState {
   user: User | null;
   session: Session | null;
@@ -43,6 +49,11 @@ export function useAuth(): AuthState {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        if (isAdminEmail(s.user.email)) {
+          setRole("admin");
+          if (mounted) setLoading(false);
+          return;
+        }
         const nextRole = await loadRole(s.user.id);
         if (!mounted) return;
         setRole(nextRole);
@@ -74,7 +85,8 @@ export function useAuth(): AuthState {
   return { user, session, role, loading };
 }
 
-export function roleHomePath(role: AppRole | null): string {
+export function roleHomePath(role: AppRole | null, email?: string | null): string {
+  if (isAdminEmail(email)) return "/admin";
   if (role === "admin") return "/admin";
   return "/plataforma";
 }

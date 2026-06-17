@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,19 +81,20 @@ function AdminSidebar() {
 function AdminLayout() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = role === "admin" || isAdminEmail(user?.email);
 
   useEffect(() => {
-    if (!loading && role !== "admin") {
+    if (!loading && !isAdmin) {
       navigate({ to: "/plataforma", replace: true });
     }
-  }, [loading, role, navigate]);
+  }, [loading, isAdmin, navigate]);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
-  if (loading || role !== "admin") {
+  if (loading || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -114,9 +115,6 @@ function AdminLayout() {
             </div>
             <div className="ml-auto flex items-center gap-3 text-sm">
               <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-              <Link to="/plataforma" className="text-muted-foreground hover:text-foreground">
-                Ver como aluno
-              </Link>
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" /> Sair
               </Button>

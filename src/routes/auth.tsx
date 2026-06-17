@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { type AppRole, useAuth, roleHomePath } from "@/hooks/use-auth";
+import { type AppRole, useAuth, roleHomePath, isAdminEmail } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ function AuthPage() {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate({ to: roleHomePath(role), replace: true });
+      navigate({ to: roleHomePath(role, user.email), replace: true });
     }
   }, [user, role, loading, navigate]);
 
@@ -90,7 +90,9 @@ function LoginForm() {
     }
     const userId = data.user?.id;
     let nextRole: AppRole | null = null;
-    if (userId) {
+    if (isAdminEmail(data.user?.email)) {
+      nextRole = "admin";
+    } else if (userId) {
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -103,7 +105,7 @@ function LoginForm() {
         null;
     }
     toast.success("Bem-vindo de volta!");
-    navigate({ to: roleHomePath(nextRole), replace: true });
+    navigate({ to: roleHomePath(nextRole, data.user?.email), replace: true });
   }
 
   return (
