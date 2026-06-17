@@ -542,9 +542,15 @@ export function AdminTrainingPanel() {
   }, []);
 
   async function createPlan() {
-    if (!selectedStudent) return toast.error("Selecione um aluno.");
+    if (!selectedStudent) {
+      toast.error("Selecione um aluno.");
+      return;
+    }
     const { error } = await supabase.from("student_plans").insert({ student_id: selectedStudent, day_of_week: Number(dayOfWeek), plan_name: planName || "Treino" });
-    if (error) return toast.error("Erro ao criar treino", { description: error.message });
+    if (error) {
+      toast.error("Erro ao criar treino", { description: error.message });
+      return;
+    }
     setPlanName("");
     toast.success("Treino criado");
     await load();
@@ -552,9 +558,15 @@ export function AdminTrainingPanel() {
 
   async function deletePlan(id: string) {
     const { error: exerciseError } = await supabase.from("student_plan_exercises").delete().eq("plan_id", id);
-    if (exerciseError) return toast.error("Erro ao remover exercícios", { description: exerciseError.message });
+    if (exerciseError) {
+      toast.error("Erro ao remover exercícios", { description: exerciseError.message });
+      return;
+    }
     const { error } = await supabase.from("student_plans").delete().eq("id", id);
-    if (error) return toast.error("Erro ao remover treino", { description: error.message });
+    if (error) {
+      toast.error("Erro ao remover treino", { description: error.message });
+      return;
+    }
     toast.success("Treino removido");
     await load();
   }
