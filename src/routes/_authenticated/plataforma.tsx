@@ -1,16 +1,31 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlataformaPage,
 });
 
 function PlataformaPage() {
-  const { user, role } = useAuth();
+  const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && role === "admin") {
+      navigate({ to: "/admin", replace: true });
+    }
+  }, [loading, role, navigate]);
+
+  if (loading || role === "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -24,9 +39,6 @@ function PlataformaPage() {
           <h1 className="font-display text-2xl">PERSONAL</h1>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-            {role === "admin" && (
-              <Link to="/admin" className="text-primary hover:underline">Painel admin</Link>
-            )}
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" /> Sair
             </Button>
