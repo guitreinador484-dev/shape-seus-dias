@@ -701,14 +701,20 @@ export function AdminSalesPanel() {
       customer_email: form.customer_email || student?.email || null,
       transaction_id: form.transaction_id || null,
     });
-    if (error) return toast.error("Erro ao criar venda", { description: error.message });
+    if (error) {
+      toast.error("Erro ao criar venda", { description: error.message });
+      return;
+    }
     toast.success("Venda registrada");
     await load();
   }
 
   async function updateStatus(id: string, status: string) {
     const { error } = await supabase.from("purchases").update({ status }).eq("id", id);
-    if (error) return toast.error("Erro ao atualizar venda", { description: error.message });
+    if (error) {
+      toast.error("Erro ao atualizar venda", { description: error.message });
+      return;
+    }
     toast.success("Venda atualizada");
     await load();
   }
@@ -843,7 +849,10 @@ export function AdminSettingsPanel() {
       ? await supabase.from("quiz_config").update({ content }).eq("id", rowId)
       : await supabase.from("quiz_config").insert({ section: "configuracoes", content });
     setSaving(false);
-    if (result.error) return toast.error("Erro ao salvar configurações", { description: result.error.message });
+    if (result.error) {
+      toast.error("Erro ao salvar configurações", { description: result.error.message });
+      return;
+    }
     toast.success("Configurações salvas");
     await load();
   }
