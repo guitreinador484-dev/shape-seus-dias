@@ -608,9 +608,15 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
   const [notes, setNotes] = useState("");
 
   async function addExercise() {
-    if (!exerciseName) return toast.error("Informe o exercício.");
+    if (!exerciseName) {
+      toast.error("Informe o exercício.");
+      return;
+    }
     const { error } = await supabase.from("student_plan_exercises").insert({ plan_id: plan.id, exercise_name: exerciseName, sets, reps, rest_seconds: Number(rest || 0), notes, display_order: plan.exercises.length + 1 });
-    if (error) return toast.error("Erro ao adicionar exercício", { description: error.message });
+    if (error) {
+      toast.error("Erro ao adicionar exercício", { description: error.message });
+      return;
+    }
     setExerciseName("");
     setSets("");
     setReps("");
@@ -621,7 +627,10 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
 
   async function deleteExercise(id: string) {
     const { error } = await supabase.from("student_plan_exercises").delete().eq("id", id);
-    if (error) return toast.error("Erro ao excluir exercício", { description: error.message });
+    if (error) {
+      toast.error("Erro ao excluir exercício", { description: error.message });
+      return;
+    }
     toast.success("Exercício removido");
     await onReload();
   }
