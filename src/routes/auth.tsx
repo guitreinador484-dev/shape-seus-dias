@@ -26,10 +26,18 @@ function AuthPage() {
   const { user, role, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user && !loading) {
       navigate({ to: roleHomePath(role), replace: true });
     }
   }, [user, role, loading, navigate]);
+
+  if (user || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
