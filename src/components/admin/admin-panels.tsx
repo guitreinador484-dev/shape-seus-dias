@@ -848,7 +848,7 @@ function Info({ label, value }: { label: string; value?: string | null }) {
 
 export function AdminSettingsPanel() {
   const [rowId, setRowId] = useState<string | null>(null);
-  const [settings, setSettings] = useState({ personal_name: "", brand_title: "PERSONAL", support_whatsapp: "", checkout_url: "", welcome_message: "" });
+  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -857,7 +857,7 @@ export function AdminSettingsPanel() {
     const { data, error } = await supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
     setRowId(data?.id ?? null);
-    setSettings({ ...settings, ...asJsonObject(data?.content ?? null) });
+    setSettings(readAdminSettings(data?.content ?? null));
     setLoading(false);
   }
 
