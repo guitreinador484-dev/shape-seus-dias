@@ -46,6 +46,21 @@ type WorkoutUpdate = Database["public"]["Tables"]["workouts"]["Update"];
 
 type Student = Profile & { role: AppRole | null };
 type PlanWithExercises = StudentPlan & { exercises: StudentPlanExercise[] };
+type AdminSettings = {
+  personal_name: string;
+  brand_title: string;
+  support_whatsapp: string;
+  checkout_url: string;
+  welcome_message: string;
+};
+
+const defaultAdminSettings: AdminSettings = {
+  personal_name: "",
+  brand_title: "PERSONAL",
+  support_whatsapp: "",
+  checkout_url: "",
+  welcome_message: "",
+};
 
 const roleLabels: Record<AppRole, string> = {
   admin: "Administrador",
@@ -72,6 +87,17 @@ function formatCurrency(value: number | null | undefined) {
 
 function asJsonObject(value: Json | null): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function readAdminSettings(value: Json | null): AdminSettings {
+  const data = asJsonObject(value);
+  return {
+    personal_name: typeof data.personal_name === "string" ? data.personal_name : defaultAdminSettings.personal_name,
+    brand_title: typeof data.brand_title === "string" ? data.brand_title : defaultAdminSettings.brand_title,
+    support_whatsapp: typeof data.support_whatsapp === "string" ? data.support_whatsapp : defaultAdminSettings.support_whatsapp,
+    checkout_url: typeof data.checkout_url === "string" ? data.checkout_url : defaultAdminSettings.checkout_url,
+    welcome_message: typeof data.welcome_message === "string" ? data.welcome_message : defaultAdminSettings.welcome_message,
+  };
 }
 
 function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
