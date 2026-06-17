@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,9 +39,6 @@ function PlataformaPage() {
           <h1 className="font-display text-2xl">PERSONAL</h1>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-            {role === "admin" && (
-              <Link to="/admin" className="text-primary hover:underline">Painel admin</Link>
-            )}
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4 mr-2" /> Sair
             </Button>
