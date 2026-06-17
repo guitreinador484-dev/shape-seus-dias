@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth, roleHomePath } from "@/hooks/use-auth";
+import { type AppRole, useAuth, roleHomePath } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,10 +26,18 @@ function AuthPage() {
   const { user, role, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user && !loading) {
       navigate({ to: roleHomePath(role), replace: true });
     }
   }, [user, role, loading, navigate]);
+
+  if (user || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
@@ -66,6 +74,7 @@ function AuthPage() {
 }
 
 function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -73,13 +82,28 @@ function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
       toast.error("Não foi possível entrar", { description: error.message });
       return;
     }
+    const userId = data.user?.id;
+    let nextRole: AppRole | null = null;
+    if (userId) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const roleList = (roles ?? []).map((item) => item.role as AppRole);
+      nextRole =
+        roleList.find((item) => item === "admin") ??
+        roleList.find((item) => item === "online") ??
+        roleList.find((item) => item === "presencial") ??
+        null;
+    }
     toast.success("Bem-vindo de volta!");
+    navigate({ to: roleHomePath(nextRole), replace: true });
   }
 
   return (
