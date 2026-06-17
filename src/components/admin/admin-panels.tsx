@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  Activity,
   BadgeDollarSign,
-  BookOpen,
   CheckCircle2,
   ClipboardList,
   Dumbbell,
-  FileText,
   Loader2,
   Pencil,
   Plus,
@@ -77,7 +74,7 @@ function asJsonObject(value: Json | null): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
-function PageHeader({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) {
+function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -509,7 +506,7 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
   );
 }
 
-function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+function Field({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return <div className={className}><Label className="mb-2 block">{label}</Label>{children}</div>;
 }
 
