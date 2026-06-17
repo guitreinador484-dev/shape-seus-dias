@@ -20,36 +20,52 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let mounted = true;
 
-    async function loadRole(uid: string) {
-      const { data } = await supabase
+    async function loadRole(uid: string): Promise<AppRole | null> {
+      const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", uid);
-      if (!mounted) return;
+      if (error) {
+        console.error("Erro ao carregar papel do usuário", error);
+        return null;
+      }
       const roles = (data ?? []).map((r) => r.role as AppRole);
-      const best: AppRole | null =
+      return (
         roles.find((r) => r === "admin") ??
         roles.find((r) => r === "online") ??
         roles.find((r) => r === "presencial") ??
-        null;
-      setRole(best);
+        null
+      );
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => loadRole(s.user.id), 0);
+        setLoading(true);
+        setTimeout(() => {
+          loadRole(s.user.id).then((nextRole) => {
+            if (!mounted) return;
+            setRole(nextRole);
+            setLoading(false);
+          });
+        }, 0);
       } else {
         setRole(null);
+        setLoading(false);
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      if (data.session?.user) loadRole(data.session.user.id);
+      if (data.session?.user) {
+        const nextRole = await loadRole(data.session.user.id);
+        if (!mounted) return;
+        setRole(nextRole);
+      }
       setLoading(false);
     });
 
