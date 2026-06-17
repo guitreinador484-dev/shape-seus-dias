@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Loader2 } from "lucide-react";
@@ -14,12 +14,12 @@ function PlataformaPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && role === "admin") {
+    if (!loading && (role === "admin" || isAdminEmail(user?.email))) {
       navigate({ to: "/admin", replace: true });
     }
-  }, [loading, role, navigate]);
+  }, [loading, role, user?.email, navigate]);
 
-  if (loading || role === "admin") {
+  if (loading || role === "admin" || isAdminEmail(user?.email)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
