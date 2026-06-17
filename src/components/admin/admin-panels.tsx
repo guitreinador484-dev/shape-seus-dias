@@ -20,6 +20,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { createStudent } from "@/lib/admin.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -259,13 +261,20 @@ export function AdminDashboardPanel() {
 
 export function AdminStudentsPanel() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   async function load() {
     setLoading(true);
-    const rows = await fetchStudents();
+    const [rows, purchaseRes] = await Promise.all([
+      fetchStudents(),
+      supabase.from("purchases").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (purchaseRes.error) throw purchaseRes.error;
     setStudents(rows);
+    setPurchases(purchaseRes.data ?? []);
     setLoading(false);
   }
 
@@ -277,6 +286,9 @@ export function AdminStudentsPanel() {
   }, []);
 
   const filtered = students.filter((student) => [student.email, student.full_name, student.whatsapp, student.role].some((value) => value?.toLowerCase().includes(query.toLowerCase())));
+
+  const registeredEmails = new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean));
+  const buyersWithoutAccount = purchases.filter((p) => p.customer_email && !registeredEmails.has(p.customer_email.toLowerCase()));
 
   async function updateStudent(student: Student, patch: Partial<Profile>, nextRole?: AppRole) {
     if (isAdminEmail(student.email) && nextRole && nextRole !== "admin") {
@@ -297,7 +309,16 @@ export function AdminStudentsPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader title="Alunos" description="Edite dados, tipo de aluno, status e liberação de acesso às aulas." />
+      <PageHeader
+        title="Alunos"
+        description="Cadastre logins, edite dados, tipo de aluno e liberação de acesso às aulas."
+        action={
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4" /> Cadastrar aluno
+          </Button>
+        }
+      />
+      <CreateStudentDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => load()} />
       <div className="mb-4 flex items-center gap-2 rounded-lg border border-border px-3 py-2">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, email, WhatsApp ou tipo" className="border-0 shadow-none focus-visible:ring-0" />
@@ -325,7 +346,174 @@ export function AdminStudentsPanel() {
           </CardContent>
         </Card>
       )}
+      <div className="mt-8">
+        <h3 className="font-display text-xl mb-1">Compradores</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Pessoas que compraram. Os que ainda não têm login estão marcados — clique para criar o acesso.
+        </p>
+        {purchases.length === 0 ? (
+          <EmptyState title="Nenhuma compra registrada" description="As vendas aparecerão aqui automaticamente." />
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Login</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {purchases.map((purchase) => {
+                    const hasAccount = purchase.customer_email && registeredEmails.has(purchase.customer_email.toLowerCase());
+                    return (
+                      <TableRow key={purchase.id}>
+                        <TableCell>{purchase.customer_name || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{purchase.customer_email || "—"}</TableCell>
+                        <TableCell>{formatCurrency(purchase.amount)}</TableCell>
+                        <TableCell><Badge variant="secondary">{statusLabels[purchase.status] ?? purchase.status}</Badge></TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(purchase.created_at)}</TableCell>
+                        <TableCell className="text-right">
+                          {hasAccount ? (
+                            <Badge><CheckCircle2 className="h-3 w-3" /> Cadastrado</Badge>
+                          ) : purchase.customer_email ? (
+                            <CreateStudentDialog
+                              trigger={<Button size="sm" variant="outline"><Plus className="h-4 w-4" /> Criar login</Button>}
+                              defaultEmail={purchase.customer_email}
+                              defaultName={purchase.customer_name ?? ""}
+                              onCreated={() => load()}
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sem email</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              {buyersWithoutAccount.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  {buyersWithoutAccount.length} comprador(es) ainda sem login criado.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
+  );
+}
+
+function CreateStudentDialog({
+  open,
+  onOpenChange,
+  trigger,
+  defaultEmail = "",
+  defaultName = "",
+  onCreated,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: ReactNode;
+  defaultEmail?: string;
+  defaultName?: string;
+  onCreated: () => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalOpen;
+  const setOpen = (v: boolean) => { if (isControlled) onOpenChange?.(v); else setInternalOpen(v); };
+
+  const createFn = useServerFn(createStudent);
+  const [email, setEmail] = useState(defaultEmail);
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState(defaultName);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [role, setRole] = useState<AppRole>("online");
+  const [hasAccess, setHasAccess] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setEmail(defaultEmail);
+      setFullName(defaultName);
+      setPassword("");
+      setWhatsapp("");
+      setRole("online");
+      setHasAccess(true);
+    }
+  }, [isOpen, defaultEmail, defaultName]);
+
+  async function submit() {
+    setSaving(true);
+    try {
+      await createFn({ data: { email, password, full_name: fullName || undefined, whatsapp: whatsapp || undefined, role, has_class_access: hasAccess } });
+      toast.success("Aluno cadastrado", { description: `Login criado para ${email}` });
+      setOpen(false);
+      onCreated();
+    } catch (error) {
+      toast.error("Erro ao cadastrar aluno", { description: error instanceof Error ? error.message : "Tente novamente." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setOpen}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cadastrar novo aluno</DialogTitle>
+          <DialogDescription>Crie o login (email + senha). O aluno poderá entrar imediatamente.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>Email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aluno@email.com" />
+          </div>
+          <div className="space-y-1">
+            <Label>Senha provisória</Label>
+            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+          </div>
+          <div className="space-y-1">
+            <Label>Nome completo</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Nome do aluno" />
+          </div>
+          <div className="space-y-1">
+            <Label>WhatsApp</Label>
+            <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(00) 00000-0000" />
+          </div>
+          <div className="space-y-1">
+            <Label>Tipo de aluno</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="online">Aluno online</SelectItem>
+                <SelectItem value="presencial">Aluno presencial</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+            <div>
+              <p className="text-sm font-medium">Liberar aulas em vídeo</p>
+              <p className="text-xs text-muted-foreground">Define o acesso inicial à área de aulas.</p>
+            </div>
+            <Switch checked={hasAccess} onCheckedChange={setHasAccess} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={submit} disabled={saving || !email || !password}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Cadastrar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
