@@ -26,7 +26,7 @@ function AuthPage() {
   const { user, role, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && user && role) {
+    if (!loading && user) {
       navigate({ to: roleHomePath(role), replace: true });
     }
   }, [user, role, loading, navigate]);
