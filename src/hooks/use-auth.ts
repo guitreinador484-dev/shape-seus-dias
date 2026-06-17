@@ -38,35 +38,31 @@ export function useAuth(): AuthState {
       );
     }
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    async function applySession(s: Session | null) {
       if (!mounted) return;
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setLoading(true);
-        setTimeout(() => {
-          loadRole(s.user.id).then((nextRole) => {
-            if (!mounted) return;
-            setRole(nextRole);
-            setLoading(false);
-          });
-        }, 0);
-      } else {
-        setRole(null);
-        setLoading(false);
-      }
-    });
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) {
-        const nextRole = await loadRole(data.session.user.id);
+        const nextRole = await loadRole(s.user.id);
         if (!mounted) return;
         setRole(nextRole);
+      } else {
+        setRole(null);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
+    }
+
+    // 1) Restore session from storage first.
+    supabase.auth.getSession().then(({ data }) => {
+      void applySession(data.session);
+    });
+
+    // 2) React to subsequent auth changes (sign in/out, token refresh).
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (!mounted) return;
+      if (event === "INITIAL_SESSION") return; // handled by getSession above
+      setLoading(true);
+      void applySession(s);
     });
 
     return () => {
