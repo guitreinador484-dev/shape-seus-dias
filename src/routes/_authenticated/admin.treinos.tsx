@@ -1,12 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminCategoryPlaceholder } from "@/components/admin/category-placeholder";
+import { AdminTrainingPanel } from "@/components/admin/admin-panels";
 
 export const Route = createFileRoute("/_authenticated/admin/treinos")({
-  component: () => (
-    <AdminCategoryPlaceholder
-      title="Treinos"
-      description="Crie planos de treino e prescreva exercícios para cada aluno."
-      items={["Modelos de treino", "Plano por aluno", "Biblioteca de exercícios", "Séries, repetições e cargas"]}
-    />
-  ),
+  component: AdminTrainingPanel,
 });
