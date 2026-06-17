@@ -85,6 +85,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Plataforma de treino personalizado com acompanhamento profissional." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Personal Trainer — Plataforma" },
+      { name: "twitter:description", content: "Plataforma de treino personalizado com acompanhamento profissional." },
     ],
     links: [
       {
