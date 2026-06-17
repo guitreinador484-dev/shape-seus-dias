@@ -24,10 +24,15 @@ export function useAuth(): AuthState {
       const { data } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", uid)
-        .maybeSingle();
+        .eq("user_id", uid);
       if (!mounted) return;
-      setRole((data?.role as AppRole) ?? null);
+      const roles = (data ?? []).map((r) => r.role as AppRole);
+      const best: AppRole | null =
+        roles.find((r) => r === "admin") ??
+        roles.find((r) => r === "online") ??
+        roles.find((r) => r === "presencial") ??
+        null;
+      setRole(best);
     }
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
