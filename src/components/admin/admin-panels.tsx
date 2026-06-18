@@ -827,14 +827,16 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState(EXERCISE_GROUPS[0].key);
   const [librarySearch, setLibrarySearch] = useState("");
+  const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string } | null>(null);
 
-  async function addFromLibrary(name: string) {
+  async function confirmAddFromLibrary() {
+    if (!pending) return;
     const { error } = await supabase.from("student_plan_exercises").insert({
       plan_id: plan.id,
-      exercise_name: name,
-      sets: "3",
-      reps: "10-12",
-      rest_seconds: 60,
+      exercise_name: pending.name,
+      sets: pending.sets,
+      reps: pending.reps,
+      rest_seconds: Number(pending.rest || 0),
       notes: "",
       display_order: plan.exercises.length + 1,
     });
@@ -842,7 +844,8 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
       toast.error("Erro ao adicionar exercício", { description: error.message });
       return;
     }
-    toast.success(`${name} adicionado`);
+    toast.success(`${pending.name} adicionado`);
+    setPending(null);
     await onReload();
   }
 
@@ -908,7 +911,7 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Biblioteca de exercícios</DialogTitle>
-            <DialogDescription>Clique em um exercício para adicioná-lo ao treino com 3x10-12, 60s de descanso (você pode editar depois).</DialogDescription>
+            <DialogDescription>Clique em um exercício para definir séries, repetições e descanso antes de adicionar.</DialogDescription>
           </DialogHeader>
           <div className="px-1">
             <Input placeholder="Buscar exercício..." value={librarySearch} onChange={(e) => setLibrarySearch(e.target.value)} />
@@ -926,34 +929,54 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
               const filtered = g.exercises.filter((ex) => ex.toLowerCase().includes(librarySearch.toLowerCase()));
               return (
                 <TabsContent key={g.key} value={g.key} className="flex-1 overflow-y-auto mt-4">
-                  <div className="grid gap-4 md:grid-cols-[260px_1fr]">
-                    <div className="rounded-lg overflow-hidden border bg-muted">
-                      <img src={g.image} alt={g.name} className="w-full h-48 object-cover" loading="lazy" />
-                      <div className="p-3">
-                        <p className="font-semibold flex items-center gap-2">{g.emoji} {g.name}</p>
-                        <p className="text-xs text-muted-foreground">{g.exercises.length} exercícios</p>
-                      </div>
-                    </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {filtered.map((ex) => (
-                        <button
-                          key={ex}
-                          onClick={() => addFromLibrary(ex)}
-                          className="flex items-center justify-between gap-2 rounded-md border p-3 text-left text-sm hover:bg-accent transition"
-                        >
-                          <span>{ex}</span>
-                          <Plus className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      ))}
-                      {filtered.length === 0 && (
-                        <p className="text-sm text-muted-foreground col-span-2">Nenhum exercício encontrado.</p>
-                      )}
-                    </div>
+                  <div className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                    <span className="text-2xl">{g.emoji}</span> {g.name}
+                    <Badge variant="secondary">{g.exercises.length}</Badge>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {filtered.map((ex) => (
+                      <button
+                        key={ex}
+                        onClick={() => setPending({ name: ex, sets: "3", reps: "10-12", rest: "60" })}
+                        className="flex items-center justify-between gap-2 rounded-md border p-3 text-left text-sm hover:bg-accent transition"
+                      >
+                        <span>{ex}</span>
+                        <Plus className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    ))}
+                    {filtered.length === 0 && (
+                      <p className="text-sm text-muted-foreground col-span-full">Nenhum exercício encontrado.</p>
+                    )}
                   </div>
                 </TabsContent>
               );
             })}
           </Tabs>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{pending?.name}</DialogTitle>
+            <DialogDescription>Defina séries, repetições e descanso.</DialogDescription>
+          </DialogHeader>
+          {pending && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Séries">
+                <Input value={pending.sets} onChange={(e) => setPending({ ...pending, sets: e.target.value })} placeholder="3" />
+              </Field>
+              <Field label="Repetições">
+                <Input value={pending.reps} onChange={(e) => setPending({ ...pending, reps: e.target.value })} placeholder="10-12" />
+              </Field>
+              <Field label="Descanso (s)">
+                <Input type="number" value={pending.rest} onChange={(e) => setPending({ ...pending, rest: e.target.value })} placeholder="60" />
+              </Field>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPending(null)}>Cancelar</Button>
+            <Button onClick={confirmAddFromLibrary}><Plus className="h-4 w-4" /> Adicionar ao treino</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
