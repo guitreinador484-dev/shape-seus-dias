@@ -25,6 +25,7 @@ import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudent } from "@/lib/admin.functions";
+import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
