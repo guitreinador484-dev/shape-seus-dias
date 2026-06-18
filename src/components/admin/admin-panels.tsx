@@ -824,6 +824,27 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
   const [reps, setReps] = useState("");
   const [rest, setRest] = useState("60");
   const [notes, setNotes] = useState("");
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [activeGroup, setActiveGroup] = useState(EXERCISE_GROUPS[0].key);
+  const [librarySearch, setLibrarySearch] = useState("");
+
+  async function addFromLibrary(name: string) {
+    const { error } = await supabase.from("student_plan_exercises").insert({
+      plan_id: plan.id,
+      exercise_name: name,
+      sets: "3",
+      reps: "10-12",
+      rest_seconds: 60,
+      notes: "",
+      display_order: plan.exercises.length + 1,
+    });
+    if (error) {
+      toast.error("Erro ao adicionar exercício", { description: error.message });
+      return;
+    }
+    toast.success(`${name} adicionado`);
+    await onReload();
+  }
 
   async function addExercise() {
     if (!exerciseName) {
@@ -861,7 +882,10 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
             <CardTitle>{plan.plan_name || "Treino"}</CardTitle>
             <p className="text-sm text-muted-foreground">{student?.full_name || student?.email || "Aluno"} · dia {plan.day_of_week}</p>
           </div>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(plan.id)}><Trash2 className="h-4 w-4" /> Excluir treino</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Biblioteca de exercícios</Button>
+            <Button variant="destructive" size="sm" onClick={() => onDelete(plan.id)}><Trash2 className="h-4 w-4" /> Excluir treino</Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -880,6 +904,58 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
           </Table>
         )}
       </CardContent>
+      <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Biblioteca de exercícios</DialogTitle>
+            <DialogDescription>Clique em um exercício para adicioná-lo ao treino com 3x10-12, 60s de descanso (você pode editar depois).</DialogDescription>
+          </DialogHeader>
+          <div className="px-1">
+            <Input placeholder="Buscar exercício..." value={librarySearch} onChange={(e) => setLibrarySearch(e.target.value)} />
+          </div>
+          <Tabs value={activeGroup} onValueChange={setActiveGroup} className="flex-1 overflow-hidden flex flex-col">
+            <TabsList className="flex flex-wrap h-auto justify-start gap-1">
+              {EXERCISE_GROUPS.map((g) => (
+                <TabsTrigger key={g.key} value={g.key} className="gap-1">
+                  <span>{g.emoji}</span>{g.name}
+                  <Badge variant="secondary" className="ml-1">{g.exercises.length}</Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {EXERCISE_GROUPS.map((g) => {
+              const filtered = g.exercises.filter((ex) => ex.toLowerCase().includes(librarySearch.toLowerCase()));
+              return (
+                <TabsContent key={g.key} value={g.key} className="flex-1 overflow-y-auto mt-4">
+                  <div className="grid gap-4 md:grid-cols-[260px_1fr]">
+                    <div className="rounded-lg overflow-hidden border bg-muted">
+                      <img src={g.image} alt={g.name} className="w-full h-48 object-cover" loading="lazy" />
+                      <div className="p-3">
+                        <p className="font-semibold flex items-center gap-2">{g.emoji} {g.name}</p>
+                        <p className="text-xs text-muted-foreground">{g.exercises.length} exercícios</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {filtered.map((ex) => (
+                        <button
+                          key={ex}
+                          onClick={() => addFromLibrary(ex)}
+                          className="flex items-center justify-between gap-2 rounded-md border p-3 text-left text-sm hover:bg-accent transition"
+                        >
+                          <span>{ex}</span>
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                      ))}
+                      {filtered.length === 0 && (
+                        <p className="text-sm text-muted-foreground col-span-2">Nenhum exercício encontrado.</p>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
