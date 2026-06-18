@@ -1,9 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LogOut, Loader2, Dumbbell, Video, PlayCircle } from "lucide-react";
+
+type StudentPlan = Tables<"student_plans">;
+type StudentPlanExercise = Tables<"student_plan_exercises">;
+type Workout = Tables<"workouts">;
+type PlanWithExercises = StudentPlan & { exercises: StudentPlanExercise[] };
+
+const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlataformaPage,
@@ -12,12 +24,35 @@ export const Route = createFileRoute("/_authenticated/plataforma")({
 function PlataformaPage() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
+  const [plans, setPlans] = useState<PlanWithExercises[]>([]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && (role === "admin" || isAdminEmail(user?.email))) {
       navigate({ to: "/admin", replace: true });
     }
   }, [loading, role, user?.email, navigate]);
+
+  useEffect(() => {
+    if (loading || !user || role === "admin" || isAdminEmail(user?.email)) return;
+    let cancelled = false;
+    (async () => {
+      setDataLoading(true);
+      const [plansRes, exRes, workoutsRes] = await Promise.all([
+        supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
+        supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
+        supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+      ]);
+      if (cancelled) return;
+      const allPlans = plansRes.data ?? [];
+      const allEx = exRes.data ?? [];
+      setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
+      setWorkouts(workoutsRes.data ?? []);
+      setDataLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [loading, user, role]);
 
   if (loading || role === "admin" || isAdminEmail(user?.email)) {
     return (
@@ -31,6 +66,8 @@ function PlataformaPage() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const showVideos = role !== "presencial";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -46,16 +83,78 @@ function PlataformaPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <h2 className="font-display text-4xl mb-3">Bem-vindo, {user?.email}</h2>
-          <p className="text-muted-foreground">
-            Sua área de aluno será construída nas próximas fases (aulas em vídeo, meu treino, perfil).
-          </p>
-          <p className="text-xs text-muted-foreground mt-4">
-            Papel atual: <span className="text-primary font-mono">{role ?? "carregando..."}</span>
-          </p>
+      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+        <div>
+          <h2 className="font-display text-3xl">Olá!</h2>
+          <p className="text-muted-foreground text-sm">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
         </div>
+
+        <Tabs defaultValue="treino">
+          <TabsList>
+            <TabsTrigger value="treino"><Dumbbell className="h-4 w-4 mr-2" /> Meu treino</TabsTrigger>
+            {showVideos && <TabsTrigger value="aulas"><Video className="h-4 w-4 mr-2" /> Aulas em vídeo</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="treino" className="mt-4 space-y-4">
+            {dataLoading ? <Skeleton className="h-64" /> : plans.length === 0 ? (
+              <Card><CardContent className="py-12 text-center text-muted-foreground">
+                Seu treino ainda não foi cadastrado. Entre em contato com seu personal.
+              </CardContent></Card>
+            ) : plans.map((plan) => (
+              <Card key={plan.id}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>{plan.plan_name}</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">{WEEKDAYS[plan.day_of_week] ?? ""}</p>
+                  </div>
+                  <Badge variant="secondary">{plan.exercises.length} exercícios</Badge>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {plan.exercises.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
+                  ) : plan.exercises.map((ex) => (
+                    <div key={ex.id} className="rounded-lg border border-border p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">{ex.exercise_name}</p>
+                        <div className="flex gap-2 text-xs">
+                          <Badge variant="outline">{ex.sets}x{ex.reps}</Badge>
+                          {ex.rest_seconds ? <Badge variant="outline">Descanso {ex.rest_seconds}s</Badge> : null}
+                        </div>
+                      </div>
+                      {ex.notes && <p className="text-sm text-muted-foreground mt-1">{ex.notes}</p>}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          {showVideos && (
+            <TabsContent value="aulas" className="mt-4">
+              {dataLoading ? <Skeleton className="h-64" /> : workouts.length === 0 ? (
+                <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {workouts.map((w) => (
+                    <Card key={w.id} className="overflow-hidden">
+                      <CardHeader>
+                        <CardTitle className="text-base">{w.title}</CardTitle>
+                        {w.description && <p className="text-xs text-muted-foreground line-clamp-2">{w.description}</p>}
+                      </CardHeader>
+                      <CardContent>
+                        {w.video_url ? (
+                          <a href={w.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
+                            <PlayCircle className="h-4 w-4" /> Assistir
+                          </a>
+                        ) : <p className="text-xs text-muted-foreground">Vídeo indisponível</p>}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          )}
+        </Tabs>
       </main>
     </div>
   );
