@@ -710,6 +710,33 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
     return key;
   }
 
+  async function removeFile(bucket: "workout-videos" | "workout-thumbnails", key: string) {
+    const { error } = await supabase.storage.from(bucket).remove([key]);
+    if (error) throw error;
+  }
+
+  async function deleteVideo() {
+    if (!form.video_path) return;
+    try {
+      await removeFile("workout-videos", form.video_path);
+      setForm((f) => ({ ...f, video_path: null }));
+      toast.success("Vídeo removido");
+    } catch (error) {
+      toast.error("Erro ao remover vídeo", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
+  async function deleteThumb() {
+    if (!form.thumbnail_path) return;
+    try {
+      await removeFile("workout-thumbnails", form.thumbnail_path);
+      setForm((f) => ({ ...f, thumbnail_path: null }));
+      toast.success("Capa removida");
+    } catch (error) {
+      toast.error("Erro ao remover capa", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
   async function handleVideoFile(file: File) {
     setUploadingVideo(true);
     try {
@@ -767,17 +794,45 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
           <Field label="Categoria"><Input value={form.category ?? ""} onChange={(event) => setForm({ ...form, category: event.target.value })} /></Field>
           <Field label="Vídeo da aula" className="sm:col-span-2">
             <div className="space-y-2">
-              <Input type="file" accept="video/*" disabled={uploadingVideo} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleVideoFile(f); }} />
-              {uploadingVideo && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando vídeo...</p>}
-              {form.video_path && <p className="text-xs text-muted-foreground">Arquivo: {form.video_path}</p>}
+              {form.video_path ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <Video className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs truncate flex-1" title={form.video_path}>{form.video_path}</span>
+                  <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteVideo}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="inline-flex">
+                  <input type="file" accept="video/*" className="hidden" disabled={uploadingVideo} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleVideoFile(f); e.target.value = ""; }} />
+                  <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploadingVideo ? "opacity-60 pointer-events-none" : ""}`}>
+                    {uploadingVideo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadingVideo ? "Enviando vídeo..." : "Enviar vídeo"}
+                  </span>
+                </label>
+              )}
               <Input placeholder="ou cole uma URL externa (opcional)" value={form.video_url ?? ""} onChange={(event) => setForm({ ...form, video_url: event.target.value })} />
             </div>
           </Field>
           <Field label="Capa (imagem)" className="sm:col-span-2">
             <div className="space-y-2">
-              <Input type="file" accept="image/*" disabled={uploadingThumb} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleThumbFile(f); }} />
-              {uploadingThumb && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando capa...</p>}
-              {form.thumbnail_path && <p className="text-xs text-muted-foreground">Arquivo: {form.thumbnail_path}</p>}
+              {form.thumbnail_path ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs truncate flex-1" title={form.thumbnail_path}>{form.thumbnail_path}</span>
+                  <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteThumb}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="inline-flex">
+                  <input type="file" accept="image/*" className="hidden" disabled={uploadingThumb} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleThumbFile(f); e.target.value = ""; }} />
+                  <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploadingThumb ? "opacity-60 pointer-events-none" : ""}`}>
+                    {uploadingThumb ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadingThumb ? "Enviando capa..." : "Enviar capa"}
+                  </span>
+                </label>
+              )}
               <Input placeholder="ou cole uma URL externa (opcional)" value={form.thumbnail_url ?? ""} onChange={(event) => setForm({ ...form, thumbnail_url: event.target.value })} />
             </div>
           </Field>
