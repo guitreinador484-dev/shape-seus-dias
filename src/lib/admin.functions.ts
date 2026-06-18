@@ -39,13 +39,18 @@ export const createStudent = createServerFn({ method: "POST" })
     return input;
   })
   .handler(async ({ data, context }) => {
-    // Verify caller is admin
-    const { data: adminCheck, error: adminErr } = await context.supabase
-      .from("user_roles").select("id").eq("user_id", context.userId).eq("role", "admin").limit(1);
-    if (adminErr) throw new Error("Falha ao verificar permissão");
-    if (!adminCheck?.length) throw new Error("Forbidden");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Verify caller is admin using service role (bypasses RLS quirks)
+    const { data: adminCheck, error: adminErr } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .limit(1);
+    if (adminErr) throw new Error(`Falha ao verificar permissão: ${adminErr.message}`);
+    if (!adminCheck?.length) throw new Error("Acesso negado: apenas administradores");
+
     const role = data.role ?? "online";
     const hasAccess = data.has_class_access ?? (role !== "presencial");
 
