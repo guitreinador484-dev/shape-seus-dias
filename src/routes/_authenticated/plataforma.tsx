@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, PlayCircle, Play, Info } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info } from "lucide-react";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
