@@ -968,6 +968,7 @@ export function AdminQuizPanel() {
   const [selectedId, setSelectedId] = useState("");
   const [contentText, setContentText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -1017,8 +1018,22 @@ export function AdminQuizPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader title="Quiz / Anamnese" description="Edite textos e perguntas do quiz, e consulte respostas enviadas pelos alunos." />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader title="Quiz / Anamnese" description="Edite textos e perguntas do quiz, e consulte respostas enviadas pelos alunos." />
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowPreview((v) => !v)}>
+            {showPreview ? <><EyeOff className="h-4 w-4" /> Fechar prévia</> : <><Eye className="h-4 w-4" /> Ver ao vivo</>}
+          </Button>
+          <Button asChild variant="outline">
+            <a href="/quiz" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" /> Abrir em nova aba
+            </a>
+          </Button>
+        </div>
+      </div>
       {loading ? <Skeleton className="h-80" /> : (
+        <div className={showPreview ? "grid gap-4 lg:grid-cols-[1fr_420px]" : ""}>
+          <div>
         <Tabs defaultValue="editor">
           <TabsList><TabsTrigger value="editor">Editor do quiz</TabsTrigger><TabsTrigger value="respostas">Respostas</TabsTrigger></TabsList>
           <TabsContent value="editor" className="mt-4">
@@ -1028,6 +1043,17 @@ export function AdminQuizPanel() {
             {anamneses.length === 0 ? <EmptyState title="Nenhuma anamnese recebida" description="As respostas dos alunos aparecerão aqui." /> : <div className="space-y-4">{anamneses.map((item) => <Card key={item.id}><CardHeader><CardTitle>{studentById.get(item.user_id)?.full_name || studentById.get(item.user_id)?.email || "Aluno"}</CardTitle><p className="text-sm text-muted-foreground">{formatDate(item.created_at)}</p></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Info label="Objetivo" value={item.objetivo} /><Info label="Frequência" value={item.frequencia} /><Info label="Experiência" value={item.experiencia} /><Info label="Local" value={item.local_treino} /><Info label="Limitação" value={item.limitacao} /><Info label="Descrição" value={item.limitacao_descricao} /><pre className="md:col-span-2 overflow-auto rounded-lg bg-muted p-3 text-xs">{JSON.stringify(item.quiz_answers, null, 2)}</pre></CardContent></Card>)}</div>}
           </TabsContent>
         </Tabs>
+          </div>
+          {showPreview && (
+            <Card className="overflow-hidden lg:sticky lg:top-4 h-[80vh]">
+              <div className="flex items-center justify-between border-b px-3 py-2">
+                <p className="text-sm font-medium">Prévia ao vivo</p>
+                <Button size="sm" variant="ghost" onClick={() => setShowPreview(false)}>Fechar</Button>
+              </div>
+              <iframe src="/quiz" title="Quiz ao vivo" className="w-full h-[calc(80vh-41px)] border-0" />
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );
