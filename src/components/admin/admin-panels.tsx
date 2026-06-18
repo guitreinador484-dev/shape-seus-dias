@@ -19,6 +19,7 @@ import {
   Trash2,
   Users,
   Video,
+  Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -63,6 +64,7 @@ type AdminSettings = {
   platform_hero_subtitle: string;
   platform_hero_image_path: string;
   platform_row_order: string;
+  platform_theme: "dark" | "light";
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -76,6 +78,7 @@ const defaultAdminSettings: AdminSettings = {
   platform_hero_subtitle: "",
   platform_hero_image_path: "",
   platform_row_order: "",
+  platform_theme: "dark",
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -118,6 +121,7 @@ function readAdminSettings(value: Json | null): AdminSettings {
     platform_hero_subtitle: typeof data.platform_hero_subtitle === "string" ? data.platform_hero_subtitle : "",
     platform_hero_image_path: typeof data.platform_hero_image_path === "string" ? data.platform_hero_image_path : "",
     platform_row_order: typeof data.platform_row_order === "string" ? data.platform_row_order : "",
+    platform_theme: data.platform_theme === "light" ? "light" : "dark",
   };
 }
 
@@ -706,6 +710,33 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
     return key;
   }
 
+  async function removeFile(bucket: "workout-videos" | "workout-thumbnails", key: string) {
+    const { error } = await supabase.storage.from(bucket).remove([key]);
+    if (error) throw error;
+  }
+
+  async function deleteVideo() {
+    if (!form.video_path) return;
+    try {
+      await removeFile("workout-videos", form.video_path);
+      setForm((f) => ({ ...f, video_path: null }));
+      toast.success("Vídeo removido");
+    } catch (error) {
+      toast.error("Erro ao remover vídeo", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
+  async function deleteThumb() {
+    if (!form.thumbnail_path) return;
+    try {
+      await removeFile("workout-thumbnails", form.thumbnail_path);
+      setForm((f) => ({ ...f, thumbnail_path: null }));
+      toast.success("Capa removida");
+    } catch (error) {
+      toast.error("Erro ao remover capa", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
   async function handleVideoFile(file: File) {
     setUploadingVideo(true);
     try {
@@ -763,17 +794,45 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
           <Field label="Categoria"><Input value={form.category ?? ""} onChange={(event) => setForm({ ...form, category: event.target.value })} /></Field>
           <Field label="Vídeo da aula" className="sm:col-span-2">
             <div className="space-y-2">
-              <Input type="file" accept="video/*" disabled={uploadingVideo} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleVideoFile(f); }} />
-              {uploadingVideo && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando vídeo...</p>}
-              {form.video_path && <p className="text-xs text-muted-foreground">Arquivo: {form.video_path}</p>}
+              {form.video_path ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <Video className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs truncate flex-1" title={form.video_path}>{form.video_path}</span>
+                  <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteVideo}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="inline-flex">
+                  <input type="file" accept="video/*" className="hidden" disabled={uploadingVideo} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleVideoFile(f); e.target.value = ""; }} />
+                  <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploadingVideo ? "opacity-60 pointer-events-none" : ""}`}>
+                    {uploadingVideo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadingVideo ? "Enviando vídeo..." : "Enviar vídeo"}
+                  </span>
+                </label>
+              )}
               <Input placeholder="ou cole uma URL externa (opcional)" value={form.video_url ?? ""} onChange={(event) => setForm({ ...form, video_url: event.target.value })} />
             </div>
           </Field>
           <Field label="Capa (imagem)" className="sm:col-span-2">
             <div className="space-y-2">
-              <Input type="file" accept="image/*" disabled={uploadingThumb} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleThumbFile(f); }} />
-              {uploadingThumb && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando capa...</p>}
-              {form.thumbnail_path && <p className="text-xs text-muted-foreground">Arquivo: {form.thumbnail_path}</p>}
+              {form.thumbnail_path ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                  <Eye className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-xs truncate flex-1" title={form.thumbnail_path}>{form.thumbnail_path}</span>
+                  <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteThumb}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="inline-flex">
+                  <input type="file" accept="image/*" className="hidden" disabled={uploadingThumb} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleThumbFile(f); e.target.value = ""; }} />
+                  <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploadingThumb ? "opacity-60 pointer-events-none" : ""}`}>
+                    {uploadingThumb ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadingThumb ? "Enviando capa..." : "Enviar capa"}
+                  </span>
+                </label>
+              )}
               <Input placeholder="ou cole uma URL externa (opcional)" value={form.thumbnail_url ?? ""} onChange={(event) => setForm({ ...form, thumbnail_url: event.target.value })} />
             </div>
           </Field>
@@ -1339,6 +1398,19 @@ export function AdminPlatformPanel() {
     }
   }
 
+  async function deleteBanner() {
+    const key = settings.platform_hero_image_path;
+    if (!key) return;
+    try {
+      const { error } = await supabase.storage.from("workout-thumbnails").remove([key]);
+      if (error) throw error;
+      setSettings((s) => ({ ...s, platform_hero_image_path: "" }));
+      toast.success("Banner removido");
+    } catch (error) {
+      toast.error("Erro ao remover banner", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
   const categories = Array.from(new Set(workouts.map((w) => w.category).filter(Boolean)));
 
   return (
@@ -1362,11 +1434,55 @@ export function AdminPlatformPanel() {
               <Field label="Subtítulo / descrição"><Textarea value={settings.platform_hero_subtitle} onChange={(e) => setSettings({ ...settings, platform_hero_subtitle: e.target.value })} placeholder="Frase de impacto" /></Field>
               <Field label="Imagem do banner">
                 <div className="space-y-2">
-                  <Input type="file" accept="image/*" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); }} />
-                  {uploading && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando...</p>}
-                  {settings.platform_hero_image_path && <p className="text-xs text-muted-foreground">Arquivo: {settings.platform_hero_image_path}</p>}
+                  {settings.platform_hero_image_path ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                      <Eye className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-xs truncate flex-1" title={settings.platform_hero_image_path}>{settings.platform_hero_image_path}</span>
+                      <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteBanner}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="inline-flex">
+                      <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); e.target.value = ""; }} />
+                      <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        {uploading ? "Enviando..." : "Enviar banner"}
+                      </span>
+                    </label>
+                  )}
                 </div>
               </Field>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Aparência da plataforma</CardTitle></CardHeader>
+            <CardContent className="grid gap-3">
+              <p className="text-sm text-muted-foreground">Escolha o tema que seus alunos verão ao acessar a plataforma.</p>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                {(["dark", "light"] as const).map((t) => {
+                  const active = settings.platform_theme === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, platform_theme: t })}
+                      className={`relative rounded-xl border-2 p-4 text-left transition-all ${active ? "border-primary shadow-lg shadow-primary/20" : "border-border hover:border-primary/40"}`}
+                    >
+                      <div className={`h-20 rounded-md mb-3 border ${t === "dark" ? "bg-[#0a0a0a] border-[#2a2a2a]" : "bg-[#fafaf7] border-[#e5e5e0]"}`}>
+                        <div className="flex gap-1 p-2">
+                          <div className={`h-2 w-10 rounded ${t === "dark" ? "bg-[#2a2a2a]" : "bg-[#e0e0d8]"}`} />
+                          <div className="h-2 w-6 rounded bg-primary" />
+                        </div>
+                        <div className={`mx-2 h-3 w-16 rounded ${t === "dark" ? "bg-[#1a1a1a]" : "bg-[#ececea]"}`} />
+                      </div>
+                      <p className="font-semibold text-sm">{t === "dark" ? "Escuro" : "Claro"}</p>
+                      <p className="text-xs text-muted-foreground">{t === "dark" ? "Cinema-style, foco total" : "Limpo, alto contraste"}</p>
+                      {active && <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
           <Card>
