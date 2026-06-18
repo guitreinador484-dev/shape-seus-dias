@@ -284,6 +284,19 @@ function PlataformaPage() {
     return () => { cancelled = true; };
   }, [hasClassAccess, workouts]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    if (config.theme === "light") {
+      root.classList.add("platform-light");
+      body.classList.add("platform-light");
+    }
+    return () => {
+      root.classList.remove("platform-light");
+      body.classList.remove("platform-light");
+    };
+  }, [config.theme]);
+
   if (loading || role === "admin" || isAdminEmail(user?.email)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
