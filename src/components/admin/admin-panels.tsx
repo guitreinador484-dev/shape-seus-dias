@@ -58,6 +58,11 @@ type AdminSettings = {
   support_whatsapp: string;
   checkout_url: string;
   welcome_message: string;
+  platform_hero_workout_id: string;
+  platform_hero_title: string;
+  platform_hero_subtitle: string;
+  platform_hero_image_path: string;
+  platform_row_order: string;
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -66,6 +71,11 @@ const defaultAdminSettings: AdminSettings = {
   support_whatsapp: "",
   checkout_url: "",
   welcome_message: "",
+  platform_hero_workout_id: "",
+  platform_hero_title: "",
+  platform_hero_subtitle: "",
+  platform_hero_image_path: "",
+  platform_row_order: "",
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -103,6 +113,11 @@ function readAdminSettings(value: Json | null): AdminSettings {
     support_whatsapp: typeof data.support_whatsapp === "string" ? data.support_whatsapp : defaultAdminSettings.support_whatsapp,
     checkout_url: typeof data.checkout_url === "string" ? data.checkout_url : defaultAdminSettings.checkout_url,
     welcome_message: typeof data.welcome_message === "string" ? data.welcome_message : defaultAdminSettings.welcome_message,
+    platform_hero_workout_id: typeof data.platform_hero_workout_id === "string" ? data.platform_hero_workout_id : "",
+    platform_hero_title: typeof data.platform_hero_title === "string" ? data.platform_hero_title : "",
+    platform_hero_subtitle: typeof data.platform_hero_subtitle === "string" ? data.platform_hero_subtitle : "",
+    platform_hero_image_path: typeof data.platform_hero_image_path === "string" ? data.platform_hero_image_path : "",
+    platform_row_order: typeof data.platform_row_order === "string" ? data.platform_row_order : "",
   };
 }
 
@@ -1265,11 +1280,111 @@ export function AdminSettingsPanel() {
 export const adminCards = [
   { title: "Alunos", url: "/admin/alunos", icon: Users, desc: "Edite alunos, acesso, status e tipo." },
   { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video, desc: "Cadastre aulas, categorias e vídeos." },
+  { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video, desc: "Banner, destaque e ordem das prateleiras Netflix." },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell, desc: "Monte planos por aluno e exercícios." },
   { title: "Vendas", url: "/admin/vendas", icon: BadgeDollarSign, desc: "Registre vendas e status de pagamento." },
   { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList, desc: "Edite perguntas e veja respostas." },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings, desc: "Ajuste marca, contato e links." },
 ];
+
+export function AdminPlatformPanel() {
+  const [rowId, setRowId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const [cfg, wks] = await Promise.all([
+      supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+    ]);
+    setRowId(cfg.data?.id ?? null);
+    setSettings(readAdminSettings(cfg.data?.content ?? null));
+    setWorkouts(wks.data ?? []);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load().catch((error) => { setLoading(false); toast.error("Erro ao carregar", { description: error.message }); });
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    const content = settings as unknown as Json;
+    const result = rowId
+      ? await supabase.from("quiz_config").update({ content }).eq("id", rowId)
+      : await supabase.from("quiz_config").insert({ section: "configuracoes", content });
+    setSaving(false);
+    if (result.error) { toast.error("Erro ao salvar", { description: result.error.message }); return; }
+    toast.success("Plataforma atualizada");
+    await load();
+  }
+
+  async function uploadBanner(file: File) {
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const key = `hero-${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("workout-thumbnails").upload(key, file, { contentType: file.type });
+      if (error) throw error;
+      setSettings((s) => ({ ...s, platform_hero_image_path: key }));
+      toast.success("Banner enviado");
+    } catch (error) {
+      toast.error("Erro ao enviar banner", { description: error instanceof Error ? error.message : "Tente novamente." });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  const categories = Array.from(new Set(workouts.map((w) => w.category).filter(Boolean)));
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <PageHeader title="Plataforma do aluno" description="Configure o banner em destaque e a ordem das prateleiras da experiência estilo Netflix." />
+      {loading ? <Skeleton className="h-96" /> : (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Banner de destaque</CardTitle></CardHeader>
+            <CardContent className="grid gap-4">
+              <Field label="Aula em destaque (CTA do banner)">
+                <Select value={settings.platform_hero_workout_id || "none"} onValueChange={(v) => setSettings({ ...settings, platform_hero_workout_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma</SelectItem>
+                    {workouts.map((w) => <SelectItem key={w.id} value={w.id}>{w.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Título do banner (opcional)"><Input value={settings.platform_hero_title} onChange={(e) => setSettings({ ...settings, platform_hero_title: e.target.value })} placeholder="Ex: Treine como nunca" /></Field>
+              <Field label="Subtítulo / descrição"><Textarea value={settings.platform_hero_subtitle} onChange={(e) => setSettings({ ...settings, platform_hero_subtitle: e.target.value })} placeholder="Frase de impacto" /></Field>
+              <Field label="Imagem do banner">
+                <div className="space-y-2">
+                  <Input type="file" accept="image/*" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); }} />
+                  {uploading && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando...</p>}
+                  {settings.platform_hero_image_path && <p className="text-xs text-muted-foreground">Arquivo: {settings.platform_hero_image_path}</p>}
+                </div>
+              </Field>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Ordem das prateleiras</CardTitle></CardHeader>
+            <CardContent className="grid gap-3">
+              <p className="text-sm text-muted-foreground">Liste as categorias na ordem que devem aparecer, separadas por vírgula. Categorias não listadas aparecem depois.</p>
+              <Input value={settings.platform_row_order} onChange={(e) => setSettings({ ...settings, platform_row_order: e.target.value })} placeholder={categories.join(", ")} />
+              {categories.length > 0 && (
+                <p className="text-xs text-muted-foreground">Categorias detectadas: {categories.join(" · ")}</p>
+              )}
+            </CardContent>
+          </Card>
+          <Button onClick={save} disabled={saving || uploading}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar plataforma</Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AdminHomeCards() {
   return (

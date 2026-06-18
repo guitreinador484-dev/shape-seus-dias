@@ -2,18 +2,36 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, PlayCircle } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info } from "lucide-react";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
 type Workout = Tables<"workouts">;
 type PlanWithExercises = StudentPlan & { exercises: StudentPlanExercise[] };
+type PlatformConfig = {
+  hero_workout_id: string;
+  hero_title: string;
+  hero_subtitle: string;
+  hero_image_path: string;
+  row_order: string;
+};
+const defaultConfig: PlatformConfig = { hero_workout_id: "", hero_title: "", hero_subtitle: "", hero_image_path: "", row_order: "" };
+function readConfig(value: Json | null): PlatformConfig {
+  const d = (value && typeof value === "object" && !Array.isArray(value)) ? (value as Record<string, unknown>) : {};
+  return {
+    hero_workout_id: typeof d.platform_hero_workout_id === "string" ? d.platform_hero_workout_id : "",
+    hero_title: typeof d.platform_hero_title === "string" ? d.platform_hero_title : "",
+    hero_subtitle: typeof d.platform_hero_subtitle === "string" ? d.platform_hero_subtitle : "",
+    hero_image_path: typeof d.platform_hero_image_path === "string" ? d.platform_hero_image_path : "",
+    row_order: typeof d.platform_row_order === "string" ? d.platform_row_order : "",
+  };
+}
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
@@ -29,6 +47,8 @@ function PlataformaPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
   const [signedUrls, setSignedUrls] = useState<Record<string, { video?: string; thumb?: string }>>({});
+  const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
+  const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
   const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string } | null>(null);
 
   useEffect(() => {
@@ -42,11 +62,12 @@ function PlataformaPage() {
     let cancelled = false;
     (async () => {
       setDataLoading(true);
-      const [plansRes, exRes, workoutsRes, profileRes] = await Promise.all([
+      const [plansRes, exRes, workoutsRes, profileRes, cfgRes] = await Promise.all([
         supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
         supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
         supabase.from("workouts").select("*").order("display_order", { ascending: true }),
         supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
+        supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       if (cancelled) return;
       const allPlans = plansRes.data ?? [];
@@ -54,10 +75,21 @@ function PlataformaPage() {
       setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
       setWorkouts(workoutsRes.data ?? []);
       setHasClassAccess(Boolean(profileRes.data?.has_class_access));
+      setConfig(readConfig(cfgRes.data?.content ?? null));
       setDataLoading(false);
     })();
     return () => { cancelled = true; };
   }, [loading, user, role]);
+
+  useEffect(() => {
+    if (!hasClassAccess || !config.hero_image_path) { setHeroBannerUrl(""); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(config.hero_image_path, 3600);
+      if (!cancelled && data?.signedUrl) setHeroBannerUrl(data.signedUrl);
+    })();
+    return () => { cancelled = true; };
+  }, [hasClassAccess, config.hero_image_path]);
 
   useEffect(() => {
     if (!hasClassAccess || workouts.length === 0) return;
@@ -95,6 +127,27 @@ function PlataformaPage() {
   }
 
   const showVideos = hasClassAccess;
+  const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
+
+  // Group workouts by category, ordered by config.row_order
+  const byCategory = new Map<string, Workout[]>();
+  workouts.forEach((w) => {
+    const cat = w.category || "Geral";
+    byCategory.set(cat, [...(byCategory.get(cat) ?? []), w]);
+  });
+  const orderedCats = (() => {
+    const cats = Array.from(byCategory.keys());
+    const preferred = config.row_order.split(",").map((s) => s.trim()).filter(Boolean);
+    const head = preferred.filter((c) => byCategory.has(c));
+    const tail = cats.filter((c) => !head.includes(c));
+    return [...head, ...tail];
+  })();
+
+  function playWorkout(w: Workout) {
+    const url = signedUrls[w.id]?.video;
+    if (url) setActiveVideo({ id: w.id, url, title: w.title });
+    else if (w.video_url) window.open(w.video_url, "_blank");
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -157,32 +210,75 @@ function PlataformaPage() {
           </TabsContent>
 
           {showVideos && (
-            <TabsContent value="aulas" className="mt-4">
-              {dataLoading ? <Skeleton className="h-64" /> : workouts.length === 0 ? (
-                <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
+            <TabsContent value="aulas" className="mt-4 -mx-4 sm:-mx-4">
+              {dataLoading ? <Skeleton className="h-64 mx-4" /> : workouts.length === 0 ? (
+                <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {workouts.map((w) => (
-                    <Card key={w.id} className="overflow-hidden">
-                      {(signedUrls[w.id]?.thumb || w.thumbnail_url) && (
-                        <img src={signedUrls[w.id]?.thumb || w.thumbnail_url || ""} alt={w.title} className="w-full h-40 object-cover" />
+                <div className="space-y-10 bg-black/95 text-white pb-12 -mt-2">
+                  {heroWorkout && (
+                    <div className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
+                      {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
+                        <img
+                          src={heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url || ""}
+                          alt={config.hero_title || heroWorkout.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
                       )}
-                      <CardHeader>
-                        <CardTitle className="text-base">{w.title}</CardTitle>
-                        {w.description && <p className="text-xs text-muted-foreground line-clamp-2">{w.description}</p>}
-                      </CardHeader>
-                      <CardContent>
-                        {signedUrls[w.id]?.video ? (
-                          <Button size="sm" variant="secondary" onClick={() => setActiveVideo({ id: w.id, url: signedUrls[w.id]!.video!, title: w.title })}>
-                            <PlayCircle className="h-4 w-4 mr-2" /> Assistir agora
-                          </Button>
-                        ) : w.video_url ? (
-                          <a href={w.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
-                            <PlayCircle className="h-4 w-4" /> Assistir
-                          </a>
-                        ) : <p className="text-xs text-muted-foreground">Vídeo indisponível</p>}
-                      </CardContent>
-                    </Card>
+                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                      <div className="relative h-full flex items-end px-4 sm:px-12 pb-12 max-w-7xl mx-auto">
+                        <div className="max-w-2xl space-y-4">
+                          <h2 className="font-display text-4xl sm:text-6xl font-bold leading-tight">
+                            {config.hero_title || heroWorkout.title}
+                          </h2>
+                          <p className="text-base sm:text-lg text-white/80 line-clamp-3">
+                            {config.hero_subtitle || heroWorkout.description || ""}
+                          </p>
+                          <div className="flex gap-3 pt-2">
+                            <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => playWorkout(heroWorkout)}>
+                              <Play className="h-5 w-5 mr-2 fill-black" /> Assistir
+                            </Button>
+                            <Button size="lg" variant="secondary" className="bg-white/20 text-white hover:bg-white/30 border-0">
+                              <Info className="h-5 w-5 mr-2" /> Mais informações
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {orderedCats.map((cat) => (
+                    <section key={cat} className="px-4 sm:px-12 max-w-7xl mx-auto">
+                      <h3 className="text-xl sm:text-2xl font-semibold mb-3">{cat}</h3>
+                      <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin">
+                        {(byCategory.get(cat) ?? []).map((w) => {
+                          const thumb = signedUrls[w.id]?.thumb || w.thumbnail_url;
+                          return (
+                            <button
+                              key={w.id}
+                              onClick={() => playWorkout(w)}
+                              className="group relative shrink-0 snap-start w-[240px] sm:w-[280px] aspect-video rounded-md overflow-hidden bg-neutral-900 transition-transform hover:scale-105 hover:z-10 ring-1 ring-white/5"
+                            >
+                              {thumb ? (
+                                <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover" />
+                              ) : (
+                                <div className="absolute inset-0 grid place-items-center text-white/30"><Video className="h-10 w-10" /></div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90 group-hover:opacity-100" />
+                              <div className="absolute inset-x-0 bottom-0 p-3">
+                                <p className="font-medium text-sm line-clamp-1">{w.title}</p>
+                                <p className="text-xs text-white/60 line-clamp-1">{w.difficulty || w.category}</p>
+                              </div>
+                              <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="h-12 w-12 rounded-full bg-white/90 grid place-items-center">
+                                  <Play className="h-6 w-6 text-black fill-black ml-0.5" />
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
                   ))}
                 </div>
               )}
