@@ -169,13 +169,20 @@ function PlataformaPage() {
           <p className="text-muted-foreground text-sm">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
         </div>
 
-        <Tabs defaultValue="treino">
-          <TabsList>
-            <TabsTrigger value="treino"><Dumbbell className="h-4 w-4 mr-2" /> Meu treino</TabsTrigger>
-            {showVideos && <TabsTrigger value="aulas"><Video className="h-4 w-4 mr-2" /> Aulas em vídeo</TabsTrigger>}
+        <Tabs defaultValue="treino" orientation="vertical" className="flex flex-col sm:flex-row gap-6 items-start">
+          <TabsList className="flex sm:flex-col h-auto w-full sm:w-56 shrink-0 gap-1 bg-muted/40 p-2 justify-start">
+            <TabsTrigger value="treino" className="w-full justify-start data-[state=active]:bg-background">
+              <Dumbbell className="h-4 w-4 mr-2" /> Meu treino
+            </TabsTrigger>
+            {showVideos && (
+              <TabsTrigger value="aulas" className="w-full justify-start data-[state=active]:bg-background">
+                <Video className="h-4 w-4 mr-2" /> Aulas em vídeo
+              </TabsTrigger>
+            )}
           </TabsList>
 
-          <TabsContent value="treino" className="mt-4 space-y-4">
+          <div className="flex-1 min-w-0 w-full">
+          <TabsContent value="treino" className="mt-0 space-y-4">
             {dataLoading ? <Skeleton className="h-64" /> : plans.length === 0 ? (
               <Card><CardContent className="py-12 text-center text-muted-foreground">
                 Seu treino ainda não foi cadastrado. Entre em contato com seu personal.
@@ -210,7 +217,7 @@ function PlataformaPage() {
           </TabsContent>
 
           {showVideos && (
-            <TabsContent value="aulas" className="mt-4 -mx-4 sm:-mx-4">
+            <TabsContent value="aulas" className="mt-0 -mx-4 sm:-mx-4">
               {dataLoading ? <Skeleton className="h-64 mx-4" /> : workouts.length === 0 ? (
                 <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
@@ -284,6 +291,7 @@ function PlataformaPage() {
               )}
             </TabsContent>
           )}
+          </div>
         </Tabs>
       </main>
       {activeVideo && (
