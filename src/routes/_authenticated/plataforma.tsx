@@ -38,7 +38,7 @@ function readConfig(value: Json | null): PlatformConfig {
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
-function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: boolean }) {
+function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
   const today = new Date().getDay();
   const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
   const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
@@ -110,8 +110,9 @@ function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: 
       </div>
 
       {/* Day hero / stats */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-6">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+      <div className={`relative overflow-hidden rounded-2xl border p-6 ${light ? "bg-card border-border" : "border-border bg-gradient-to-br from-primary/15 via-card to-card"}`}>
+        {!light && <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />}
+        {light && <div className="absolute left-0 top-0 h-full w-1.5 bg-primary" />}
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
