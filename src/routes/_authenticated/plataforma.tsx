@@ -38,7 +38,7 @@ function readConfig(value: Json | null): PlatformConfig {
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
-function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: boolean }) {
+function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
   const today = new Date().getDay();
   const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
   const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
@@ -110,8 +110,9 @@ function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: 
       </div>
 
       {/* Day hero / stats */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-6">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+      <div className={`relative overflow-hidden rounded-2xl border p-6 ${light ? "bg-card border-border" : "border-border bg-gradient-to-br from-primary/15 via-card to-card"}`}>
+        {!light && <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />}
+        {light && <div className="absolute left-0 top-0 h-full w-1.5 bg-primary" />}
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
@@ -297,6 +298,7 @@ function PlataformaPage() {
   }
 
   const showVideos = hasClassAccess;
+  const isLight = config.theme === "light";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
   // Group workouts by category, ordered by config.row_order
@@ -353,7 +355,7 @@ function PlataformaPage() {
 
           <div className="flex-1 min-w-0 w-full">
           <TabsContent value="treino" className="mt-0">
-            <TreinoPanel plans={plans} loading={dataLoading} />
+            <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
           </TabsContent>
 
           {showVideos && (
@@ -361,7 +363,7 @@ function PlataformaPage() {
               {dataLoading ? <Skeleton className="h-64 mx-4" /> : workouts.length === 0 ? (
                 <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
-                <div className="space-y-10 bg-black/95 text-white pb-12 -mt-2">
+                <div className={`space-y-10 pb-12 -mt-2 ${isLight ? "bg-background text-foreground" : "bg-black/95 text-white"}`}>
                   {heroWorkout && (
                     <div className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
                       {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
@@ -371,21 +373,27 @@ function PlataformaPage() {
                           className="absolute inset-0 w-full h-full object-cover"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                      {isLight ? (
+                        <div className="absolute inset-0 bg-black/30" />
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                        </>
+                      )}
                       <div className="relative h-full flex items-end px-4 sm:px-12 pb-12 max-w-7xl mx-auto">
                         <div className="max-w-2xl space-y-4">
-                          <h2 className="font-display text-4xl sm:text-6xl font-bold leading-tight">
+                          <h2 className="font-display text-4xl sm:text-6xl font-bold leading-tight text-white drop-shadow-lg">
                             {config.hero_title || heroWorkout.title}
                           </h2>
-                          <p className="text-base sm:text-lg text-white/80 line-clamp-3">
+                          <p className="text-base sm:text-lg text-white/90 line-clamp-3 drop-shadow">
                             {config.hero_subtitle || heroWorkout.description || ""}
                           </p>
                           <div className="flex gap-3 pt-2">
-                            <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => playWorkout(heroWorkout)}>
-                              <Play className="h-5 w-5 mr-2 fill-black" /> Assistir
+                            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => playWorkout(heroWorkout)}>
+                              <Play className="h-5 w-5 mr-2 fill-current" /> Assistir
                             </Button>
-                            <Button size="lg" variant="secondary" className="bg-white/20 text-white hover:bg-white/30 border-0">
+                            <Button size="lg" variant="secondary" className="bg-black/40 text-white hover:bg-black/60 border-0 backdrop-blur">
                               <Info className="h-5 w-5 mr-2" /> Mais informações
                             </Button>
                           </div>
@@ -404,21 +412,21 @@ function PlataformaPage() {
                             <button
                               key={w.id}
                               onClick={() => playWorkout(w)}
-                              className="group relative shrink-0 snap-start w-[240px] sm:w-[280px] aspect-video rounded-md overflow-hidden bg-neutral-900 transition-transform hover:scale-105 hover:z-10 ring-1 ring-white/5"
+                              className={`group relative shrink-0 snap-start w-[240px] sm:w-[280px] aspect-video rounded-md overflow-hidden transition-transform hover:scale-105 hover:z-10 ${isLight ? "bg-muted ring-1 ring-black/10 hover:ring-primary" : "bg-neutral-900 ring-1 ring-white/5"}`}
                             >
                               {thumb ? (
                                 <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover" />
                               ) : (
-                                <div className="absolute inset-0 grid place-items-center text-white/30"><Video className="h-10 w-10" /></div>
+                                <div className={`absolute inset-0 grid place-items-center ${isLight ? "text-muted-foreground/40" : "text-white/30"}`}><Video className="h-10 w-10" /></div>
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90 group-hover:opacity-100" />
-                              <div className="absolute inset-x-0 bottom-0 p-3">
+                              <div className="absolute inset-x-0 bottom-0 p-3 text-white">
                                 <p className="font-medium text-sm line-clamp-1">{w.title}</p>
-                                <p className="text-xs text-white/60 line-clamp-1">{w.difficulty || w.category}</p>
+                                <p className="text-xs text-white/70 line-clamp-1">{w.difficulty || w.category}</p>
                               </div>
                               <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="h-12 w-12 rounded-full bg-white/90 grid place-items-center">
-                                  <Play className="h-6 w-6 text-black fill-black ml-0.5" />
+                                <div className="h-12 w-12 rounded-full bg-primary grid place-items-center shadow-lg">
+                                  <Play className="h-6 w-6 text-primary-foreground fill-current ml-0.5" />
                                 </div>
                               </div>
                             </button>
@@ -441,7 +449,14 @@ function PlataformaPage() {
               <p className="font-medium text-sm">{activeVideo.title}</p>
               <Button size="sm" variant="ghost" onClick={() => setActiveVideo(null)}>Fechar</Button>
             </div>
-            <video src={activeVideo.url} controls autoPlay controlsList="nodownload" className="w-full max-h-[70vh] bg-black" />
+            <video
+              src={activeVideo.url}
+              poster={signedUrls[activeVideo.id]?.thumb || workouts.find((w) => w.id === activeVideo.id)?.thumbnail_url || undefined}
+              controls
+              autoPlay
+              controlsList="nodownload"
+              className="w-full max-h-[70vh] bg-black"
+            />
           </div>
         </div>
       )}
