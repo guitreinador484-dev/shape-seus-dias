@@ -34,6 +34,174 @@ function readConfig(value: Json | null): PlatformConfig {
 }
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+
+function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: boolean }) {
+  const today = new Date().getDay();
+  const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
+  const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
+  const [selectedDay, setSelectedDay] = useState<number>(initial);
+  const [done, setDone] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!availableDays.includes(selectedDay) && availableDays.length > 0) {
+      setSelectedDay(availableDays[0]);
+    }
+  }, [plans]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return <Skeleton className="h-64" />;
+  if (plans.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="py-16 text-center space-y-3">
+          <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
+            <Dumbbell className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-display text-xl">Sem treino cadastrado</p>
+          <p className="text-sm text-muted-foreground">Seu personal ainda não montou seu plano. Fale com ele para começar.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const dayPlans = plans.filter((p) => p.day_of_week === selectedDay);
+  const totalEx = dayPlans.reduce((acc, p) => acc + p.exercises.length, 0);
+  const totalSets = dayPlans.reduce((acc, p) => acc + p.exercises.reduce((s, e) => s + (e.sets ?? 0), 0), 0);
+  const completed = dayPlans.reduce((acc, p) => acc + p.exercises.filter((e) => done.has(e.id)).length, 0);
+  const progress = totalEx ? Math.round((completed / totalEx) * 100) : 0;
+
+  function toggle(id: string) {
+    setDone((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Day chips */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+        {WEEKDAYS_SHORT.map((label, idx) => {
+          const has = plans.some((p) => p.day_of_week === idx);
+          const active = idx === selectedDay;
+          const isToday = idx === today;
+          return (
+            <button
+              key={idx}
+              disabled={!has}
+              onClick={() => has && setSelectedDay(idx)}
+              className={`shrink-0 w-14 h-16 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-105"
+                  : has
+                  ? "bg-card border-border hover:border-primary/50"
+                  : "bg-muted/30 border-border/50 text-muted-foreground/40 cursor-not-allowed"
+              }`}
+            >
+              <span className="text-[10px] font-medium tracking-wider opacity-70">{label}</span>
+              <span className="font-display text-lg leading-none">{has ? "•" : "·"}</span>
+              {isToday && !active && <span className="text-[9px] uppercase font-bold text-primary">hoje</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Day hero / stats */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-6">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
+            <h3 className="font-display text-3xl sm:text-4xl mt-1">
+              {dayPlans.map((p) => p.plan_name).join(" + ") || "Descanso"}
+            </h3>
+          </div>
+          <div className="flex gap-6 text-sm">
+            <div>
+              <p className="text-2xl font-display leading-none">{totalEx}</p>
+              <p className="text-xs text-muted-foreground mt-1">exercícios</p>
+            </div>
+            <div>
+              <p className="text-2xl font-display leading-none">{totalSets}</p>
+              <p className="text-xs text-muted-foreground mt-1">séries</p>
+            </div>
+            <div>
+              <p className="text-2xl font-display leading-none text-primary">{progress}%</p>
+              <p className="text-xs text-muted-foreground mt-1">concluído</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative mt-5 h-1.5 w-full rounded-full bg-background/60 overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      {/* Plans + exercises */}
+      {dayPlans.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            Nenhum treino programado para {WEEKDAYS[selectedDay].toLowerCase()}. Aproveite para descansar.
+          </CardContent>
+        </Card>
+      ) : dayPlans.map((plan) => (
+        <div key={plan.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/15 text-primary grid place-items-center">
+                <Flame className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold truncate">{plan.plan_name}</p>
+                <p className="text-xs text-muted-foreground">{plan.exercises.length} exercícios</p>
+              </div>
+            </div>
+          </div>
+          {plan.exercises.length === 0 ? (
+            <p className="p-5 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
+          ) : (
+            <ol className="divide-y divide-border">
+              {plan.exercises.map((ex, i) => {
+                const isDone = done.has(ex.id);
+                return (
+                  <li key={ex.id} className={`group flex items-start gap-4 p-4 sm:p-5 transition-colors ${isDone ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                    <button
+                      onClick={() => toggle(ex.id)}
+                      className={`shrink-0 h-10 w-10 rounded-full grid place-items-center font-display text-sm transition-all ${
+                        isDone
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground border border-border group-hover:border-primary/50"
+                      }`}
+                      aria-label={isDone ? "Desmarcar" : "Marcar como feito"}
+                    >
+                      {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-medium leading-tight ${isDone ? "line-through text-muted-foreground" : ""}`}>{ex.exercise_name}</p>
+                      {ex.notes && <p className="text-xs text-muted-foreground mt-1">{ex.notes}</p>}
+                      <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-1 font-semibold tabular-nums">
+                          <span className="font-display text-sm">{ex.sets}</span>
+                          <span className="opacity-60">×</span>
+                          <span className="font-display text-sm">{ex.reps}</span>
+                        </span>
+                        {ex.rest_seconds ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-muted-foreground">
+                            <Timer className="h-3 w-3" /> {ex.rest_seconds}s
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlataformaPage,
