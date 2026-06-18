@@ -322,7 +322,6 @@ function PlataformaPage() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${config.theme === "light" ? "platform-light" : ""}`}>
-      {(() => { return null; })()}
       <header className="border-b border-border bg-popover">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="font-display text-2xl">PERSONAL</h1>
@@ -355,7 +354,7 @@ function PlataformaPage() {
 
           <div className="flex-1 min-w-0 w-full">
           <TabsContent value="treino" className="mt-0">
-            <TreinoPanel plans={plans} loading={dataLoading} />
+            <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
           </TabsContent>
 
           {showVideos && (
