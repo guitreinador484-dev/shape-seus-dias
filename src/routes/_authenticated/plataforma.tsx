@@ -20,8 +20,9 @@ type PlatformConfig = {
   hero_subtitle: string;
   hero_image_path: string;
   row_order: string;
+  theme: "dark" | "light";
 };
-const defaultConfig: PlatformConfig = { hero_workout_id: "", hero_title: "", hero_subtitle: "", hero_image_path: "", row_order: "" };
+const defaultConfig: PlatformConfig = { hero_workout_id: "", hero_title: "", hero_subtitle: "", hero_image_path: "", row_order: "", theme: "dark" };
 function readConfig(value: Json | null): PlatformConfig {
   const d = (value && typeof value === "object" && !Array.isArray(value)) ? (value as Record<string, unknown>) : {};
   return {
@@ -30,6 +31,7 @@ function readConfig(value: Json | null): PlatformConfig {
     hero_subtitle: typeof d.platform_hero_subtitle === "string" ? d.platform_hero_subtitle : "",
     hero_image_path: typeof d.platform_hero_image_path === "string" ? d.platform_hero_image_path : "",
     row_order: typeof d.platform_row_order === "string" ? d.platform_row_order : "",
+    theme: d.platform_theme === "light" ? "light" : "dark",
   };
 }
 
