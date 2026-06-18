@@ -1398,6 +1398,19 @@ export function AdminPlatformPanel() {
     }
   }
 
+  async function deleteBanner() {
+    const key = settings.platform_hero_image_path;
+    if (!key) return;
+    try {
+      const { error } = await supabase.storage.from("workout-thumbnails").remove([key]);
+      if (error) throw error;
+      setSettings((s) => ({ ...s, platform_hero_image_path: "" }));
+      toast.success("Banner removido");
+    } catch (error) {
+      toast.error("Erro ao remover banner", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
+  }
+
   const categories = Array.from(new Set(workouts.map((w) => w.category).filter(Boolean)));
 
   return (
@@ -1421,11 +1434,55 @@ export function AdminPlatformPanel() {
               <Field label="Subtítulo / descrição"><Textarea value={settings.platform_hero_subtitle} onChange={(e) => setSettings({ ...settings, platform_hero_subtitle: e.target.value })} placeholder="Frase de impacto" /></Field>
               <Field label="Imagem do banner">
                 <div className="space-y-2">
-                  <Input type="file" accept="image/*" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); }} />
-                  {uploading && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando...</p>}
-                  {settings.platform_hero_image_path && <p className="text-xs text-muted-foreground">Arquivo: {settings.platform_hero_image_path}</p>}
+                  {settings.platform_hero_image_path ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                      <Eye className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-xs truncate flex-1" title={settings.platform_hero_image_path}>{settings.platform_hero_image_path}</span>
+                      <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteBanner}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="inline-flex">
+                      <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); e.target.value = ""; }} />
+                      <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        {uploading ? "Enviando..." : "Enviar banner"}
+                      </span>
+                    </label>
+                  )}
                 </div>
               </Field>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Aparência da plataforma</CardTitle></CardHeader>
+            <CardContent className="grid gap-3">
+              <p className="text-sm text-muted-foreground">Escolha o tema que seus alunos verão ao acessar a plataforma.</p>
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                {(["dark", "light"] as const).map((t) => {
+                  const active = settings.platform_theme === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, platform_theme: t })}
+                      className={`relative rounded-xl border-2 p-4 text-left transition-all ${active ? "border-primary shadow-lg shadow-primary/20" : "border-border hover:border-primary/40"}`}
+                    >
+                      <div className={`h-20 rounded-md mb-3 border ${t === "dark" ? "bg-[#0a0a0a] border-[#2a2a2a]" : "bg-[#fafaf7] border-[#e5e5e0]"}`}>
+                        <div className="flex gap-1 p-2">
+                          <div className={`h-2 w-10 rounded ${t === "dark" ? "bg-[#2a2a2a]" : "bg-[#e0e0d8]"}`} />
+                          <div className="h-2 w-6 rounded bg-primary" />
+                        </div>
+                        <div className={`mx-2 h-3 w-16 rounded ${t === "dark" ? "bg-[#1a1a1a]" : "bg-[#ececea]"}`} />
+                      </div>
+                      <p className="font-semibold text-sm">{t === "dark" ? "Escuro" : "Claro"}</p>
+                      <p className="text-xs text-muted-foreground">{t === "dark" ? "Cinema-style, foco total" : "Limpo, alto contraste"}</p>
+                      {active && <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
           <Card>
