@@ -611,6 +611,8 @@ export function AdminLessonsPanel() {
       ...values,
       video_url: values.video_url || null,
       thumbnail_url: values.thumbnail_url || null,
+      video_path: values.video_path || null,
+      thumbnail_path: values.thumbnail_path || null,
       description: values.description || null,
       difficulty: values.difficulty || null,
       duration_minutes: Number(values.duration_minutes || 0),
