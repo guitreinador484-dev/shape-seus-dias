@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2 } from "lucide-react";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -182,38 +182,8 @@ function PlataformaPage() {
           </TabsList>
 
           <div className="flex-1 min-w-0 w-full">
-          <TabsContent value="treino" className="mt-0 space-y-4">
-            {dataLoading ? <Skeleton className="h-64" /> : plans.length === 0 ? (
-              <Card><CardContent className="py-12 text-center text-muted-foreground">
-                Seu treino ainda não foi cadastrado. Entre em contato com seu personal.
-              </CardContent></Card>
-            ) : plans.map((plan) => (
-              <Card key={plan.id}>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>{plan.plan_name}</CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">{WEEKDAYS[plan.day_of_week] ?? ""}</p>
-                  </div>
-                  <Badge variant="secondary">{plan.exercises.length} exercícios</Badge>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {plan.exercises.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
-                  ) : plan.exercises.map((ex) => (
-                    <div key={ex.id} className="rounded-lg border border-border p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-medium">{ex.exercise_name}</p>
-                        <div className="flex gap-2 text-xs">
-                          <Badge variant="outline">{ex.sets}x{ex.reps}</Badge>
-                          {ex.rest_seconds ? <Badge variant="outline">Descanso {ex.rest_seconds}s</Badge> : null}
-                        </div>
-                      </div>
-                      {ex.notes && <p className="text-sm text-muted-foreground mt-1">{ex.notes}</p>}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
+          <TabsContent value="treino" className="mt-0">
+            <TreinoPanel plans={plans} loading={dataLoading} />
           </TabsContent>
 
           {showVideos && (
