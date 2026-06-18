@@ -27,6 +27,7 @@ function PlataformaPage() {
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
 
   useEffect(() => {
     if (!loading && (role === "admin" || isAdminEmail(user?.email))) {
@@ -39,16 +40,18 @@ function PlataformaPage() {
     let cancelled = false;
     (async () => {
       setDataLoading(true);
-      const [plansRes, exRes, workoutsRes] = await Promise.all([
+      const [plansRes, exRes, workoutsRes, profileRes] = await Promise.all([
         supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
         supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
         supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+        supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
       ]);
       if (cancelled) return;
       const allPlans = plansRes.data ?? [];
       const allEx = exRes.data ?? [];
       setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
       setWorkouts(workoutsRes.data ?? []);
+      setHasClassAccess(Boolean(profileRes.data?.has_class_access));
       setDataLoading(false);
     })();
     return () => { cancelled = true; };
@@ -67,7 +70,7 @@ function PlataformaPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const showVideos = role !== "presencial";
+  const showVideos = hasClassAccess;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
