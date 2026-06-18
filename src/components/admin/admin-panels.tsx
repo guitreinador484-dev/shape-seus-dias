@@ -58,6 +58,11 @@ type AdminSettings = {
   support_whatsapp: string;
   checkout_url: string;
   welcome_message: string;
+  platform_hero_workout_id: string;
+  platform_hero_title: string;
+  platform_hero_subtitle: string;
+  platform_hero_image_path: string;
+  platform_row_order: string;
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -66,6 +71,11 @@ const defaultAdminSettings: AdminSettings = {
   support_whatsapp: "",
   checkout_url: "",
   welcome_message: "",
+  platform_hero_workout_id: "",
+  platform_hero_title: "",
+  platform_hero_subtitle: "",
+  platform_hero_image_path: "",
+  platform_row_order: "",
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -103,6 +113,11 @@ function readAdminSettings(value: Json | null): AdminSettings {
     support_whatsapp: typeof data.support_whatsapp === "string" ? data.support_whatsapp : defaultAdminSettings.support_whatsapp,
     checkout_url: typeof data.checkout_url === "string" ? data.checkout_url : defaultAdminSettings.checkout_url,
     welcome_message: typeof data.welcome_message === "string" ? data.welcome_message : defaultAdminSettings.welcome_message,
+    platform_hero_workout_id: typeof data.platform_hero_workout_id === "string" ? data.platform_hero_workout_id : "",
+    platform_hero_title: typeof data.platform_hero_title === "string" ? data.platform_hero_title : "",
+    platform_hero_subtitle: typeof data.platform_hero_subtitle === "string" ? data.platform_hero_subtitle : "",
+    platform_hero_image_path: typeof data.platform_hero_image_path === "string" ? data.platform_hero_image_path : "",
+    platform_row_order: typeof data.platform_row_order === "string" ? data.platform_row_order : "",
   };
 }
 
