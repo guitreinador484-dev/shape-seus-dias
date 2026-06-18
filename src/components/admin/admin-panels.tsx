@@ -677,10 +677,46 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
   const setOpen = onOpenChange ?? setInternalOpen;
   const [form, setForm] = useState<WorkoutInsert | WorkoutUpdate>(workout ?? emptyWorkoutForm);
   const [saving, setSaving] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
 
   useEffect(() => {
     setForm(workout ?? emptyWorkoutForm);
   }, [workout, controlledOpen]);
+
+  async function uploadFile(file: File, bucket: "workout-videos" | "workout-thumbnails"): Promise<string> {
+    const ext = file.name.split(".").pop() || "bin";
+    const key = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from(bucket).upload(key, file, { upsert: false, contentType: file.type });
+    if (error) throw error;
+    return key;
+  }
+
+  async function handleVideoFile(file: File) {
+    setUploadingVideo(true);
+    try {
+      const key = await uploadFile(file, "workout-videos");
+      setForm((f) => ({ ...f, video_path: key }));
+      toast.success("Vídeo enviado");
+    } catch (error) {
+      toast.error("Erro ao enviar vídeo", { description: error instanceof Error ? error.message : "Tente novamente." });
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
+  async function handleThumbFile(file: File) {
+    setUploadingThumb(true);
+    try {
+      const key = await uploadFile(file, "workout-thumbnails");
+      setForm((f) => ({ ...f, thumbnail_path: key }));
+      toast.success("Capa enviada");
+    } catch (error) {
+      toast.error("Erro ao enviar capa", { description: error instanceof Error ? error.message : "Tente novamente." });
+    } finally {
+      setUploadingThumb(false);
+    }
+  }
 
   async function submit() {
     if (!form.title || !form.category) {
@@ -706,13 +742,27 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{workout ? "Editar aula" : "Nova aula"}</DialogTitle>
-          <DialogDescription>Organize o conteúdo que aparece para os alunos.</DialogDescription>
+          <DialogDescription>Envie o vídeo direto pela plataforma — cada aluno acessa por link assinado individual.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Título"><Input value={form.title ?? ""} onChange={(event) => setForm({ ...form, title: event.target.value })} /></Field>
           <Field label="Categoria"><Input value={form.category ?? ""} onChange={(event) => setForm({ ...form, category: event.target.value })} /></Field>
-          <Field label="URL do vídeo"><Input value={form.video_url ?? ""} onChange={(event) => setForm({ ...form, video_url: event.target.value })} /></Field>
-          <Field label="URL da capa"><Input value={form.thumbnail_url ?? ""} onChange={(event) => setForm({ ...form, thumbnail_url: event.target.value })} /></Field>
+          <Field label="Vídeo da aula" className="sm:col-span-2">
+            <div className="space-y-2">
+              <Input type="file" accept="video/*" disabled={uploadingVideo} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleVideoFile(f); }} />
+              {uploadingVideo && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando vídeo...</p>}
+              {form.video_path && <p className="text-xs text-muted-foreground">Arquivo: {form.video_path}</p>}
+              <Input placeholder="ou cole uma URL externa (opcional)" value={form.video_url ?? ""} onChange={(event) => setForm({ ...form, video_url: event.target.value })} />
+            </div>
+          </Field>
+          <Field label="Capa (imagem)" className="sm:col-span-2">
+            <div className="space-y-2">
+              <Input type="file" accept="image/*" disabled={uploadingThumb} onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleThumbFile(f); }} />
+              {uploadingThumb && <p className="text-xs text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin" /> Enviando capa...</p>}
+              {form.thumbnail_path && <p className="text-xs text-muted-foreground">Arquivo: {form.thumbnail_path}</p>}
+              <Input placeholder="ou cole uma URL externa (opcional)" value={form.thumbnail_url ?? ""} onChange={(event) => setForm({ ...form, thumbnail_url: event.target.value })} />
+            </div>
+          </Field>
           <Field label="Dificuldade"><Input value={form.difficulty ?? ""} onChange={(event) => setForm({ ...form, difficulty: event.target.value })} /></Field>
           <Field label="Duração em minutos"><Input type="number" value={form.duration_minutes ?? 0} onChange={(event) => setForm({ ...form, duration_minutes: Number(event.target.value) })} /></Field>
           <Field label="Ordem"><Input type="number" value={form.display_order ?? 0} onChange={(event) => setForm({ ...form, display_order: Number(event.target.value) })} /></Field>
@@ -720,7 +770,7 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
           <Field label="Descrição" className="sm:col-span-2"><Textarea value={form.description ?? ""} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
+          <Button onClick={submit} disabled={saving || uploadingVideo || uploadingThumb}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
