@@ -19,6 +19,7 @@ import {
   Trash2,
   Users,
   Video,
+  Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -63,6 +64,7 @@ type AdminSettings = {
   platform_hero_subtitle: string;
   platform_hero_image_path: string;
   platform_row_order: string;
+  platform_theme: "dark" | "light";
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -76,6 +78,7 @@ const defaultAdminSettings: AdminSettings = {
   platform_hero_subtitle: "",
   platform_hero_image_path: "",
   platform_row_order: "",
+  platform_theme: "dark",
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -118,6 +121,7 @@ function readAdminSettings(value: Json | null): AdminSettings {
     platform_hero_subtitle: typeof data.platform_hero_subtitle === "string" ? data.platform_hero_subtitle : "",
     platform_hero_image_path: typeof data.platform_hero_image_path === "string" ? data.platform_hero_image_path : "",
     platform_row_order: typeof data.platform_row_order === "string" ? data.platform_row_order : "",
+    platform_theme: data.platform_theme === "light" ? "light" : "dark",
   };
 }
 
