@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
   { title: "Alunos", url: "/admin/alunos", icon: Users },
   { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
+  { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
   { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList },
