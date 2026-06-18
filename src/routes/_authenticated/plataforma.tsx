@@ -66,7 +66,7 @@ function TreinoPanel({ plans, loading }: { plans: PlanWithExercises[]; loading: 
 
   const dayPlans = plans.filter((p) => p.day_of_week === selectedDay);
   const totalEx = dayPlans.reduce((acc, p) => acc + p.exercises.length, 0);
-  const totalSets = dayPlans.reduce((acc, p) => acc + p.exercises.reduce((s, e) => s + (e.sets ?? 0), 0), 0);
+  const totalSets = dayPlans.reduce((acc, p) => acc + p.exercises.reduce((s, e) => s + (Number(e.sets) || 0), 0), 0);
   const completed = dayPlans.reduce((acc, p) => acc + p.exercises.filter((e) => done.has(e.id)).length, 0);
   const progress = totalEx ? Math.round((completed / totalEx) * 100) : 0;
 
