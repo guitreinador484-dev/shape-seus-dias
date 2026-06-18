@@ -336,37 +336,43 @@ function PlataformaPage() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${config.theme === "light" ? "platform-light" : ""}`}>
-      <header className="border-b border-border bg-popover">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <h1 className="font-display text-2xl">PERSONAL</h1>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={signOut}>
+      <Tabs defaultValue="treino" orientation="vertical" className="flex flex-col sm:flex-row min-h-screen w-full">
+        <TabsList className="flex sm:flex-col h-auto w-full sm:w-56 sm:min-h-screen sm:sticky sm:top-0 shrink-0 gap-1 bg-muted/40 p-2 justify-start sm:border-r border-border rounded-none">
+          <div className="hidden sm:block w-full px-2 py-3 mb-2 border-b border-border">
+            <h1 className="font-display text-xl">PERSONAL</h1>
+          </div>
+          <TabsTrigger value="treino" className="w-full justify-start data-[state=active]:bg-background">
+            <Dumbbell className="h-4 w-4 mr-2" /> Meu treino
+          </TabsTrigger>
+          {showVideos && (
+            <TabsTrigger value="aulas" className="w-full justify-start data-[state=active]:bg-background">
+              <Video className="h-4 w-4 mr-2" /> Aulas em vídeo
+            </TabsTrigger>
+          )}
+          <div className="mt-auto hidden sm:block w-full px-2 py-3 border-t border-border space-y-2">
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start">
               <LogOut className="h-4 w-4 mr-2" /> Sair
             </Button>
           </div>
-        </div>
-      </header>
+        </TabsList>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        <div>
-          <h2 className="font-display text-3xl">Olá!</h2>
-          <p className="text-muted-foreground text-sm">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
-        </div>
+        <div className="flex-1 min-w-0 w-full flex flex-col">
+          <header className="sm:hidden border-b border-border bg-popover">
+            <div className="px-4 h-14 flex items-center justify-between">
+              <h1 className="font-display text-xl">PERSONAL</h1>
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" /> Sair
+              </Button>
+            </div>
+          </header>
 
-        <Tabs defaultValue="treino" orientation="vertical" className="flex flex-col sm:flex-row gap-6 items-start">
-          <TabsList className="flex sm:flex-col h-auto w-full sm:w-56 shrink-0 gap-1 bg-muted/40 p-2 justify-start">
-            <TabsTrigger value="treino" className="w-full justify-start data-[state=active]:bg-background">
-              <Dumbbell className="h-4 w-4 mr-2" /> Meu treino
-            </TabsTrigger>
-            {showVideos && (
-              <TabsTrigger value="aulas" className="w-full justify-start data-[state=active]:bg-background">
-                <Video className="h-4 w-4 mr-2" /> Aulas em vídeo
-              </TabsTrigger>
-            )}
-          </TabsList>
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+            <div>
+              <h2 className="font-display text-3xl">Olá!</h2>
+              <p className="text-muted-foreground text-sm">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
+            </div>
 
-          <div className="flex-1 min-w-0 w-full">
           <TabsContent value="treino" className="mt-0">
             <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
           </TabsContent>
@@ -452,9 +458,9 @@ function PlataformaPage() {
               )}
             </TabsContent>
           )}
-          </div>
-        </Tabs>
-      </main>
+          </main>
+        </div>
+      </Tabs>
       {activeVideo && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
           <div className="bg-background rounded-xl overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
