@@ -28,6 +28,8 @@ function PlataformaPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
+  const [signedUrls, setSignedUrls] = useState<Record<string, { video?: string; thumb?: string }>>({});
+  const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string } | null>(null);
 
   useEffect(() => {
     if (!loading && (role === "admin" || isAdminEmail(user?.email))) {
@@ -56,6 +58,28 @@ function PlataformaPage() {
     })();
     return () => { cancelled = true; };
   }, [loading, user, role]);
+
+  useEffect(() => {
+    if (!hasClassAccess || workouts.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(workouts.map(async (w) => {
+        const result: { video?: string; thumb?: string } = {};
+        if (w.video_path) {
+          const { data } = await supabase.storage.from("workout-videos").createSignedUrl(w.video_path, 3600);
+          if (data?.signedUrl) result.video = data.signedUrl;
+        }
+        if (w.thumbnail_path) {
+          const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(w.thumbnail_path, 3600);
+          if (data?.signedUrl) result.thumb = data.signedUrl;
+        }
+        return [w.id, result] as const;
+      }));
+      if (cancelled) return;
+      setSignedUrls(Object.fromEntries(entries));
+    })();
+    return () => { cancelled = true; };
+  }, [hasClassAccess, workouts]);
 
   if (loading || role === "admin" || isAdminEmail(user?.email)) {
     return (
@@ -140,12 +164,19 @@ function PlataformaPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {workouts.map((w) => (
                     <Card key={w.id} className="overflow-hidden">
+                      {(signedUrls[w.id]?.thumb || w.thumbnail_url) && (
+                        <img src={signedUrls[w.id]?.thumb || w.thumbnail_url || ""} alt={w.title} className="w-full h-40 object-cover" />
+                      )}
                       <CardHeader>
                         <CardTitle className="text-base">{w.title}</CardTitle>
                         {w.description && <p className="text-xs text-muted-foreground line-clamp-2">{w.description}</p>}
                       </CardHeader>
                       <CardContent>
-                        {w.video_url ? (
+                        {signedUrls[w.id]?.video ? (
+                          <Button size="sm" variant="secondary" onClick={() => setActiveVideo({ id: w.id, url: signedUrls[w.id]!.video!, title: w.title })}>
+                            <PlayCircle className="h-4 w-4 mr-2" /> Assistir agora
+                          </Button>
+                        ) : w.video_url ? (
                           <a href={w.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
                             <PlayCircle className="h-4 w-4" /> Assistir
                           </a>
@@ -159,6 +190,17 @@ function PlataformaPage() {
           )}
         </Tabs>
       </main>
+      {activeVideo && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
+          <div className="bg-background rounded-xl overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 border-b border-border">
+              <p className="font-medium text-sm">{activeVideo.title}</p>
+              <Button size="sm" variant="ghost" onClick={() => setActiveVideo(null)}>Fechar</Button>
+            </div>
+            <video src={activeVideo.url} controls autoPlay controlsList="nodownload" className="w-full max-h-[70vh] bg-black" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
