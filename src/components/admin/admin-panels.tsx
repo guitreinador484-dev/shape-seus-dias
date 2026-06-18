@@ -19,6 +19,7 @@ import {
   Trash2,
   Users,
   Video,
+  Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
