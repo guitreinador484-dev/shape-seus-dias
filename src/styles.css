@@ -131,7 +131,7 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.25 0 0);
+  --muted-foreground: oklch(0.20 0 0);
   --accent: oklch(0.55 0.22 25);
   --accent-foreground: oklch(0.99 0 0);
   --border: oklch(0.88 0 0);
@@ -141,6 +141,41 @@
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Force solid white + black text everywhere inside the light platform scope */
+.platform-light,
+.platform-light header,
+.platform-light main,
+.platform-light section,
+.platform-light article,
+.platform-light aside {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+.platform-light h1,
+.platform-light h2,
+.platform-light h3,
+.platform-light h4,
+.platform-light h5,
+.platform-light h6,
+.platform-light p,
+.platform-light span,
+.platform-light li,
+.platform-light label,
+.platform-light button {
+  color: #000000;
+}
+/* Keep red accents and white-on-red buttons intact */
+.platform-light .text-primary,
+.platform-light [class*="text-primary"] { color: var(--color-primary) !important; }
+.platform-light .bg-primary,
+.platform-light [class*="bg-primary"] {
+  background-color: var(--color-primary) !important;
+  background-image: none !important;
+  color: #ffffff !important;
+}
+.platform-light .bg-primary *,
+.platform-light [class*="bg-primary"] * { color: #ffffff !important; }
 
 @layer base {
   * {
