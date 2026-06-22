@@ -208,3 +208,55 @@
   transition: background-color 150ms ease, transform 150ms ease;
 }
 @utility btn-cta-hover { background-color: oklch(0.60 0.22 25); }
+
+/* Quiz de Vendas — force light/black readable colors regardless of admin theme */
+.quiz-vendas-scope,
+.quiz-vendas-scope * {
+  color: #0f172a;
+}
+.quiz-vendas-scope [data-slot="card"],
+.quiz-vendas-scope [data-slot="popover-content"],
+.quiz-vendas-scope [data-slot="dialog-content"],
+.quiz-vendas-scope [data-slot="select-content"],
+.quiz-vendas-scope [data-slot="dropdown-menu-content"] {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+.quiz-vendas-scope [data-slot="input"],
+.quiz-vendas-scope [data-slot="textarea"],
+.quiz-vendas-scope [data-slot="select-trigger"] {
+  background-color: #ffffff;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+.quiz-vendas-scope [data-slot="input"]::placeholder,
+.quiz-vendas-scope [data-slot="textarea"]::placeholder {
+  color: #94a3b8;
+}
+/* Preserve intentionally-colored text */
+.quiz-vendas-scope .text-white,
+.quiz-vendas-scope [class*="bg-blue-600"],
+.quiz-vendas-scope [class*="bg-blue-700"],
+.quiz-vendas-scope [class*="bg-slate-900"],
+.quiz-vendas-scope [class*="bg-slate-800"],
+.quiz-vendas-scope [class*="bg-emerald-500"],
+.quiz-vendas-scope [class*="bg-amber-500"] {
+  color: #ffffff;
+}
+.quiz-vendas-scope [class*="bg-blue-600"] *,
+.quiz-vendas-scope [class*="bg-blue-700"] *,
+.quiz-vendas-scope [class*="bg-slate-900"] *,
+.quiz-vendas-scope [class*="bg-slate-800"] * {
+  color: #ffffff;
+}
+.quiz-vendas-scope .text-blue-700 { color: #1d4ed8 !important; }
+.quiz-vendas-scope .text-blue-600 { color: #2563eb !important; }
+.quiz-vendas-scope .text-blue-100 { color: #dbeafe !important; }
+.quiz-vendas-scope .text-blue-900 { color: #1e3a8a !important; }
+.quiz-vendas-scope .text-emerald-700 { color: #047857 !important; }
+.quiz-vendas-scope .text-amber-700 { color: #b45309 !important; }
+.quiz-vendas-scope .text-rose-600 { color: #e11d48 !important; }
+.quiz-vendas-scope .text-slate-400 { color: #94a3b8 !important; }
+.quiz-vendas-scope .text-slate-500 { color: #64748b !important; }
+.quiz-vendas-scope .text-slate-600 { color: #475569 !important; }
+.quiz-vendas-scope .text-slate-700 { color: #334155 !important; }

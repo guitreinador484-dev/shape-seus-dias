@@ -168,7 +168,7 @@ function QuizVendasPage() {
   }
 
   return (
-    <div className="-m-6 p-6 sm:p-8 min-h-[calc(100vh-3.5rem)] bg-[#f7f8fb] text-slate-900">
+    <div className="quiz-vendas-scope -m-6 p-6 sm:p-8 min-h-[calc(100vh-3.5rem)] bg-[#f7f8fb] text-slate-900">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full mb-2">
