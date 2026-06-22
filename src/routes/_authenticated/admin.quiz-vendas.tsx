@@ -123,7 +123,7 @@ const mockLeads: Lead[] = [
 ];
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
-  qualificado: "bg-purple-100 text-primary border-purple-200",
+  qualificado: "bg-primary/15 text-primary border-primary/30",
   "em-contato": "bg-amber-100 text-amber-700 border-amber-200",
   convertido: "bg-emerald-100 text-emerald-700 border-emerald-200",
   "nao-qualificado": "bg-muted text-muted-foreground border-border",
@@ -871,7 +871,7 @@ function Stepper({ step }: { step: number }) {
         const done = n < step;
         return (
           <div key={l} className="flex-1 flex items-center gap-2">
-            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${active ? "bg-primary text-primary-foreground" : done ? "bg-purple-200 text-primary" : "bg-muted text-muted-foreground"}`}>
+            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${active ? "bg-primary text-primary-foreground" : done ? "bg-primary/25 text-primary" : "bg-muted text-muted-foreground"}`}>
               {n}
             </div>
             <span className={`text-xs hidden md:inline ${active ? "text-primary font-semibold" : "text-muted-foreground"}`}>{l}</span>
