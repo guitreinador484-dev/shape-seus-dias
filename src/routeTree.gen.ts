@@ -24,6 +24,7 @@ import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
+import { Route as AuthenticatedAdminQuizVendasEditorIdRouteImport } from './routes/_authenticated/admin.quiz-vendas.editor.$id'
 
 const QuizRoute = QuizRouteImport.update({
   id: '/quiz',
@@ -105,6 +106,12 @@ const AuthenticatedAdminAlunosRoute =
     path: '/alunos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminQuizVendasEditorIdRoute =
+  AuthenticatedAdminQuizVendasEditorIdRouteImport.update({
+    id: '/editor/$id',
+    path: '/editor/$id',
+    getParentRoute: () => AuthenticatedAdminQuizVendasRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,10 +124,11 @@ export interface FileRoutesByFullPath {
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz': typeof AuthenticatedAdminQuizRoute
-  '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRoute
+  '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -132,10 +140,11 @@ export interface FileRoutesByTo {
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz': typeof AuthenticatedAdminQuizRoute
-  '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRoute
+  '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -150,10 +159,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/_authenticated/admin/quiz': typeof AuthenticatedAdminQuizRoute
-  '/_authenticated/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRoute
+  '/_authenticated/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/admin/'
+    | '/admin/quiz-vendas/editor/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/admin'
+    | '/admin/quiz-vendas/editor/$id'
   id:
     | '__root__'
     | '/'
@@ -204,6 +216,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/quiz-vendas/editor/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -320,8 +333,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAlunosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/quiz-vendas/editor/$id': {
+      id: '/_authenticated/admin/quiz-vendas/editor/$id'
+      path: '/editor/$id'
+      fullPath: '/admin/quiz-vendas/editor/$id'
+      preLoaderRoute: typeof AuthenticatedAdminQuizVendasEditorIdRouteImport
+      parentRoute: typeof AuthenticatedAdminQuizVendasRoute
+    }
   }
 }
+
+interface AuthenticatedAdminQuizVendasRouteChildren {
+  AuthenticatedAdminQuizVendasEditorIdRoute: typeof AuthenticatedAdminQuizVendasEditorIdRoute
+}
+
+const AuthenticatedAdminQuizVendasRouteChildren: AuthenticatedAdminQuizVendasRouteChildren =
+  {
+    AuthenticatedAdminQuizVendasEditorIdRoute:
+      AuthenticatedAdminQuizVendasEditorIdRoute,
+  }
+
+const AuthenticatedAdminQuizVendasRouteWithChildren =
+  AuthenticatedAdminQuizVendasRoute._addFileChildren(
+    AuthenticatedAdminQuizVendasRouteChildren,
+  )
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRoute
@@ -329,7 +364,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminPlataformaRoute: typeof AuthenticatedAdminPlataformaRoute
   AuthenticatedAdminQuizRoute: typeof AuthenticatedAdminQuizRoute
-  AuthenticatedAdminQuizVendasRoute: typeof AuthenticatedAdminQuizVendasRoute
+  AuthenticatedAdminQuizVendasRoute: typeof AuthenticatedAdminQuizVendasRouteWithChildren
   AuthenticatedAdminTreinosRoute: typeof AuthenticatedAdminTreinosRoute
   AuthenticatedAdminVendasRoute: typeof AuthenticatedAdminVendasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -341,7 +376,8 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminPlataformaRoute: AuthenticatedAdminPlataformaRoute,
   AuthenticatedAdminQuizRoute: AuthenticatedAdminQuizRoute,
-  AuthenticatedAdminQuizVendasRoute: AuthenticatedAdminQuizVendasRoute,
+  AuthenticatedAdminQuizVendasRoute:
+    AuthenticatedAdminQuizVendasRouteWithChildren,
   AuthenticatedAdminTreinosRoute: AuthenticatedAdminTreinosRoute,
   AuthenticatedAdminVendasRoute: AuthenticatedAdminVendasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
