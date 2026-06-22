@@ -280,11 +280,11 @@ function TabPill({ active, onClick, icon: Icon, label }: { active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-full px-4 h-10 text-sm font-medium transition ${
+      className={`flex items-center gap-2 rounded-full px-3 lg:px-4 h-10 text-sm font-medium transition ${
         active ? "bg-emerald-500 text-white" : "text-slate-300 hover:bg-slate-800"
       }`}
     >
-      <Icon className="h-4 w-4" /> {label}
+      <Icon className="h-4 w-4" /> <span className="hidden lg:inline">{label}</span>
     </button>
   );
 }
