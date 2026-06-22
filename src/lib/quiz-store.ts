@@ -96,37 +96,10 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
-function loadQuizzes(): QuizConfig[] {
-  if (!isBrowser()) return SEED;
-  try {
-    const raw = localStorage.getItem(QKEY);
-    if (!raw) {
-      localStorage.setItem(QKEY, JSON.stringify(SEED));
-      return SEED;
-    }
-    return JSON.parse(raw) as QuizConfig[];
-  } catch {
-    return SEED;
-  }
-}
-function loadLeads(): LeadRecord[] {
-  if (!isBrowser()) return SEED_LEADS;
-  try {
-    const raw = localStorage.getItem(LKEY);
-    if (!raw) {
-      localStorage.setItem(LKEY, JSON.stringify(SEED_LEADS));
-      return SEED_LEADS;
-    }
-    return JSON.parse(raw) as LeadRecord[];
-  } catch {
-    return SEED_LEADS;
-  }
-}
-
-let quizzes: QuizConfig[] = [];
-let leads: LeadRecord[] = [];
 const qListeners = new Set<() => void>();
 const lListeners = new Set<() => void>();
+let quizzes: QuizConfig[] = [];
+let leads: LeadRecord[] = [];
 
 function persistQ() {
   if (isBrowser()) localStorage.setItem(QKEY, JSON.stringify(quizzes));
@@ -464,5 +437,32 @@ const SEED_LEADS: LeadRecord[] = [
 export { uid };
 
 // Initialize after SEED constants are defined to avoid TDZ
+function loadQuizzes(): QuizConfig[] {
+  if (!isBrowser()) return SEED;
+  try {
+    const raw = localStorage.getItem(QKEY);
+    if (!raw) {
+      localStorage.setItem(QKEY, JSON.stringify(SEED));
+      return SEED;
+    }
+    return JSON.parse(raw) as QuizConfig[];
+  } catch {
+    return SEED;
+  }
+}
+function loadLeads(): LeadRecord[] {
+  if (!isBrowser()) return SEED_LEADS;
+  try {
+    const raw = localStorage.getItem(LKEY);
+    if (!raw) {
+      localStorage.setItem(LKEY, JSON.stringify(SEED_LEADS));
+      return SEED_LEADS;
+    }
+    return JSON.parse(raw) as LeadRecord[];
+  } catch {
+    return SEED_LEADS;
+  }
+}
+
 quizzes = loadQuizzes();
 leads = loadLeads();
