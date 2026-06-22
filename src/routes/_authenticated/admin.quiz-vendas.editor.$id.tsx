@@ -163,7 +163,7 @@ function QuizEditor() {
   return (
     <div className="fixed inset-0 bg-slate-950 text-white flex flex-col">
       {/* Top toolbar */}
-      <div className="h-14 border-b border-slate-800 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-3 gap-2 shrink-0">
+      <div className="h-14 border-b border-slate-800 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center px-3 gap-2 shrink-0">
         <button
           onClick={() => { if (dirty) save(); navigate({ to: "/admin/quiz-vendas" }); }}
           className="h-10 w-10 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-400"
