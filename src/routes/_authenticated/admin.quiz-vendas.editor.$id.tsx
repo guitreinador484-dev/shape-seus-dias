@@ -215,7 +215,7 @@ function QuizEditor() {
             />
 
             {/* Block library */}
-            <div className="w-[210px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+            <div className="w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Componentes</p>
               <div className="space-y-1.5">
                 {BLOCK_LIB.map((b) => (
@@ -232,7 +232,7 @@ function QuizEditor() {
             </div>
 
             {/* Canvas */}
-            <div className="flex-1 bg-slate-900/50 overflow-y-auto p-6 flex items-start justify-center">
+            <div className="flex-1 min-w-0 bg-slate-900/50 overflow-auto p-4 flex items-start justify-center">
               <Canvas
                 quiz={quiz}
                 step={step}
@@ -280,11 +280,11 @@ function TabPill({ active, onClick, icon: Icon, label }: { active: boolean; onCl
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-full px-4 h-10 text-sm font-medium transition ${
+      className={`flex items-center gap-2 rounded-full px-3 lg:px-4 h-10 text-sm font-medium transition ${
         active ? "bg-emerald-500 text-white" : "text-slate-300 hover:bg-slate-800"
       }`}
     >
-      <Icon className="h-4 w-4" /> {label}
+      <Icon className="h-4 w-4" /> <span className="hidden lg:inline">{label}</span>
     </button>
   );
 }
@@ -304,7 +304,7 @@ function StepsSidebar({
 }) {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   return (
-    <div className="w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+    <div className="w-[160px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
       <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Etapas</p>
       <div className="space-y-1">
         {quiz.steps.map((s, i) => {
@@ -367,13 +367,13 @@ function Canvas({
 }) {
   const progress = ((stepIdx + 1) / quiz.steps.length) * 100;
   return (
-    <div className="w-full max-w-2xl bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+    <div className="w-full max-w-xl bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
       {quiz.showProgress && (
         <div className="h-1.5 bg-slate-100">
           <div className="h-full transition-all" style={{ width: `${progress}%`, backgroundColor: quiz.accent }} />
         </div>
       )}
-      <div className="px-8 sm:px-12 py-10 min-h-[500px] flex flex-col gap-5">
+      <div className="px-6 sm:px-10 py-8 min-h-[460px] flex flex-col gap-4">
         {step.blocks.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-12">
             <SeparatorHorizontal className="h-10 w-10 mb-3" />
@@ -485,7 +485,7 @@ function Inspector({
   updateBlock: (id: string, patch: Partial<Block>) => void;
 }) {
   return (
-    <div className="w-[300px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
+    <div className="w-[280px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
       {/* Step settings */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3">
         <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Etapa</p>
