@@ -123,8 +123,8 @@ function loadLeads(): LeadRecord[] {
   }
 }
 
-let quizzes: QuizConfig[] = loadQuizzes();
-let leads: LeadRecord[] = loadLeads();
+let quizzes: QuizConfig[] = [];
+let leads: LeadRecord[] = [];
 const qListeners = new Set<() => void>();
 const lListeners = new Set<() => void>();
 
