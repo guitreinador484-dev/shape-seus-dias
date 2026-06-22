@@ -123,10 +123,10 @@ const mockLeads: Lead[] = [
 ];
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
-  qualificado: "bg-purple-100 text-purple-700 border-purple-200",
+  qualificado: "bg-purple-100 text-primary border-purple-200",
   "em-contato": "bg-amber-100 text-amber-700 border-amber-200",
   convertido: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  "nao-qualificado": "bg-slate-100 text-slate-600 border-slate-200",
+  "nao-qualificado": "bg-muted text-muted-foreground border-border",
 };
 const STATUS_LABEL: Record<LeadStatus, string> = {
   qualificado: "Qualificado",
@@ -172,17 +172,17 @@ function QuizVendasPage() {
   }
 
   return (
-    <div className="quiz-vendas bg-white text-slate-900 -m-6 p-6 min-h-[calc(100vh-3.5rem)]">
+    <div className="quiz-vendas bg-background text-foreground -m-6 p-6 min-h-[calc(100vh-3.5rem)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quiz de Vendas</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Quiz de Vendas</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Crie quizzes interativos para qualificar e converter leads em alunos
           </p>
         </div>
         <Button
           onClick={() => setOpenCreator(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
           <Plus className="h-4 w-4 mr-2" /> Novo Quiz
         </Button>
@@ -196,14 +196,14 @@ function QuizVendasPage() {
       </div>
 
       <Tabs defaultValue="quizzes" className="w-full">
-        <TabsList className="bg-slate-100">
-          <TabsTrigger value="quizzes" className="data-[state=active]:bg-white data-[state=active]:text-purple-700">
+        <TabsList className="bg-muted">
+          <TabsTrigger value="quizzes" className="data-[state=active]:bg-white data-[state=active]:text-primary">
             Meus Quizzes
           </TabsTrigger>
-          <TabsTrigger value="leads" className="data-[state=active]:bg-white data-[state=active]:text-purple-700">
+          <TabsTrigger value="leads" className="data-[state=active]:bg-white data-[state=active]:text-primary">
             Leads
           </TabsTrigger>
-          <TabsTrigger value="analise" className="data-[state=active]:bg-white data-[state=active]:text-purple-700">
+          <TabsTrigger value="analise" className="data-[state=active]:bg-white data-[state=active]:text-primary">
             Análise
           </TabsTrigger>
         </TabsList>
@@ -233,10 +233,10 @@ function QuizVendasPage() {
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <Card className="border-slate-200 shadow-none">
+    <Card className="border-border shadow-none">
       <CardContent className="p-4">
-        <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
       </CardContent>
     </Card>
   );
@@ -256,42 +256,42 @@ function QuizzesList({
   return (
     <div className="grid gap-3">
       {quizzes.map((q) => (
-        <Card key={q.id} className="border-slate-200 shadow-none">
+        <Card key={q.id} className="border-border shadow-none">
           <CardContent className="p-5">
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <StatusBadge status={q.status} />
-                  <h3 className="text-base font-semibold text-slate-900 truncate">{q.title}</h3>
+                  <h3 className="text-base font-semibold text-foreground truncate">{q.title}</h3>
                 </div>
-                <p className="text-sm text-slate-500 mb-3">{q.description}</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                  <span><b className="text-slate-700">{q.responses}</b> respostas</span>
-                  <span><b className="text-slate-700">{q.questions}</b> perguntas</span>
-                  <span>Oferta: <b className="text-slate-700">{q.offer}</b></span>
+                <p className="text-sm text-muted-foreground mb-3">{q.description}</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span><b className="text-foreground">{q.responses}</b> respostas</span>
+                  <span><b className="text-foreground">{q.questions}</b> perguntas</span>
+                  <span>Oferta: <b className="text-foreground">{q.offer}</b></span>
                 </div>
                 <div className="mt-3 max-w-md">
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span>Taxa de conversão</span>
-                    <span className="font-semibold text-purple-700">{q.conversion}%</span>
+                    <span className="font-semibold text-primary">{q.conversion}%</span>
                   </div>
-                  <Progress value={q.conversion} className="h-2 [&>div]:bg-purple-600" />
+                  <Progress value={q.conversion} className="h-2 [&>div]:bg-primary" />
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 lg:flex-col lg:items-stretch lg:w-44">
-                <Button variant="outline" size="sm" className="border-slate-200">
+                <Button variant="outline" size="sm" className="border-border">
                   <BarChart3 className="h-4 w-4 mr-2" /> Métricas
                 </Button>
-                <Button variant="outline" size="sm" className="border-slate-200">
+                <Button variant="outline" size="sm" className="border-border">
                   <Pencil className="h-4 w-4 mr-2" /> Editar
                 </Button>
-                <Button variant="outline" size="sm" className="border-slate-200" onClick={() => onDuplicate(q.id)}>
+                <Button variant="outline" size="sm" className="border-border" onClick={() => onDuplicate(q.id)}>
                   <Copy className="h-4 w-4 mr-2" /> Duplicar
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-slate-200"
+                  className="border-border"
                   onClick={() => onToggle(q.id)}
                   disabled={q.status === "rascunho"}
                 >
@@ -313,7 +313,7 @@ function QuizzesList({
 function StatusBadge({ status }: { status: QuizStatus }) {
   const map = {
     ativo: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    rascunho: "bg-slate-100 text-slate-600 border-slate-200",
+    rascunho: "bg-muted text-muted-foreground border-border",
     pausado: "bg-amber-100 text-amber-700 border-amber-200",
   } as const;
   const label = { ativo: "Ativo", rascunho: "Rascunho", pausado: "Pausado" }[status];
@@ -351,13 +351,13 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
   }
 
   return (
-    <Card className="border-slate-200 shadow-none">
+    <Card className="border-border shadow-none">
       <CardContent className="p-4">
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div className="min-w-[200px]">
-            <Label className="text-xs text-slate-500">Quiz</Label>
+            <Label className="text-xs text-muted-foreground">Quiz</Label>
             <Select value={filterQuiz} onValueChange={setFilterQuiz}>
-              <SelectTrigger className="border-slate-200"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="border-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 {quizzes.map((q) => (
@@ -367,9 +367,9 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
             </Select>
           </div>
           <div className="min-w-[160px]">
-            <Label className="text-xs text-slate-500">Status</Label>
+            <Label className="text-xs text-muted-foreground">Status</Label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="border-slate-200"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="border-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="qualificado">Qualificado</SelectItem>
@@ -380,9 +380,9 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
             </Select>
           </div>
           <div className="min-w-[160px]">
-            <Label className="text-xs text-slate-500">Pontuação</Label>
+            <Label className="text-xs text-muted-foreground">Pontuação</Label>
             <Select value={filterScore} onValueChange={setFilterScore}>
-              <SelectTrigger className="border-slate-200"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="border-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="high">80 - 100</SelectItem>
@@ -391,7 +391,7 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" className="border-slate-200 ml-auto" onClick={exportCsv}>
+          <Button variant="outline" className="border-border ml-auto" onClick={exportCsv}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
         </div>
@@ -399,7 +399,7 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-200">
+              <TableRow className="border-border">
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>WhatsApp</TableHead>
@@ -413,30 +413,30 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
             </TableHeader>
             <TableBody>
               {filtered.map((l) => (
-                <TableRow key={l.id} className="border-slate-100">
-                  <TableCell className="font-medium text-slate-900">{l.name}</TableCell>
-                  <TableCell className="text-slate-600">{l.email}</TableCell>
-                  <TableCell className="text-slate-600">{l.whatsapp}</TableCell>
-                  <TableCell className="text-slate-600 max-w-[200px] truncate">{l.quiz}</TableCell>
-                  <TableCell className="text-slate-600">{l.profile}</TableCell>
+                <TableRow key={l.id} className="border-border">
+                  <TableCell className="font-medium text-foreground">{l.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{l.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{l.whatsapp}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[200px] truncate">{l.quiz}</TableCell>
+                  <TableCell className="text-muted-foreground">{l.profile}</TableCell>
                   <TableCell>
-                    <span className="font-semibold text-purple-700">{l.score}</span>
+                    <span className="font-semibold text-primary">{l.score}</span>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={STATUS_COLORS[l.status]}>
                       {STATUS_LABEL[l.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-slate-500">{l.date}</TableCell>
+                  <TableCell className="text-muted-foreground">{l.date}</TableCell>
                   <TableCell>
-                    <Button size="sm" variant="ghost" className="text-purple-700 hover:text-purple-800 hover:bg-purple-50" onClick={() => setSelectedLead(l)}>
+                    <Button size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10" onClick={() => setSelectedLead(l)}>
                       <Eye className="h-4 w-4 mr-1" /> Ver
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-slate-400 py-8">Nenhum lead encontrado.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Nenhum lead encontrado.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -449,9 +449,9 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
             <DialogTitle>Respostas de {selectedLead?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm">
-            <div className="rounded-md bg-slate-50 p-3">
-              <p className="text-xs text-slate-500">Perfil gerado</p>
-              <p className="font-medium text-slate-900">{selectedLead?.profile}</p>
+            <div className="rounded-md bg-muted/50 p-3">
+              <p className="text-xs text-muted-foreground">Perfil gerado</p>
+              <p className="font-medium text-foreground">{selectedLead?.profile}</p>
             </div>
             {[
               { q: "Qual seu objetivo principal?", a: "Emagrecer e ganhar disposição" },
@@ -459,9 +459,9 @@ function LeadsTable({ quizzes }: { quizzes: Quiz[] }) {
               { q: "Já fez acompanhamento com personal antes?", a: "Sim, há mais de 6 meses" },
               { q: "Qual seu nível de comprometimento (1-5)?", a: "5 - Totalmente comprometido" },
             ].map((item, i) => (
-              <div key={i} className="border-l-2 border-purple-500 pl-3">
-                <p className="text-xs text-slate-500">{item.q}</p>
-                <p className="text-slate-900">{item.a}</p>
+              <div key={i} className="border-l-2 border-primary pl-3">
+                <p className="text-xs text-muted-foreground">{item.q}</p>
+                <p className="text-foreground">{item.a}</p>
               </div>
             ))}
           </div>
@@ -492,12 +492,12 @@ function Analise({ quizzes }: { quizzes: Quiz[] }) {
 
   return (
     <div className="grid lg:grid-cols-2 gap-4">
-      <Card className="border-slate-200 shadow-none">
+      <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base text-slate-900">Funil de conversão</CardTitle>
+            <CardTitle className="text-base text-foreground">Funil de conversão</CardTitle>
             <Select value={selected} onValueChange={setSelected}>
-              <SelectTrigger className="w-[220px] border-slate-200"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px] border-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {quizzes.map((q) => (<SelectItem key={q.id} value={q.id}>{q.title}</SelectItem>))}
               </SelectContent>
@@ -511,15 +511,15 @@ function Analise({ quizzes }: { quizzes: Quiz[] }) {
             return (
               <div key={step.label}>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-slate-700">{step.label}</span>
-                  <span className="text-slate-500">
-                    <b className="text-slate-900">{step.value}</b> · {pct}%
+                  <span className="text-foreground">{step.label}</span>
+                  <span className="text-muted-foreground">
+                    <b className="text-foreground">{step.value}</b> · {pct}%
                   </span>
                 </div>
-                <div className="h-7 rounded bg-slate-100 overflow-hidden">
+                <div className="h-7 rounded bg-muted overflow-hidden">
                   <div
                     className="h-full rounded"
-                    style={{ width: `${pct}%`, backgroundColor: `rgba(124, 58, 237, ${intensity})` }}
+                    style={{ width: `${pct}%`, backgroundColor: `rgba(220, 38, 38, ${intensity})` }}
                   />
                 </div>
               </div>
@@ -528,22 +528,22 @@ function Analise({ quizzes }: { quizzes: Quiz[] }) {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 shadow-none">
+      <Card className="border-border shadow-none">
         <CardHeader>
-          <CardTitle className="text-base text-slate-900">Insights por pergunta</CardTitle>
+          <CardTitle className="text-base text-foreground">Insights por pergunta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {questions.map((q, i) => (
-            <div key={i} className="rounded-lg border border-slate-200 p-3">
+            <div key={i} className="rounded-lg border border-border p-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900">{q.q}</p>
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                  <p className="text-sm font-medium text-foreground">{q.q}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span>Abandono: <b className="text-rose-600">{q.abandon}%</b></span>
-                    <span>Resposta + comum: <b className="text-slate-700">{q.topAnswer}</b></span>
+                    <span>Resposta + comum: <b className="text-foreground">{q.topAnswer}</b></span>
                   </div>
                 </div>
-                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white shrink-0">
+                <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0">
                   <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Otimizar com IA
                 </Button>
               </div>
@@ -656,13 +656,13 @@ function QuizCreatorModal({
             <div>
               <Label>URL personalizada</Label>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-500">seusite.com/quiz/</span>
+                <span className="text-sm text-muted-foreground">seusite.com/quiz/</span>
                 <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="nome-do-quiz" />
               </div>
             </div>
             <div>
               <Label>Thumbnail / capa</Label>
-              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center text-sm text-slate-400">
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-sm text-muted-foreground">
                 Arraste uma imagem ou clique para enviar
               </div>
             </div>
@@ -671,13 +671,13 @@ function QuizCreatorModal({
 
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-xs text-slate-500">{questions.length}/15 perguntas</p>
+            <p className="text-xs text-muted-foreground">{questions.length}/15 perguntas</p>
             {questions.map((q, idx) => (
-              <Card key={q.id} className="border-slate-200 shadow-none">
+              <Card key={q.id} className="border-border shadow-none">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-slate-400 cursor-grab" />
-                    <span className="text-xs font-semibold text-slate-500">Pergunta {idx + 1}</span>
+                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                    <span className="text-xs font-semibold text-muted-foreground">Pergunta {idx + 1}</span>
                     <Button size="sm" variant="ghost" className="ml-auto text-rose-600" onClick={() => removeQuestion(q.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -722,7 +722,7 @@ function QuizCreatorModal({
                           />
                         </div>
                       ))}
-                      <Button size="sm" variant="outline" className="border-slate-200" onClick={() => addOption(q.id)}>
+                      <Button size="sm" variant="outline" className="border-border" onClick={() => addOption(q.id)}>
                         <Plus className="h-3 w-3 mr-1" /> Adicionar opção
                       </Button>
                     </div>
@@ -733,7 +733,7 @@ function QuizCreatorModal({
                 </CardContent>
               </Card>
             ))}
-            <Button variant="outline" className="border-slate-200 w-full" onClick={addQuestion} disabled={questions.length >= 15}>
+            <Button variant="outline" className="border-border w-full" onClick={addQuestion} disabled={questions.length >= 15}>
               <Plus className="h-4 w-4 mr-2" /> Adicionar pergunta
             </Button>
           </div>
@@ -742,10 +742,10 @@ function QuizCreatorModal({
         {step === 3 && (
           <div className="space-y-3">
             {ranges.map((r, i) => (
-              <Card key={r.id} className="border-slate-200 shadow-none">
+              <Card key={r.id} className="border-border shadow-none">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-500">Faixa {String.fromCharCode(65 + i)}</span>
+                    <span className="text-xs font-semibold text-muted-foreground">Faixa {String.fromCharCode(65 + i)}</span>
                     <Button size="sm" variant="ghost" className="ml-auto text-rose-600" onClick={() => setRanges((arr) => arr.filter((x) => x.id !== r.id))}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -766,7 +766,7 @@ function QuizCreatorModal({
                 </CardContent>
               </Card>
             ))}
-            <Button variant="outline" className="border-slate-200 w-full" onClick={() => setRanges((arr) => [...arr, { id: crypto.randomUUID(), min: 0, max: 0, profile: "", message: "", offer: "" }])}>
+            <Button variant="outline" className="border-border w-full" onClick={() => setRanges((arr) => [...arr, { id: crypto.randomUUID(), min: 0, max: 0, profile: "", message: "", offer: "" }])}>
               <Plus className="h-4 w-4 mr-2" /> Adicionar faixa
             </Button>
           </div>
@@ -780,23 +780,23 @@ function QuizCreatorModal({
             </div>
             <div className="space-y-2">
               <Label>Campos a capturar</Label>
-              <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+              <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <span className="text-sm">Nome (obrigatório)</span>
                 <Switch checked={capture.name} onCheckedChange={(v) => setCapture({ ...capture, name: v })} />
               </div>
-              <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+              <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <span className="text-sm">E-mail (obrigatório)</span>
                 <Switch checked={capture.email} onCheckedChange={(v) => setCapture({ ...capture, email: v })} />
               </div>
-              <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+              <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <span className="text-sm">WhatsApp (opcional)</span>
                 <Switch checked={capture.whatsapp} onCheckedChange={(v) => setCapture({ ...capture, whatsapp: v })} />
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+            <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Mostrar formulário antes do resultado</p>
-                <p className="text-xs text-slate-500">Se desativado, o resultado aparece antes da captura.</p>
+                <p className="text-xs text-muted-foreground">Se desativado, o resultado aparece antes da captura.</p>
               </div>
               <Switch checked={capture.before} onCheckedChange={(v) => setCapture({ ...capture, before: v })} />
             </div>
@@ -819,20 +819,20 @@ function QuizCreatorModal({
                 <Input value={delivery.gtm} onChange={(e) => setDelivery({ ...delivery, gtm: e.target.value })} placeholder="GTM-XXXXX" />
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+            <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Redirecionar após resultado</p>
-                <p className="text-xs text-slate-500">Envia o lead para uma URL externa.</p>
+                <p className="text-xs text-muted-foreground">Envia o lead para uma URL externa.</p>
               </div>
               <Switch checked={delivery.redirect} onCheckedChange={(v) => setDelivery({ ...delivery, redirect: v })} />
             </div>
             {delivery.redirect && (
               <Input value={delivery.redirectUrl} onChange={(e) => setDelivery({ ...delivery, redirectUrl: e.target.value })} placeholder="https://..." />
             )}
-            <div className="flex items-center justify-between rounded-md border border-slate-200 p-3">
+            <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Enviar e-mail automático ao lead</p>
-                <p className="text-xs text-slate-500">O lead recebe um resumo do resultado por e-mail.</p>
+                <p className="text-xs text-muted-foreground">O lead recebe um resumo do resultado por e-mail.</p>
               </div>
               <Switch checked={delivery.autoEmail} onCheckedChange={(v) => setDelivery({ ...delivery, autoEmail: v })} />
             </div>
@@ -840,17 +840,17 @@ function QuizCreatorModal({
         )}
 
         <DialogFooter className="flex-row justify-between sm:justify-between gap-2">
-          <Button variant="outline" className="border-slate-200" disabled={step === 1} onClick={() => setStep((s) => s - 1)}>
+          <Button variant="outline" className="border-border" disabled={step === 1} onClick={() => setStep((s) => s - 1)}>
             <ChevronLeft className="h-4 w-4 mr-1" /> Voltar
           </Button>
           <div className="flex gap-2">
             {step === 5 ? (
               <>
-                <Button variant="outline" className="border-slate-200" onClick={() => handleSave("rascunho")}>Salvar rascunho</Button>
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => handleSave("ativo")}>Publicar quiz</Button>
+                <Button variant="outline" className="border-border" onClick={() => handleSave("rascunho")}>Salvar rascunho</Button>
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => handleSave("ativo")}>Publicar quiz</Button>
               </>
             ) : (
-              <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => setStep((s) => Math.min(5, s + 1))}>
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setStep((s) => Math.min(5, s + 1))}>
                 Avançar <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             )}
@@ -871,11 +871,11 @@ function Stepper({ step }: { step: number }) {
         const done = n < step;
         return (
           <div key={l} className="flex-1 flex items-center gap-2">
-            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${active ? "bg-purple-600 text-white" : done ? "bg-purple-200 text-purple-800" : "bg-slate-100 text-slate-500"}`}>
+            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold ${active ? "bg-primary text-primary-foreground" : done ? "bg-purple-200 text-primary" : "bg-muted text-muted-foreground"}`}>
               {n}
             </div>
-            <span className={`text-xs hidden md:inline ${active ? "text-purple-700 font-semibold" : "text-slate-500"}`}>{l}</span>
-            {i < labels.length - 1 && <div className={`flex-1 h-0.5 ${done ? "bg-purple-300" : "bg-slate-200"}`} />}
+            <span className={`text-xs hidden md:inline ${active ? "text-primary font-semibold" : "text-muted-foreground"}`}>{l}</span>
+            {i < labels.length - 1 && <div className={`flex-1 h-0.5 ${done ? "bg-primary/40" : "bg-muted"}`} />}
           </div>
         );
       })}
