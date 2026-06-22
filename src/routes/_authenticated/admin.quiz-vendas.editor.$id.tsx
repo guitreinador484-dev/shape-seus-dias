@@ -304,7 +304,7 @@ function StepsSidebar({
 }) {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   return (
-    <div className="w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+    <div className="w-[160px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
       <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Etapas</p>
       <div className="space-y-1">
         {quiz.steps.map((s, i) => {
@@ -485,7 +485,7 @@ function Inspector({
   updateBlock: (id: string, patch: Partial<Block>) => void;
 }) {
   return (
-    <div className="w-[300px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
+    <div className="w-[280px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
       {/* Step settings */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3">
         <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Etapa</p>
