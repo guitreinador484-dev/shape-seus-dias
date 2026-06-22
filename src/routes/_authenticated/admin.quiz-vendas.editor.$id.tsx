@@ -99,6 +99,7 @@ function QuizEditor() {
     setDirty(true);
   }
   function addStep() {
+    if (!quiz) return;
     setQuiz((q) => {
       if (!q) return q;
       const s: Step = { id: uid(), name: `Etapa ${q.steps.length + 1}`, blocks: [] };
@@ -108,12 +109,13 @@ function QuizEditor() {
     setDirty(true);
   }
   function removeStep(idx: number) {
-    if (quiz.steps.length <= 1) return;
+    if (!quiz || quiz.steps.length <= 1) return;
     setQuiz((q) => (q ? { ...q, steps: q.steps.filter((_, i) => i !== idx) } : q));
     setStepIdx(Math.max(0, idx - 1));
     setDirty(true);
   }
   function moveStep(idx: number, dir: -1 | 1) {
+    if (!quiz) return;
     const target = idx + dir;
     if (target < 0 || target >= quiz.steps.length) return;
     setQuiz((q) => {
@@ -153,6 +155,7 @@ function QuizEditor() {
     setDirty(false);
   }
   function openPublic() {
+    if (!quiz) return;
     if (dirty) save();
     window.open(`/quiz/${quiz.slug}`, "_blank");
   }
