@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +99,8 @@ function QuizVendasPage() {
           <Analise quizzes={quizzes} leads={leads} />
         </TabsContent>
       </Tabs>
+
+      <Outlet />
     </div>
   );
 }
