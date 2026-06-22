@@ -215,7 +215,7 @@ function QuizEditor() {
             />
 
             {/* Block library */}
-            <div className="w-[210px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+            <div className="w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Componentes</p>
               <div className="space-y-1.5">
                 {BLOCK_LIB.map((b) => (
@@ -232,7 +232,7 @@ function QuizEditor() {
             </div>
 
             {/* Canvas */}
-            <div className="flex-1 bg-slate-900/50 overflow-y-auto p-6 flex items-start justify-center">
+            <div className="flex-1 min-w-0 bg-slate-900/50 overflow-auto p-4 flex items-start justify-center">
               <Canvas
                 quiz={quiz}
                 step={step}
@@ -367,13 +367,13 @@ function Canvas({
 }) {
   const progress = ((stepIdx + 1) / quiz.steps.length) * 100;
   return (
-    <div className="w-full max-w-2xl bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+    <div className="w-full max-w-xl bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
       {quiz.showProgress && (
         <div className="h-1.5 bg-slate-100">
           <div className="h-full transition-all" style={{ width: `${progress}%`, backgroundColor: quiz.accent }} />
         </div>
       )}
-      <div className="px-8 sm:px-12 py-10 min-h-[500px] flex flex-col gap-5">
+      <div className="px-6 sm:px-10 py-8 min-h-[460px] flex flex-col gap-4">
         {step.blocks.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-12">
             <SeparatorHorizontal className="h-10 w-10 mb-3" />
