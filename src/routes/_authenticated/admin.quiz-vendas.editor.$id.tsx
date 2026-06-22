@@ -163,19 +163,19 @@ function QuizEditor() {
   return (
     <div className="fixed inset-0 bg-slate-950 text-white flex flex-col">
       {/* Top toolbar */}
-      <div className="h-14 border-b border-slate-800 flex items-center px-3 gap-2 shrink-0">
+      <div className="h-14 border-b border-slate-800 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-3 gap-2 shrink-0">
         <button
           onClick={() => { if (dirty) save(); navigate({ to: "/admin/quiz-vendas" }); }}
           className="h-10 w-10 rounded-lg hover:bg-slate-800 flex items-center justify-center text-slate-400"
         >
           <X className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-1 ml-1">
+        <div className="flex items-center gap-1 ml-1 shrink-0">
           <ToolBtn icon={Undo2} />
           <ToolBtn icon={Redo2} />
         </div>
 
-        <div className="flex-1 flex items-center justify-center gap-1">
+        <div className="min-w-0 flex items-center justify-start xl:justify-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabPill active={tab === "construtor"} onClick={() => setTab("construtor")} icon={Hammer} label="Construtor" />
           <TabPill active={tab === "fluxo"} onClick={() => setTab("fluxo")} icon={GitBranch} label="Fluxo" />
           <TabPill active={tab === "design"} onClick={() => setTab("design")} icon={Palette} label="Design" />
@@ -183,7 +183,7 @@ function QuizEditor() {
           <TabPill active={tab === "config"} onClick={() => setTab("config")} icon={Settings2} label="Configurações" />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <ToolBtn icon={Eye} onClick={openPublic} title="Pré-visualizar" />
           <ToolBtn icon={Play} onClick={openPublic} title="Testar" />
           <Button
@@ -191,9 +191,9 @@ function QuizEditor() {
             className="rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white h-10"
             onClick={save}
           >
-            <Save className="h-4 w-4 mr-1.5" /> {dirty ? "Salvar*" : "Salvo"}
+              <Save className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">{dirty ? "Salvar*" : "Salvo"}</span>
           </Button>
-          <Button onClick={publish} className="rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white h-10 px-5">
+          <Button onClick={publish} className="rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white h-10 px-3 sm:px-5">
             Publicar
           </Button>
         </div>
@@ -215,7 +215,7 @@ function QuizEditor() {
             />
 
             {/* Block library */}
-            <div className="w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+            <div className="w-[152px] xl:w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
               <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Componentes</p>
               <div className="space-y-1.5">
                 {BLOCK_LIB.map((b) => (
@@ -304,7 +304,7 @@ function StepsSidebar({
 }) {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   return (
-    <div className="w-[160px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+    <div className="w-[140px] xl:w-[160px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
       <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">Etapas</p>
       <div className="space-y-1">
         {quiz.steps.map((s, i) => {
@@ -485,7 +485,7 @@ function Inspector({
   updateBlock: (id: string, patch: Partial<Block>) => void;
 }) {
   return (
-    <div className="w-[280px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
+    <div className="w-[248px] xl:w-[280px] border-l border-slate-800 overflow-y-auto p-4 shrink-0 space-y-4">
       {/* Step settings */}
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 space-y-3">
         <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Etapa</p>
