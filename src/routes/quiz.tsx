@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/quiz")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Descubra seu plano de treino — Quiz Personal" },
@@ -9,18 +10,13 @@ export const Route = createFileRoute("/quiz")({
       { property: "og:description", content: "Quiz rápido para montar o plano ideal para você." },
     ],
   }),
-  component: QuizPlaceholder,
+  component: QuizLayout,
 });
 
-function QuizPlaceholder() {
+function QuizLayout() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-4">
-      <div className="max-w-md text-center">
-        <h1 className="font-display text-5xl">QUIZ</h1>
-        <p className="text-muted-foreground mt-4">
-          O quiz interativo será construído na Fase 3, lendo o conteúdo da tabela <code className="text-primary">quiz_config</code>.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <Outlet />
     </div>
   );
 }
