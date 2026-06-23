@@ -27,7 +27,10 @@ function PublicQuiz() {
       <div className="min-h-screen flex items-center justify-center bg-white text-slate-900 px-4">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold mb-2">Quiz não encontrado</h1>
-          <p className="text-slate-500">O link <code className="bg-slate-100 px-2 py-0.5 rounded">/quiz/{slug}</code> não corresponde a nenhum quiz publicado.</p>
+          <p className="text-slate-500">
+            O link <code className="bg-slate-100 px-2 py-0.5 rounded">/quiz/{slug}</code> não
+            corresponde a nenhum quiz publicado.
+          </p>
         </div>
       </div>
     );
@@ -39,7 +42,9 @@ function PublicQuiz() {
         <div className="text-center max-w-md">
           <div className="text-5xl mb-3">⏸️</div>
           <h1 className="text-2xl font-extrabold mb-2">Quiz pausado</h1>
-          <p className="text-slate-500">Este quiz está temporariamente indisponível. Volte mais tarde.</p>
+          <p className="text-slate-500">
+            Este quiz está temporariamente indisponível. Volte mais tarde.
+          </p>
         </div>
       </div>
     );
@@ -49,7 +54,10 @@ function PublicQuiz() {
   const totalSteps = quiz.steps.length;
   const progress = finished ? 100 : Math.round(((stepIdx + 1) / totalSteps) * 100);
 
-  const totalScore = useMemo(() => Object.values(answers).reduce((s, a) => s + a.points, 0), [answers]);
+  const totalScore = useMemo(
+    () => Object.values(answers).reduce((s, a) => s + a.points, 0),
+    [answers],
+  );
   const maxScore = useMemo(() => {
     let total = 0;
     for (const s of quiz.steps) {
@@ -132,8 +140,16 @@ function PublicQuiz() {
           <div className="relative inline-flex items-center justify-center my-5">
             <svg className="h-32 w-32 -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="42" stroke="#e2e8f0" strokeWidth="8" fill="none" />
-              <circle cx="50" cy="50" r="42" stroke={quiz.accent} strokeWidth="8" fill="none"
-                strokeDasharray={`${(score / 100) * 264} 264`} strokeLinecap="round" />
+              <circle
+                cx="50"
+                cy="50"
+                r="42"
+                stroke={quiz.accent}
+                strokeWidth="8"
+                fill="none"
+                strokeDasharray={`${(score / 100) * 264} 264`}
+                strokeLinecap="round"
+              />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-4xl font-extrabold text-slate-900">{score}</span>
@@ -141,7 +157,9 @@ function PublicQuiz() {
             </div>
           </div>
           <p className="text-slate-600 mb-6 max-w-md mx-auto">{matchedRange.message}</p>
-          {matchedRange.offer && <p className="text-sm font-bold text-slate-900 mb-6">Oferta: {matchedRange.offer}</p>}
+          {matchedRange.offer && (
+            <p className="text-sm font-bold text-slate-900 mb-6">Oferta: {matchedRange.offer}</p>
+          )}
           {matchedRange.ctaUrl && matchedRange.ctaUrl !== "#" && (
             <a href={matchedRange.ctaUrl} target="_blank" rel="noopener" className="inline-block">
               <Button
@@ -174,8 +192,12 @@ function PublicQuiz() {
               form={form}
               setForm={setForm}
               onAnswerChoice={answerChoice}
-              onClickNext={() => { if (canAdvanceFromStep()) goNext(); }}
-              onSubmit={() => { if (canAdvanceFromStep()) finalize(); }}
+              onClickNext={() => {
+                if (canAdvanceFromStep()) goNext();
+              }}
+              onSubmit={() => {
+                if (canAdvanceFromStep()) finalize();
+              }}
             />
           ))}
         </div>
@@ -191,12 +213,14 @@ function PublicQuiz() {
               >
                 ← Voltar
               </button>
-            ) : <span />}
+            ) : (
+              <span />
+            )}
             <Button
               className="rounded-full h-12 px-7 text-white text-base font-bold shadow-sm disabled:opacity-50"
               style={{ backgroundColor: quiz.accent }}
               disabled={!canAdvanceFromStep()}
-              onClick={() => stepIdx + 1 >= totalSteps ? finalize() : goNext()}
+              onClick={() => (stepIdx + 1 >= totalSteps ? finalize() : goNext())}
             >
               {stepIdx + 1 === totalSteps ? "Ver resultado 🎯" : "Continuar 👉"}
             </Button>
@@ -217,18 +241,40 @@ function PublicQuiz() {
   );
 }
 
-function Shell({ quiz, progress, children }: { quiz: QuizConfig; progress: number; children: React.ReactNode }) {
+const widthClasses = {
+  narrow: "max-w-md",
+  medium: "max-w-xl",
+  wide: "max-w-3xl",
+};
+
+function Shell({
+  quiz,
+  progress,
+  children,
+}: {
+  quiz: QuizConfig;
+  progress: number;
+  children: React.ReactNode;
+}) {
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col">
       {quiz.showProgress && (
         <div className="h-1.5 w-full bg-slate-100 sticky top-0 z-10">
-          <div className="h-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: quiz.accent }} />
+          <div
+            className="h-full transition-all duration-500"
+            style={{ width: `${progress}%`, backgroundColor: quiz.accent }}
+          />
         </div>
       )}
       {quiz.showLogo && (
-        <header className="px-4 sm:px-6 py-4 flex items-center justify-between max-w-3xl mx-auto w-full">
+        <header
+          className={`px-4 sm:px-6 py-4 flex items-center justify-between mx-auto w-full ${widthClasses[quiz.width || "medium"]} transition-all duration-300`}
+        >
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl text-white flex items-center justify-center font-extrabold text-sm" style={{ backgroundColor: quiz.accent }}>
+            <div
+              className="h-9 w-9 rounded-xl text-white flex items-center justify-center font-extrabold text-sm"
+              style={{ backgroundColor: quiz.accent }}
+            >
               {quiz.title.slice(0, 2).toUpperCase()}
             </div>
             <div>
@@ -239,7 +285,11 @@ function Shell({ quiz, progress, children }: { quiz: QuizConfig; progress: numbe
         </header>
       )}
       <main className="flex-1 flex items-start justify-center px-4 pb-12 pt-2 sm:pt-6">
-        <div className="w-full max-w-xl">{children}</div>
+        <div
+          className={`w-full ${widthClasses[quiz.width || "medium"]} transition-all duration-300`}
+        >
+          {children}
+        </div>
       </main>
       <footer className="text-center text-[11px] text-slate-400 py-4">
         Feito com <span className="font-bold text-slate-600">inlead</span>
@@ -249,7 +299,14 @@ function Shell({ quiz, progress, children }: { quiz: QuizConfig; progress: numbe
 }
 
 function RuntimeBlock({
-  block, accent, answers, form, setForm, onAnswerChoice, onClickNext, onSubmit,
+  block,
+  accent,
+  answers,
+  form,
+  setForm,
+  onAnswerChoice,
+  onClickNext,
+  onSubmit,
 }: {
   block: Block;
   accent: string;
@@ -262,11 +319,19 @@ function RuntimeBlock({
 }) {
   switch (block.kind) {
     case "titulo":
-      return <h1 className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}>{block.text}</h1>;
+      return (
+        <h1
+          className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}
+        >
+          {block.text}
+        </h1>
+      );
     case "paragrafo":
       return <p className="text-slate-600 leading-relaxed">{block.text}</p>;
     case "imagem":
-      return block.url ? <img src={block.url} alt={block.alt ?? ""} className="w-full rounded-2xl" /> : null;
+      return block.url ? (
+        <img src={block.url} alt={block.alt ?? ""} className="w-full rounded-2xl" />
+      ) : null;
     case "espacador":
       return <div style={{ height: block.height }} />;
     case "escolha": {
@@ -280,7 +345,9 @@ function RuntimeBlock({
               return (
                 <button
                   key={opt.id}
-                  onClick={() => onAnswerChoice(block.id, opt.text, opt.points, !!block.autoAdvance)}
+                  onClick={() =>
+                    onAnswerChoice(block.id, opt.text, opt.points, !!block.autoAdvance)
+                  }
                   className="group w-full text-left rounded-full border-2 px-5 py-4 transition flex items-center gap-3"
                   style={{
                     borderColor: active ? accent : "#e2e8f0",
@@ -296,7 +363,9 @@ function RuntimeBlock({
                   >
                     {active && <span className="h-2 w-2 rounded-full bg-white" />}
                   </span>
-                  <span className={`font-medium ${active ? "text-slate-900" : "text-slate-800"}`}>{opt.text}</span>
+                  <span className={`font-medium ${active ? "text-slate-900" : "text-slate-800"}`}>
+                    {opt.text}
+                  </span>
                 </button>
               );
             })}
@@ -316,7 +385,8 @@ function RuntimeBlock({
             ].map((o) => {
               const active = a?.value === o.label;
               return (
-                <button key={o.label}
+                <button
+                  key={o.label}
                   onClick={() => onAnswerChoice(block.id, o.label, o.points, true)}
                   className="rounded-full border-2 px-5 py-4 text-center font-bold"
                   style={{
@@ -337,12 +407,21 @@ function RuntimeBlock({
       const value = form[block.field];
       return (
         <div>
-          <label className="text-xs font-semibold text-slate-700">{block.label}{block.required && " *"}</label>
+          <label className="text-xs font-semibold text-slate-700">
+            {block.label}
+            {block.required && " *"}
+          </label>
           <input
             type={block.field === "email" ? "email" : "text"}
             value={value}
             onChange={(e) => setForm({ ...form, [block.field]: e.target.value })}
-            placeholder={block.field === "email" ? "seu@email.com" : block.field === "whatsapp" ? "(11) 99999-9999" : "Seu nome"}
+            placeholder={
+              block.field === "email"
+                ? "seu@email.com"
+                : block.field === "whatsapp"
+                  ? "(11) 99999-9999"
+                  : "Seu nome"
+            }
             className="w-full rounded-full border border-slate-200 px-5 h-12 mt-1 text-slate-900 outline-none focus:border-blue-500"
           />
         </div>

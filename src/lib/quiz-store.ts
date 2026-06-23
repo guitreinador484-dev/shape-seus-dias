@@ -79,6 +79,7 @@ export type QuizConfig = {
   allowBack: boolean;
   responses: number;
   createdAt: string;
+  width?: "narrow" | "medium" | "wide";
 };
 
 // ============ Store ============
@@ -195,7 +196,11 @@ export function createBlankQuiz(): QuizConfig {
         name: "Boas-vindas",
         blocks: [
           { id: uid(), kind: "titulo", text: "Bem-vindo ao quiz!", align: "center" },
-          { id: uid(), kind: "paragrafo", text: "Responda algumas perguntas rápidas para descobrir o melhor caminho para você." },
+          {
+            id: uid(),
+            kind: "paragrafo",
+            text: "Responda algumas perguntas rápidas para descobrir o melhor caminho para você.",
+          },
           { id: uid(), kind: "botao", text: "Começar 👉", action: "next" },
         ],
       },
@@ -230,22 +235,52 @@ export function createBlankQuiz(): QuizConfig {
       },
     ],
     ranges: [
-      { id: uid(), min: 80, max: 100, profile: "Pronto para evoluir", message: "Você tem perfil ideal para acelerar resultados.", offer: "Mentoria premium", ctaText: "Falar no WhatsApp", ctaUrl: "https://wa.me/5511999999999" },
-      { id: uid(), min: 50, max: 79, profile: "Quase lá", message: "Com o plano certo você dobra seus resultados.", offer: "Lista de espera", ctaText: "Quero saber mais", ctaUrl: "https://wa.me/5511999999999" },
-      { id: uid(), min: 0, max: 49, profile: "Começando", message: "Vamos te preparar com o conteúdo certo.", offer: "E-book gratuito", ctaText: "Receber e-book", ctaUrl: "#" },
+      {
+        id: uid(),
+        min: 80,
+        max: 100,
+        profile: "Pronto para evoluir",
+        message: "Você tem perfil ideal para acelerar resultados.",
+        offer: "Mentoria premium",
+        ctaText: "Falar no WhatsApp",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: uid(),
+        min: 50,
+        max: 79,
+        profile: "Quase lá",
+        message: "Com o plano certo você dobra seus resultados.",
+        offer: "Lista de espera",
+        ctaText: "Quero saber mais",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: uid(),
+        min: 0,
+        max: 49,
+        profile: "Começando",
+        message: "Vamos te preparar com o conteúdo certo.",
+        offer: "E-book gratuito",
+        ctaText: "Receber e-book",
+        ctaUrl: "#",
+      },
     ],
     showLogo: true,
     showProgress: true,
     allowBack: true,
     responses: 0,
     createdAt: new Date().toISOString(),
+    width: "medium",
   };
   return q;
 }
 
 // ============ Leads ============
 
-export function addLead(lead: Omit<LeadRecord, "id" | "date" | "status"> & { status?: LeadRecord["status"] }) {
+export function addLead(
+  lead: Omit<LeadRecord, "id" | "date" | "status"> & { status?: LeadRecord["status"] },
+) {
   const rec: LeadRecord = {
     ...lead,
     id: uid(),
@@ -281,7 +316,11 @@ const SEED: QuizConfig[] = [
         name: "Boas-vindas",
         blocks: [
           { id: "b1", kind: "titulo", text: "Descubra seu plano de treino ideal", align: "center" },
-          { id: "b2", kind: "paragrafo", text: "Responda 5 perguntas rápidas e descubra o programa perfeito para o seu objetivo." },
+          {
+            id: "b2",
+            kind: "paragrafo",
+            text: "Responda 5 perguntas rápidas e descubra o programa perfeito para o seu objetivo.",
+          },
           { id: "b3", kind: "botao", text: "Começar agora 👉", action: "next" },
         ],
       },
@@ -290,7 +329,10 @@ const SEED: QuizConfig[] = [
         name: "Objetivo",
         blocks: [
           {
-            id: "b4", kind: "escolha", question: "Qual seu objetivo principal?", autoAdvance: true,
+            id: "b4",
+            kind: "escolha",
+            question: "Qual seu objetivo principal?",
+            autoAdvance: true,
             options: [
               { id: "o1", text: "Emagrecer", points: 8 },
               { id: "o2", text: "Ganhar massa muscular", points: 9 },
@@ -305,7 +347,10 @@ const SEED: QuizConfig[] = [
         name: "Frequência",
         blocks: [
           {
-            id: "b5", kind: "escolha", question: "Com que frequência treina hoje?", autoAdvance: true,
+            id: "b5",
+            kind: "escolha",
+            question: "Com que frequência treina hoje?",
+            autoAdvance: true,
             options: [
               { id: "o5", text: "5+ vezes por semana", points: 10 },
               { id: "o6", text: "3 a 4 vezes", points: 8 },
@@ -320,7 +365,10 @@ const SEED: QuizConfig[] = [
         name: "Investimento",
         blocks: [
           {
-            id: "b6", kind: "escolha", question: "Quanto está disposto(a) a investir por mês?", autoAdvance: true,
+            id: "b6",
+            kind: "escolha",
+            question: "Quanto está disposto(a) a investir por mês?",
+            autoAdvance: true,
             options: [
               { id: "o9", text: "Acima de R$ 500", points: 10 },
               { id: "o10", text: "R$ 200 a R$ 500", points: 7 },
@@ -335,7 +383,10 @@ const SEED: QuizConfig[] = [
         name: "Comprometimento",
         blocks: [
           {
-            id: "b7", kind: "escolha", question: "Qual seu nível de comprometimento?", autoAdvance: true,
+            id: "b7",
+            kind: "escolha",
+            question: "Qual seu nível de comprometimento?",
+            autoAdvance: true,
             options: [
               { id: "o13", text: "5 - Totalmente", points: 10 },
               { id: "o14", text: "4 - Muito", points: 8 },
@@ -349,7 +400,12 @@ const SEED: QuizConfig[] = [
         id: "s6",
         name: "Captura",
         blocks: [
-          { id: "b8", kind: "titulo", text: "Insira seus dados para ver seu resultado", align: "center" },
+          {
+            id: "b8",
+            kind: "titulo",
+            text: "Insira seus dados para ver seu resultado",
+            align: "center",
+          },
           { id: "b9", kind: "paragrafo", text: "Vamos te enviar o plano ideal por e-mail." },
           { id: "b10", kind: "entrada", field: "name", label: "Nome", required: true },
           { id: "b11", kind: "entrada", field: "email", label: "E-mail", required: true },
@@ -359,9 +415,36 @@ const SEED: QuizConfig[] = [
       },
     ],
     ranges: [
-      { id: "r1", min: 80, max: 100, profile: "Pronto para evoluir", message: "Você tem o perfil ideal para acelerar resultados com acompanhamento próximo.", offer: "Mentoria premium", ctaText: "Falar no WhatsApp", ctaUrl: "https://wa.me/5511999999999" },
-      { id: "r2", min: 50, max: 79, profile: "Quase lá", message: "Com o plano certo você dobra seus resultados nos próximos 90 dias.", offer: "Lista de espera", ctaText: "Quero saber mais", ctaUrl: "https://wa.me/5511999999999" },
-      { id: "r3", min: 0, max: 49, profile: "Começando agora", message: "Vamos te preparar com o conteúdo certo para começar com o pé direito.", offer: "E-book gratuito", ctaText: "Receber e-book", ctaUrl: "#" },
+      {
+        id: "r1",
+        min: 80,
+        max: 100,
+        profile: "Pronto para evoluir",
+        message: "Você tem o perfil ideal para acelerar resultados com acompanhamento próximo.",
+        offer: "Mentoria premium",
+        ctaText: "Falar no WhatsApp",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: "r2",
+        min: 50,
+        max: 79,
+        profile: "Quase lá",
+        message: "Com o plano certo você dobra seus resultados nos próximos 90 dias.",
+        offer: "Lista de espera",
+        ctaText: "Quero saber mais",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: "r3",
+        min: 0,
+        max: 49,
+        profile: "Começando agora",
+        message: "Vamos te preparar com o conteúdo certo para começar com o pé direito.",
+        offer: "E-book gratuito",
+        ctaText: "Receber e-book",
+        ctaUrl: "#",
+      },
     ],
   },
   {
@@ -372,30 +455,68 @@ const SEED: QuizConfig[] = [
     status: "ativo",
     accent: "#0ea5e9",
     offer: "Programa Massa Pro",
-    showLogo: true, showProgress: true, allowBack: true,
+    showLogo: true,
+    showProgress: true,
+    allowBack: true,
     responses: 89,
     createdAt: new Date().toISOString(),
     steps: [
-      { id: "s1", name: "Início", blocks: [
-        { id: "b1", kind: "titulo", text: "Hipertrofia: você está pronto?", align: "center" },
-        { id: "b2", kind: "botao", text: "Começar", action: "next" },
-      ]},
-      { id: "s2", name: "Experiência", blocks: [
-        { id: "b3", kind: "escolha", question: "Quanto tempo de treino você tem?", autoAdvance: true, options: [
-          { id: "o1", text: "Mais de 2 anos", points: 10 },
-          { id: "o2", text: "Entre 6 meses e 2 anos", points: 7 },
-          { id: "o3", text: "Menos de 6 meses", points: 3 },
-        ]},
-      ]},
-      { id: "s3", name: "Captura", blocks: [
-        { id: "b4", kind: "entrada", field: "name", label: "Nome", required: true },
-        { id: "b5", kind: "entrada", field: "email", label: "E-mail", required: true },
-        { id: "b6", kind: "botao", text: "Ver resultado", action: "submit" },
-      ]},
+      {
+        id: "s1",
+        name: "Início",
+        blocks: [
+          { id: "b1", kind: "titulo", text: "Hipertrofia: você está pronto?", align: "center" },
+          { id: "b2", kind: "botao", text: "Começar", action: "next" },
+        ],
+      },
+      {
+        id: "s2",
+        name: "Experiência",
+        blocks: [
+          {
+            id: "b3",
+            kind: "escolha",
+            question: "Quanto tempo de treino você tem?",
+            autoAdvance: true,
+            options: [
+              { id: "o1", text: "Mais de 2 anos", points: 10 },
+              { id: "o2", text: "Entre 6 meses e 2 anos", points: 7 },
+              { id: "o3", text: "Menos de 6 meses", points: 3 },
+            ],
+          },
+        ],
+      },
+      {
+        id: "s3",
+        name: "Captura",
+        blocks: [
+          { id: "b4", kind: "entrada", field: "name", label: "Nome", required: true },
+          { id: "b5", kind: "entrada", field: "email", label: "E-mail", required: true },
+          { id: "b6", kind: "botao", text: "Ver resultado", action: "submit" },
+        ],
+      },
     ],
     ranges: [
-      { id: "r1", min: 70, max: 100, profile: "Pronto para massa", message: "Vamos acelerar!", offer: "Programa Massa Pro", ctaText: "Quero entrar", ctaUrl: "https://wa.me/5511999999999" },
-      { id: "r2", min: 0, max: 69, profile: "Preparação", message: "Vamos te preparar primeiro.", offer: "Plano base", ctaText: "Saber mais", ctaUrl: "#" },
+      {
+        id: "r1",
+        min: 70,
+        max: 100,
+        profile: "Pronto para massa",
+        message: "Vamos acelerar!",
+        offer: "Programa Massa Pro",
+        ctaText: "Quero entrar",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: "r2",
+        min: 0,
+        max: 69,
+        profile: "Preparação",
+        message: "Vamos te preparar primeiro.",
+        offer: "Plano base",
+        ctaText: "Saber mais",
+        ctaUrl: "#",
+      },
     ],
   },
   {
@@ -406,32 +527,117 @@ const SEED: QuizConfig[] = [
     status: "rascunho",
     accent: "#facc15",
     offer: "E-book gratuito",
-    showLogo: true, showProgress: true, allowBack: true,
+    showLogo: true,
+    showProgress: true,
+    allowBack: true,
     responses: 0,
     createdAt: new Date().toISOString(),
     steps: [
-      { id: "s1", name: "Início", blocks: [
-        { id: "b1", kind: "titulo", text: "Reeducação alimentar", align: "center" },
-        { id: "b2", kind: "botao", text: "Começar", action: "next" },
-      ]},
-      { id: "s2", name: "Captura", blocks: [
-        { id: "b3", kind: "entrada", field: "email", label: "E-mail", required: true },
-        { id: "b4", kind: "botao", text: "Receber e-book", action: "submit" },
-      ]},
+      {
+        id: "s1",
+        name: "Início",
+        blocks: [
+          { id: "b1", kind: "titulo", text: "Reeducação alimentar", align: "center" },
+          { id: "b2", kind: "botao", text: "Começar", action: "next" },
+        ],
+      },
+      {
+        id: "s2",
+        name: "Captura",
+        blocks: [
+          { id: "b3", kind: "entrada", field: "email", label: "E-mail", required: true },
+          { id: "b4", kind: "botao", text: "Receber e-book", action: "submit" },
+        ],
+      },
     ],
     ranges: [
-      { id: "r1", min: 0, max: 100, profile: "Lead capturado", message: "Obrigado!", offer: "E-book", ctaText: "Baixar", ctaUrl: "#" },
+      {
+        id: "r1",
+        min: 0,
+        max: 100,
+        profile: "Lead capturado",
+        message: "Obrigado!",
+        offer: "E-book",
+        ctaText: "Baixar",
+        ctaUrl: "#",
+      },
     ],
   },
 ];
 
 const SEED_LEADS: LeadRecord[] = [
-  { id: "l1", quizId: "seed-1", name: "Mariana Souza", email: "mariana.s@gmail.com", whatsapp: "(11) 98123-4567", profile: "Pronto para evoluir", score: 87, status: "qualificado", date: "22/06/2026", answers: {} },
-  { id: "l2", quizId: "seed-2", name: "Carlos Almeida", email: "carlos.almeida@outlook.com", whatsapp: "(21) 99876-1234", profile: "Pronto para massa", score: 92, status: "convertido", date: "21/06/2026", answers: {} },
-  { id: "l3", quizId: "seed-1", name: "Juliana Pereira", email: "ju.pereira@gmail.com", whatsapp: "(31) 98765-4321", profile: "Quase lá", score: 64, status: "em-contato", date: "21/06/2026", answers: {} },
-  { id: "l4", quizId: "seed-1", name: "Rafael Mendes", email: "rafa.mendes@yahoo.com", whatsapp: "(11) 97777-2222", profile: "Pronto para evoluir", score: 78, status: "qualificado", date: "20/06/2026", answers: {} },
-  { id: "l5", quizId: "seed-2", name: "Beatriz Lima", email: "bia.lima@hotmail.com", whatsapp: "(41) 96666-3333", profile: "Preparação", score: 41, status: "nao-qualificado", date: "20/06/2026", answers: {} },
-  { id: "l6", quizId: "seed-1", name: "Felipe Costa", email: "felipe.costa@gmail.com", whatsapp: "(11) 95555-4444", profile: "Pronto para evoluir", score: 95, status: "convertido", date: "19/06/2026", answers: {} },
+  {
+    id: "l1",
+    quizId: "seed-1",
+    name: "Mariana Souza",
+    email: "mariana.s@gmail.com",
+    whatsapp: "(11) 98123-4567",
+    profile: "Pronto para evoluir",
+    score: 87,
+    status: "qualificado",
+    date: "22/06/2026",
+    answers: {},
+  },
+  {
+    id: "l2",
+    quizId: "seed-2",
+    name: "Carlos Almeida",
+    email: "carlos.almeida@outlook.com",
+    whatsapp: "(21) 99876-1234",
+    profile: "Pronto para massa",
+    score: 92,
+    status: "convertido",
+    date: "21/06/2026",
+    answers: {},
+  },
+  {
+    id: "l3",
+    quizId: "seed-1",
+    name: "Juliana Pereira",
+    email: "ju.pereira@gmail.com",
+    whatsapp: "(31) 98765-4321",
+    profile: "Quase lá",
+    score: 64,
+    status: "em-contato",
+    date: "21/06/2026",
+    answers: {},
+  },
+  {
+    id: "l4",
+    quizId: "seed-1",
+    name: "Rafael Mendes",
+    email: "rafa.mendes@yahoo.com",
+    whatsapp: "(11) 97777-2222",
+    profile: "Pronto para evoluir",
+    score: 78,
+    status: "qualificado",
+    date: "20/06/2026",
+    answers: {},
+  },
+  {
+    id: "l5",
+    quizId: "seed-2",
+    name: "Beatriz Lima",
+    email: "bia.lima@hotmail.com",
+    whatsapp: "(41) 96666-3333",
+    profile: "Preparação",
+    score: 41,
+    status: "nao-qualificado",
+    date: "20/06/2026",
+    answers: {},
+  },
+  {
+    id: "l6",
+    quizId: "seed-1",
+    name: "Felipe Costa",
+    email: "felipe.costa@gmail.com",
+    whatsapp: "(11) 95555-4444",
+    profile: "Pronto para evoluir",
+    score: 95,
+    status: "convertido",
+    date: "19/06/2026",
+    answers: {},
+  },
 ];
 
 export { uid };
