@@ -217,7 +217,7 @@ function QuizEditor() {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-950 text-white flex flex-col">
+    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col">
       {/* Top toolbar */}
       <div className="h-14 border-b border-slate-800 grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center px-3 gap-2 shrink-0">
         <button
