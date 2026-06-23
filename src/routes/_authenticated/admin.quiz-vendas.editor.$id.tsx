@@ -326,7 +326,7 @@ function QuizEditor() {
             )}
 
             {/* Canvas */}
-            <div className="flex-1 min-w-0 bg-slate-900/50 overflow-y-auto p-4 flex flex-col items-center justify-start">
+            <div className="flex-1 min-w-0 min-h-0 bg-slate-900/50 overflow-y-auto p-4 flex flex-col items-center justify-start">
               {/* Canvas Toolbar */}
               <div className="w-full max-w-4xl mb-4 flex flex-wrap items-center justify-between gap-3 px-3 py-2 bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl shrink-0">
                 <div className="flex items-center gap-1.5">
@@ -780,7 +780,7 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
     case "botao":
       return (
         <button
-          className="w-full rounded-full h-13 py-3.5 text-white font-bold text-base shadow-sm"
+          className="w-full rounded-full h-[52px] py-3.5 text-white font-bold text-base shadow-sm"
           style={{ backgroundColor: accent }}
         >
           {block.text}

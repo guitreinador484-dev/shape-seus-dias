@@ -163,7 +163,7 @@ function PublicQuiz() {
           {matchedRange.ctaUrl && matchedRange.ctaUrl !== "#" && (
             <a href={matchedRange.ctaUrl} target="_blank" rel="noopener" className="inline-block">
               <Button
-                className="rounded-full h-13 px-8 text-white text-base font-bold py-3 shadow-sm"
+                className="rounded-full h-[52px] px-8 text-white text-base font-bold py-3 shadow-sm"
                 style={{ backgroundColor: quiz.accent }}
               >
                 {matchedRange.ctaText || "Continuar"} 💬
@@ -430,7 +430,7 @@ function RuntimeBlock({
     case "botao":
       return (
         <Button
-          className="w-full rounded-full h-13 py-3.5 text-white font-bold text-base shadow-sm"
+          className="w-full rounded-full h-[52px] py-3.5 text-white font-bold text-base shadow-sm"
           style={{ backgroundColor: accent }}
           onClick={() => (block.action === "submit" ? onSubmit() : onClickNext())}
         >
