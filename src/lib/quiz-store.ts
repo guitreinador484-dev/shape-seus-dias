@@ -2,6 +2,13 @@ import { useSyncExternalStore } from "react";
 
 // ============ Types ============
 
+export type TextStyle = {
+  color?: string;
+  fontWeight?: "normal" | "bold" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
+  fontSize?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+  bgColor?: string;
+};
+
 export type BlockKind =
   | "titulo"
   | "paragrafo"
@@ -13,8 +20,8 @@ export type BlockKind =
   | "espacador";
 
 export type Block =
-  | { id: string; kind: "titulo"; text: string; align?: "left" | "center" }
-  | { id: string; kind: "paragrafo"; text: string }
+  | { id: string; kind: "titulo"; text: string; align?: "left" | "center"; style?: TextStyle }
+  | { id: string; kind: "paragrafo"; text: string; style?: TextStyle }
   | { id: string; kind: "imagem"; url: string; alt?: string }
   | {
       id: string;
@@ -31,7 +38,7 @@ export type Block =
       label: string;
       required: boolean;
     }
-  | { id: string; kind: "botao"; text: string; action: "next" | "submit" }
+  | { id: string; kind: "botao"; text: string; action: "next" | "submit"; style?: TextStyle }
   | { id: string; kind: "espacador"; height: number };
 
 export type Step = {

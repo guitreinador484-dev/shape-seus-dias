@@ -1,7 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range } from "@/lib/quiz-store";
+import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
+
+const fontSizeMap: Record<string, string> = {
+  xs: "0.75rem",
+  sm: "0.875rem",
+  base: "1rem",
+  lg: "1.125rem",
+  xl: "1.25rem",
+  "2xl": "1.5rem",
+  "3xl": "1.875rem",
+  "4xl": "2.25rem",
+};
+
+function textStyle(s?: TextStyle): React.CSSProperties {
+  if (!s) return {};
+  return {
+    color: s.color,
+    fontWeight: s.fontWeight as React.CSSProperties["fontWeight"],
+    fontSize: s.fontSize ? fontSizeMap[s.fontSize] : undefined,
+    backgroundColor: s.bgColor,
+  };
+}
 
 export const Route = createFileRoute("/quiz/$slug")({
   component: PublicQuiz,
@@ -322,12 +343,17 @@ function RuntimeBlock({
       return (
         <h1
           className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}
+          style={textStyle(block.style)}
         >
           {block.text}
         </h1>
       );
     case "paragrafo":
-      return <p className="text-slate-600 leading-relaxed">{block.text}</p>;
+      return (
+        <p className="text-slate-600 leading-relaxed" style={textStyle(block.style)}>
+          {block.text}
+        </p>
+      );
     case "imagem":
       return block.url ? (
         <img src={block.url} alt={block.alt ?? ""} className="w-full rounded-2xl" />
@@ -431,7 +457,7 @@ function RuntimeBlock({
       return (
         <Button
           className="w-full rounded-full h-[52px] py-3.5 text-white font-bold text-base shadow-sm"
-          style={{ backgroundColor: accent }}
+          style={{ backgroundColor: accent, ...textStyle(block.style) }}
           onClick={() => (block.action === "submit" ? onSubmit() : onClickNext())}
         >
           {block.text}

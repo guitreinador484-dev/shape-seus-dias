@@ -53,6 +53,7 @@ import {
   type Step,
   type Block,
   type BlockKind,
+  type TextStyle,
 } from "@/lib/quiz-store";
 
 export const Route = createFileRoute("/_authenticated/admin/quiz-vendas/editor/$id")({
@@ -617,6 +618,27 @@ const previewWidthClasses = {
   desktop: "max-w-[1024px]",
 };
 
+const fontSizeMap: Record<string, string> = {
+  xs: "0.75rem",
+  sm: "0.875rem",
+  base: "1rem",
+  lg: "1.125rem",
+  xl: "1.25rem",
+  "2xl": "1.5rem",
+  "3xl": "1.875rem",
+  "4xl": "2.25rem",
+};
+
+function textStyle(style?: TextStyle): React.CSSProperties {
+  if (!style) return {};
+  return {
+    color: style.color,
+    fontWeight: style.fontWeight as React.CSSProperties["fontWeight"],
+    fontSize: style.fontSize ? fontSizeMap[style.fontSize] : undefined,
+    backgroundColor: style.bgColor,
+  };
+}
+
 // ============ Canvas ============
 
 function Canvas({
@@ -692,8 +714,10 @@ function BlockRenderer({
   return (
     <div
       onClick={onSelect}
-      className={`group relative rounded-xl transition cursor-pointer ${
-        selected ? "ring-2 ring-blue-500 ring-offset-2" : "hover:ring-1 hover:ring-slate-200"
+      className={`group relative rounded-xl border transition cursor-pointer ${
+        selected
+          ? "ring-2 ring-blue-500 ring-offset-2 border-blue-300 bg-white"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
       }`}
     >
       <button
@@ -705,7 +729,9 @@ function BlockRenderer({
       >
         <Trash2 className="h-3 w-3" />
       </button>
-      <BlockView block={block} accent={accent} />
+      <div className="px-4 py-3">
+        <BlockView block={block} accent={accent} />
+      </div>
     </div>
   );
 }
@@ -716,12 +742,17 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
       return (
         <h2
           className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}
+          style={textStyle(block.style)}
         >
           {block.text}
         </h2>
       );
     case "paragrafo":
-      return <p className="text-slate-600 leading-relaxed">{block.text}</p>;
+      return (
+        <p className="text-slate-600 leading-relaxed" style={textStyle(block.style)}>
+          {block.text}
+        </p>
+      );
     case "imagem":
       return block.url ? (
         <img src={block.url} alt={block.alt || ""} className="w-full rounded-xl" />
@@ -781,7 +812,7 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
       return (
         <button
           className="w-full rounded-full h-[52px] py-3.5 text-white font-bold text-base shadow-sm"
-          style={{ backgroundColor: accent }}
+          style={{ backgroundColor: accent, ...textStyle(block.style) }}
         >
           {block.text}
         </button>
@@ -845,6 +876,125 @@ function Inspector({
   );
 }
 
+const TEXT_COLORS = [
+  "#1e293b", "#475569", "#64748b", "#0f172a",
+  "#2563eb", "#0ea5e9", "#10b981", "#059669",
+  "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899",
+  "#ffffff", "#f8fafc",
+];
+
+const BG_COLORS = [
+  "transparent", "#ffffff", "#f8fafc", "#f1f5f9",
+  "#dbeafe", "#ede9fe", "#fce7f3", "#d1fae5",
+  "#fef3c7", "#fee2e2", "#e0e7ff",
+];
+
+const FONT_SIZES = [
+  { value: "xs", label: "Extra pequeno" },
+  { value: "sm", label: "Pequeno" },
+  { value: "base", label: "Normal" },
+  { value: "lg", label: "Grande" },
+  { value: "xl", label: "Extra grande" },
+  { value: "2xl", label: "2x" },
+  { value: "3xl", label: "3x" },
+  { value: "4xl", label: "4x" },
+];
+
+const FONT_WEIGHTS = [
+  { value: "normal", label: "Normal" },
+  { value: "500", label: "Medium" },
+  { value: "600", label: "Semi Bold" },
+  { value: "700", label: "Bold" },
+  { value: "800", label: "Extra Bold" },
+  { value: "900", label: "Black" },
+];
+
+function patchStyle(
+  block: Block & { style?: TextStyle },
+  update: (p: Partial<Block>) => void,
+  patch: Partial<TextStyle>,
+) {
+  const s: TextStyle = { ...block.style, ...patch };
+  const cleaned = Object.fromEntries(Object.entries(s).filter(([_, v]) => v !== undefined && v !== ""));
+  update({ style: Object.keys(cleaned).length > 0 ? (cleaned as TextStyle) : undefined });
+}
+
+function TextStyleEditor({
+  block,
+  update,
+}: {
+  block: Block & { style?: TextStyle };
+  update: (p: Partial<Block>) => void;
+}) {
+  const style = block.style ?? {};
+  return (
+    <div className="space-y-2 pt-2 border-t border-slate-800">
+      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Estilo do texto</p>
+
+      <Label className="text-xs text-slate-400">Cor do texto</Label>
+      <div className="flex flex-wrap gap-1.5">
+        {TEXT_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => patchStyle(block, update, { color: style.color === c ? undefined : c })}
+            className="h-6 w-6 rounded-full border border-slate-600 shrink-0"
+            style={{ backgroundColor: c, outline: style.color === c ? "2px solid #3b82f6" : undefined, outlineOffset: "1px" }}
+          />
+        ))}
+      </div>
+
+      <Label className="text-xs text-slate-400">Cor de fundo</Label>
+      <div className="flex flex-wrap gap-1.5">
+        {BG_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => patchStyle(block, update, { bgColor: style.bgColor === c ? undefined : c })}
+            className="h-6 w-6 rounded border border-slate-600 shrink-0"
+            style={{
+              backgroundColor: c === "transparent" ? undefined : c,
+              backgroundImage: c === "transparent" ? "linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%), linear-gradient(45deg, #e2e8f0 25%, transparent 25%, transparent 75%, #e2e8f0 75%)" : undefined,
+              backgroundSize: c === "transparent" ? "8px 8px" : undefined,
+              backgroundPosition: c === "transparent" ? "0 0, 4px 4px" : undefined,
+              outline: style.bgColor === c ? "2px solid #3b82f6" : undefined,
+              outlineOffset: "1px",
+            }}
+          />
+        ))}
+      </div>
+
+      <Label className="text-xs text-slate-400">Tamanho da fonte</Label>
+      <Select
+        value={style.fontSize ?? ""}
+        onValueChange={(v) => patchStyle(block, update, { fontSize: (v || undefined) as TextStyle["fontSize"] })}
+      >
+        <SelectTrigger className="bg-slate-800 border-slate-700 text-white rounded-lg h-9">
+          <SelectValue placeholder="Padrão" />
+        </SelectTrigger>
+        <SelectContent>
+          {FONT_SIZES.map((f) => (
+            <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Label className="text-xs text-slate-400">Peso da fonte</Label>
+      <Select
+        value={style.fontWeight ?? ""}
+        onValueChange={(v) => patchStyle(block, update, { fontWeight: (v || undefined) as TextStyle["fontWeight"] })}
+      >
+        <SelectTrigger className="bg-slate-800 border-slate-700 text-white rounded-lg h-9">
+          <SelectValue placeholder="Padrão" />
+        </SelectTrigger>
+        <SelectContent>
+          {FONT_WEIGHTS.map((f) => (
+            <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 function BlockInspector({ block, update }: { block: Block; update: (p: Partial<Block>) => void }) {
   const Input2 = (p: React.InputHTMLAttributes<HTMLInputElement>) => (
     <input
@@ -878,10 +1028,16 @@ function BlockInspector({ block, update }: { block: Block; update: (p: Partial<B
               <SelectItem value="center">Centro</SelectItem>
             </SelectContent>
           </Select>
+          <TextStyleEditor block={block} update={update} />
         </div>
       );
     case "paragrafo":
-      return <TA value={block.text} rows={4} onChange={(e) => update({ text: e.target.value })} />;
+      return (
+        <div className="space-y-2">
+          <TA value={block.text} rows={4} onChange={(e) => update({ text: e.target.value })} />
+          <TextStyleEditor block={block} update={update} />
+        </div>
+      );
     case "imagem":
       return (
         <div className="space-y-2">
@@ -1014,6 +1170,7 @@ function BlockInspector({ block, update }: { block: Block; update: (p: Partial<B
               <SelectItem value="submit">Enviar (finalizar)</SelectItem>
             </SelectContent>
           </Select>
+          <TextStyleEditor block={block} update={update} />
         </div>
       );
     case "espacador":
