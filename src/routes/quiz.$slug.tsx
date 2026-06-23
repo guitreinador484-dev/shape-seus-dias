@@ -25,6 +25,7 @@ function textStyle(s?: TextStyle): React.CSSProperties {
 }
 
 export const Route = createFileRoute("/quiz/$slug")({
+  ssr: false,
   component: PublicQuiz,
 });
 
