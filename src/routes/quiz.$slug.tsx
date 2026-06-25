@@ -63,6 +63,27 @@ function PublicQuiz() {
     };
   }, [slug]);
 
+  const totalScore = useMemo(
+    () => Object.values(answers).reduce((s, a) => s + a.points, 0),
+    [answers],
+  );
+  const maxScore = useMemo(() => {
+    if (!quiz) return 1;
+    let total = 0;
+    for (const s of quiz.steps) {
+      for (const b of s.blocks) {
+        if (b.kind === "escolha") total += Math.max(...b.options.map((o) => o.points), 0);
+        else if (b.kind === "sim-nao") total += Math.max(b.yesPoints, b.noPoints);
+      }
+    }
+    return total || 1;
+  }, [quiz]);
+  const score = Math.round((totalScore / maxScore) * 100);
+  const matchedRange: Range | undefined = useMemo(
+    () => quiz?.ranges.find((r) => score >= r.min && score <= r.max) ?? quiz?.ranges[0],
+    [quiz, score],
+  );
+
   if (loading && !quiz) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white text-slate-900 px-4">
@@ -105,27 +126,6 @@ function PublicQuiz() {
   const step = quiz.steps[stepIdx];
   const totalSteps = quiz.steps.length;
   const progress = finished ? 100 : Math.round(((stepIdx + 1) / totalSteps) * 100);
-
-  const totalScore = useMemo(
-    () => Object.values(answers).reduce((s, a) => s + a.points, 0),
-    [answers],
-  );
-  const maxScore = useMemo(() => {
-    let total = 0;
-    for (const s of quiz.steps) {
-      for (const b of s.blocks) {
-        if (b.kind === "escolha") total += Math.max(...b.options.map((o) => o.points), 0);
-        else if (b.kind === "sim-nao") total += Math.max(b.yesPoints, b.noPoints);
-      }
-    }
-    return total || 1;
-  }, [quiz]);
-  const score = Math.round((totalScore / maxScore) * 100);
-
-  const matchedRange: Range | undefined = useMemo(
-    () => quiz.ranges.find((r) => score >= r.min && score <= r.max) ?? quiz.ranges[0],
-    [quiz, score],
-  );
 
   function answerChoice(blockId: string, optionText: string, points: number, autoAdvance: boolean) {
     setAnswers((a) => ({ ...a, [blockId]: { value: optionText, points } }));
