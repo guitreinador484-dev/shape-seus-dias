@@ -21,7 +21,8 @@ import {
 import {
   Plus, Pencil, Copy, Pause, Play, BarChart3, Download, Trash2, Wand2,
   Eye, ExternalLink, Zap, Target, MessageCircle, Sparkles, GitFork, Brain,
-  TrendingUp, Users, MousePointerClick, Globe,
+  TrendingUp, Users, MousePointerClick, Globe, LayoutTemplate, Rocket,
+  CheckCircle2, ArrowRight, Trophy, Lightbulb, BarChart,
 } from "lucide-react";
 import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
@@ -87,6 +88,12 @@ function QuizVendasPage() {
 
       <TrustBar />
 
+      <ComoFunciona />
+
+      <TemplateGallery />
+
+      <CtaBanner />
+
       <Tabs defaultValue="quizzes" className="w-full">
         <TabsList className="bg-white border border-slate-200 rounded-full p-1 h-11">
           <TabsTrigger value="quizzes" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-5 h-9">Meus Quizzes</TabsTrigger>
@@ -143,6 +150,166 @@ function TrustBar() {
           <span className="text-slate-800">Google Ads</span>
           <span className="text-slate-300">|</span>
           <span className="text-slate-800">Webhook</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComoFunciona() {
+  const steps = [
+    {
+      num: "1",
+      icon: LayoutTemplate,
+      title: "Monte seu quiz",
+      desc: "Arrastando blocos de texto, perguntas, imagens e botões. Sem código.",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      num: "2",
+      icon: Rocket,
+      title: "Publique em segundos",
+      desc: "Gere um link público compartilhável. Pronto para receber leads.",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      num: "3",
+      icon: Trophy,
+      title: "Converta leads",
+      desc: "Cada lead receive um perfil personalizado com oferta e CTA direto.",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+  ];
+  return (
+    <div className="rounded-2xl bg-white border border-slate-200 p-6 mb-7">
+      <div className="text-center mb-6">
+        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Como funciona</p>
+        <h2 className="text-lg font-extrabold text-slate-900">3 passos para capturar leads qualificados</h2>
+      </div>
+      <div className="grid sm:grid-cols-3 gap-4">
+        {steps.map((s) => (
+          <div key={s.num} className="text-center">
+            <div className={`h-12 w-12 rounded-2xl ${s.bg} ${s.color} flex items-center justify-center mx-auto mb-3`}>
+              <s.icon className="h-6 w-6" />
+            </div>
+            <p className="text-xs font-bold text-slate-400 mb-1">Passo {s.num}</p>
+            <h3 className="font-bold text-slate-900 text-sm mb-1">{s.title}</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TemplateGallery() {
+  const templates = [
+    {
+      title: "Diagnóstico de Treino",
+      desc: "O quiz mais usado. Descubra o plano ideal para cada lead.",
+      accent: "#2563eb",
+      badge: "Mais usado",
+      badgeCls: "bg-blue-100 text-blue-700",
+    },
+    {
+      title: "Quiz de Reeducação",
+      desc: "Capture leads frios com um quiz educativo sobre alimentação.",
+      accent: "#f59e0b",
+      badge: "Novo",
+      badgeCls: "bg-amber-100 text-amber-700",
+    },
+    {
+      title: "Perfil de Investidor",
+      desc: "Qualifique leads para assessorias e produtos financeiros.",
+      accent: "#8b5cf6",
+      badge: "Exclusivo",
+      badgeCls: "bg-violet-100 text-violet-700",
+    },
+    {
+      title: "Checkup de Negócio",
+      desc: "Diagnóstico rápido para empresas. Gere propostas personalizadas.",
+      accent: "#10b981",
+      badge: "Premium",
+      badgeCls: "bg-emerald-100 text-emerald-700",
+    },
+  ];
+  const navigate = useNavigate();
+  return (
+    <div className="mb-7">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Templates prontos</p>
+          <h2 className="text-lg font-extrabold text-slate-900">Comece rápido com modelos testados</h2>
+        </div>
+        <Button variant="ghost" className="rounded-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-sm font-semibold">
+          Ver todos <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {templates.map((t) => (
+          <div
+            key={t.title}
+            className="rounded-2xl bg-white border border-slate-200 shadow-none p-5 hover:shadow-md hover:-translate-y-0.5 transition cursor-pointer group"
+          >
+            <div
+              className="h-24 rounded-xl mb-4 flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${t.accent}22, ${t.accent}08)` }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl text-white flex items-center justify-center font-extrabold text-sm"
+                style={{ backgroundColor: t.accent }}
+              >
+                {t.title.slice(0, 2).toUpperCase()}
+              </div>
+            </div>
+            <span className={`text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${t.badgeCls}`}>{t.badge}</span>
+            <h3 className="font-bold text-slate-900 text-sm mt-2 mb-1">{t.title}</h3>
+            <p className="text-xs text-slate-500 leading-relaxed mb-3">{t.desc}</p>
+            <Button
+              size="sm"
+              className="w-full rounded-full bg-blue-600 hover:bg-blue-700 text-white h-8 opacity-0 group-hover:opacity-100 transition"
+            >
+              Usar template
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CtaBanner() {
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 p-8 mb-7 text-center text-white relative overflow-hidden">
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full translate-x-1/3 translate-y-1/3" />
+      </div>
+      <div className="relative">
+        <div className="inline-flex items-center gap-2 text-xs font-bold bg-white/20 px-3 py-1 rounded-full mb-4">
+          <Lightbulb className="h-3.5 w-3.5" /> Dica de ouro
+        </div>
+        <h2 className="text-2xl font-extrabold mb-2">Seus quizzes já estão convertendo?</h2>
+        <p className="text-blue-100 text-sm max-w-md mx-auto mb-5">
+          Crie mais quizzes, teste diferentes ângulos e descubra o que mais converte para o seu público.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button
+            onClick={() => navigate({ to: "/admin/quiz-vendas" })}
+            className="rounded-full bg-white text-blue-700 hover:bg-blue-50 h-11 px-6 font-bold shadow-lg"
+          >
+            <Plus className="h-4 w-4 mr-2" /> Criar novo quiz
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full border-white/30 text-white hover:bg-white/10 h-11 px-6 font-bold"
+          >
+            <BarChart className="h-4 w-4 mr-2" /> Ver métricas
+          </Button>
         </div>
       </div>
     </div>
