@@ -55,6 +55,8 @@ import {
   type BlockKind,
   type TextStyle,
 } from "@/lib/quiz-store";
+import { publishQuizFn } from "@/lib/quiz.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/quiz-vendas/editor/$id")({
   component: QuizEditor,
@@ -203,17 +205,39 @@ function QuizEditor() {
     if (!quiz) return;
     upsertQuiz(quiz);
     setDirty(false);
+    // Keep the published copy in sync if the quiz is already live.
+    if (quiz.status === "ativo") {
+      publishQuizFn({ data: { quiz } }).catch((e) =>
+        toast.error(`Falha ao sincronizar publicação: ${e.message ?? e}`),
+      );
+    }
   }
-  function publish() {
+  async function publish() {
     if (!quiz) return;
     const updated = { ...quiz, status: "ativo" as const };
     upsertQuiz(updated);
     setQuiz(updated);
     setDirty(false);
+    try {
+      await publishQuizFn({ data: { quiz: updated } });
+      toast.success("Quiz publicado! Link externo já está no ar.");
+    } catch (e: any) {
+      toast.error(`Falha ao publicar: ${e.message ?? e}`);
+    }
   }
-  function openPublic() {
+  async function openPublic() {
     if (!quiz) return;
-    if (dirty) save();
+    // Make sure the latest version is live on the backend before opening the public URL.
+    const toPublish = { ...quiz, status: "ativo" as const };
+    upsertQuiz(toPublish);
+    setQuiz(toPublish);
+    setDirty(false);
+    try {
+      await publishQuizFn({ data: { quiz: toPublish } });
+    } catch (e: any) {
+      toast.error(`Falha ao publicar antes de abrir: ${e.message ?? e}`);
+      return;
+    }
     window.open(`/quiz/${quiz.slug}`, "_blank");
   }
 

@@ -28,6 +28,8 @@ import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
   createBlankQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
 } from "@/lib/quiz-store";
+import { publishQuizFn, unpublishQuizFn } from "@/lib/quiz.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/quiz-vendas")({
   component: QuizVendasPage,
@@ -445,7 +447,21 @@ function QuizCard({ quiz }: { quiz: QuizConfig }) {
               size="sm" variant="ghost"
               disabled={quiz.status === "rascunho"}
               className="rounded-full h-8 px-2.5 text-slate-500 hover:bg-slate-100"
-              onClick={() => toggleQuizStatus(quiz.id)}
+              onClick={async () => {
+                const wasActive = quiz.status === "ativo";
+                toggleQuizStatus(quiz.id);
+                try {
+                  if (wasActive) {
+                    await unpublishQuizFn({ data: { id: quiz.id } });
+                    toast.success("Quiz pausado.");
+                  } else {
+                    await publishQuizFn({ data: { quiz: { ...quiz, status: "ativo" } } });
+                    toast.success("Quiz publicado!");
+                  }
+                } catch (e: any) {
+                  toast.error(e.message ?? String(e));
+                }
+              }}
             >
               {quiz.status === "ativo" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
             </Button>
@@ -474,7 +490,17 @@ function QuizCard({ quiz }: { quiz: QuizConfig }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-full">Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="rounded-full bg-rose-600 hover:bg-rose-700" onClick={() => deleteQuiz(quiz.id)}>
+            <AlertDialogAction
+              className="rounded-full bg-rose-600 hover:bg-rose-700"
+              onClick={async () => {
+                deleteQuiz(quiz.id);
+                try {
+                  await unpublishQuizFn({ data: { id: quiz.id } });
+                } catch (e: any) {
+                  toast.error(e.message ?? String(e));
+                }
+              }}
+            >
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

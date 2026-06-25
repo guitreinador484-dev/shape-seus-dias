@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
+import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
 
 const fontSizeMap: Record<string, string> = {
   xs: "0.75rem",
@@ -34,15 +35,65 @@ type FormState = { name: string; email: string; whatsapp: string };
 function PublicQuiz() {
   const { slug } = Route.useParams();
   const [quiz, setQuiz] = useState<QuizConfig | null>(null);
+  const [loading, setLoading] = useState(true);
   const [stepIdx, setStepIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, { value: string; points: number }>>({});
   const [form, setForm] = useState<FormState>({ name: "", email: "", whatsapp: "" });
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    const q = getQuizBySlug(slug);
-    setQuiz(q ?? null);
+    let cancelled = false;
+    const local = getQuizBySlug(slug);
+    if (local) {
+      setQuiz(local);
+      setLoading(false);
+    }
+    // Always try backend so visitors on other devices see the latest published version.
+    fetchPublicQuizBySlug(slug)
+      .then((remote) => {
+        if (cancelled) return;
+        if (remote) setQuiz(remote);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
+
+  const totalScore = useMemo(
+    () => Object.values(answers).reduce((s, a) => s + a.points, 0),
+    [answers],
+  );
+  const maxScore = useMemo(() => {
+    if (!quiz) return 1;
+    let total = 0;
+    for (const s of quiz.steps) {
+      for (const b of s.blocks) {
+        if (b.kind === "escolha") total += Math.max(...b.options.map((o) => o.points), 0);
+        else if (b.kind === "sim-nao") total += Math.max(b.yesPoints, b.noPoints);
+      }
+    }
+    return total || 1;
+  }, [quiz]);
+  const score = Math.round((totalScore / maxScore) * 100);
+  const matchedRange: Range | undefined = useMemo(
+    () => quiz?.ranges.find((r) => score >= r.min && score <= r.max) ?? quiz?.ranges[0],
+    [quiz, score],
+  );
+
+  if (loading && !quiz) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-slate-900 px-4">
+        <div className="text-center">
+          <div className="text-3xl mb-2">⏳</div>
+          <p className="text-slate-500">Carregando quiz…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!quiz) {
     return (
@@ -75,27 +126,6 @@ function PublicQuiz() {
   const step = quiz.steps[stepIdx];
   const totalSteps = quiz.steps.length;
   const progress = finished ? 100 : Math.round(((stepIdx + 1) / totalSteps) * 100);
-
-  const totalScore = useMemo(
-    () => Object.values(answers).reduce((s, a) => s + a.points, 0),
-    [answers],
-  );
-  const maxScore = useMemo(() => {
-    let total = 0;
-    for (const s of quiz.steps) {
-      for (const b of s.blocks) {
-        if (b.kind === "escolha") total += Math.max(...b.options.map((o) => o.points), 0);
-        else if (b.kind === "sim-nao") total += Math.max(b.yesPoints, b.noPoints);
-      }
-    }
-    return total || 1;
-  }, [quiz]);
-  const score = Math.round((totalScore / maxScore) * 100);
-
-  const matchedRange: Range | undefined = useMemo(
-    () => quiz.ranges.find((r) => score >= r.min && score <= r.max) ?? quiz.ranges[0],
-    [quiz, score],
-  );
 
   function answerChoice(blockId: string, optionText: string, points: number, autoAdvance: boolean) {
     setAnswers((a) => ({ ...a, [blockId]: { value: optionText, points } }));
