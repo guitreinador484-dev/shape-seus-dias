@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Plus, Pencil, Copy, Pause, Play, BarChart3, Download, Trash2, Wand2,
-  Eye, ExternalLink, Zap,
+  Eye, ExternalLink, Zap, Target, MessageCircle, Sparkles, GitFork, Brain,
 } from "lucide-react";
 import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
@@ -82,6 +82,8 @@ function QuizVendasPage() {
         <Metric label="Aguardando contato" value={metrics.qualified} hint="qualificados" highlight />
       </div>
 
+      <SellCards />
+
       <Tabs defaultValue="quizzes" className="w-full">
         <TabsList className="bg-white border border-slate-200 rounded-full p-1 h-11">
           <TabsTrigger value="quizzes" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-5 h-9">Meus Quizzes</TabsTrigger>
@@ -101,6 +103,53 @@ function QuizVendasPage() {
       </Tabs>
 
       <Outlet />
+    </div>
+  );
+}
+
+function SellCards() {
+  const cards = [
+    {
+      icon: Brain,
+      gradient: "from-violet-600 to-indigo-600",
+      title: "Captura Inteligente",
+      desc: "Pontuação automática de leads com base nas respostas. Saiba quem está pronto para comprar.",
+    },
+    {
+      icon: GitFork,
+      gradient: "from-blue-600 to-cyan-600",
+      title: "Funil Automático",
+      desc: "Cada resposta direciona o lead para o próximo passo certo. Conversão sem atrito.",
+    },
+    {
+      icon: MessageCircle,
+      gradient: "from-emerald-500 to-teal-600",
+      title: "WhatsApp Nativo",
+      desc: "CTA direto para o seu WhatsApp com a oferta certa no momento certo. Venda no automático.",
+    },
+    {
+      icon: Sparkles,
+      gradient: "from-amber-500 to-orange-600",
+      title: "Resultado Instantâneo",
+      desc: "O lead vê o perfil e a oferta personalizada em segundos. Experiência que converte.",
+    },
+  ];
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-7">
+      {cards.map((c) => (
+        <div
+          key={c.title}
+          className="rounded-2xl bg-white border border-slate-200 shadow-none p-5 hover:shadow-md hover:-translate-y-0.5 transition"
+        >
+          <div
+            className={`h-10 w-10 rounded-xl bg-gradient-to-br ${c.gradient} text-white flex items-center justify-center mb-3 shadow-sm`}
+          >
+            <c.icon className="h-5 w-5" />
+          </div>
+          <h3 className="font-bold text-slate-900 text-sm mb-1">{c.title}</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">{c.desc}</p>
+        </div>
+      ))}
     </div>
   );
 }
