@@ -25,12 +25,10 @@ export const publishQuizFn = createServerFn({ method: "POST" })
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const section = `quiz:${data.quiz.id}`;
+    const content = JSON.parse(JSON.stringify(data.quiz));
     const { error } = await supabaseAdmin
       .from("quiz_config")
-      .upsert(
-        { section, content: data.quiz as unknown as Record<string, unknown> },
-        { onConflict: "section" },
-      );
+      .upsert({ section, content }, { onConflict: "section" });
     if (error) throw new Error(`Falha ao publicar: ${error.message}`);
     return { ok: true as const };
   });
