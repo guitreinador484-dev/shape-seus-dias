@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
+import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
 
 const fontSizeMap: Record<string, string> = {
   xs: "0.75rem",
@@ -34,15 +35,44 @@ type FormState = { name: string; email: string; whatsapp: string };
 function PublicQuiz() {
   const { slug } = Route.useParams();
   const [quiz, setQuiz] = useState<QuizConfig | null>(null);
+  const [loading, setLoading] = useState(true);
   const [stepIdx, setStepIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, { value: string; points: number }>>({});
   const [form, setForm] = useState<FormState>({ name: "", email: "", whatsapp: "" });
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    const q = getQuizBySlug(slug);
-    setQuiz(q ?? null);
+    let cancelled = false;
+    const local = getQuizBySlug(slug);
+    if (local) {
+      setQuiz(local);
+      setLoading(false);
+    }
+    // Always try backend so visitors on other devices see the latest published version.
+    fetchPublicQuizBySlug(slug)
+      .then((remote) => {
+        if (cancelled) return;
+        if (remote) setQuiz(remote);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
+
+  if (loading && !quiz) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-slate-900 px-4">
+        <div className="text-center">
+          <div className="text-3xl mb-2">⏳</div>
+          <p className="text-slate-500">Carregando quiz…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!quiz) {
     return (
