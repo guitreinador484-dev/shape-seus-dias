@@ -9,10 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QuizIndexRouteImport } from './routes/quiz.index'
 import { Route as QuizSlugRouteImport } from './routes/quiz.$slug'
 import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -27,11 +27,6 @@ import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
 import { Route as AuthenticatedAdminQuizVendasEditorIdRouteImport } from './routes/_authenticated/admin.quiz-vendas.editor.$id'
 
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -46,10 +41,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizIndexRoute = QuizIndexRouteImport.update({
+  id: '/quiz/',
+  path: '/quiz/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizSlugRoute = QuizSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => QuizRoute,
+  id: '/quiz/$slug',
+  path: '/quiz/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPlataformaRoute = AuthenticatedPlataformaRouteImport.update({
   id: '/plataforma',
@@ -122,10 +122,10 @@ const AuthenticatedAdminQuizVendasEditorIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
+  '/quiz/': typeof QuizIndexRoute
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
@@ -140,9 +140,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
+  '/quiz': typeof QuizIndexRoute
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
@@ -159,10 +159,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
+  '/quiz/': typeof QuizIndexRoute
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/_authenticated/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
@@ -179,10 +179,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/quiz'
     | '/admin'
     | '/plataforma'
     | '/quiz/$slug'
+    | '/quiz/'
     | '/admin/alunos'
     | '/admin/aulas'
     | '/admin/configuracoes'
@@ -197,9 +197,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/quiz'
     | '/plataforma'
     | '/quiz/$slug'
+    | '/quiz'
     | '/admin/alunos'
     | '/admin/aulas'
     | '/admin/configuracoes'
@@ -215,10 +215,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/quiz'
     | '/_authenticated/admin'
     | '/_authenticated/plataforma'
     | '/quiz/$slug'
+    | '/quiz/'
     | '/_authenticated/admin/alunos'
     | '/_authenticated/admin/aulas'
     | '/_authenticated/admin/configuracoes'
@@ -235,18 +235,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  QuizRoute: typeof QuizRouteWithChildren
+  QuizSlugRoute: typeof QuizSlugRoute
+  QuizIndexRoute: typeof QuizIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -268,12 +262,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/': {
+      id: '/quiz/'
+      path: '/quiz'
+      fullPath: '/quiz/'
+      preLoaderRoute: typeof QuizIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz/$slug': {
       id: '/quiz/$slug'
-      path: '/$slug'
+      path: '/quiz/$slug'
       fullPath: '/quiz/$slug'
       preLoaderRoute: typeof QuizSlugRouteImport
-      parentRoute: typeof QuizRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/plataforma': {
       id: '/_authenticated/plataforma'
@@ -418,21 +419,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface QuizRouteChildren {
-  QuizSlugRoute: typeof QuizSlugRoute
-}
-
-const QuizRouteChildren: QuizRouteChildren = {
-  QuizSlugRoute: QuizSlugRoute,
-}
-
-const QuizRouteWithChildren = QuizRoute._addFileChildren(QuizRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  QuizRoute: QuizRouteWithChildren,
+  QuizSlugRoute: QuizSlugRoute,
+  QuizIndexRoute: QuizIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
