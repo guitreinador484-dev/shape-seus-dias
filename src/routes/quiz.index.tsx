@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/quiz")({
+export const Route = createFileRoute("/quiz/")({
   head: () => ({
     meta: [
       { title: "Descubra seu plano de treino — Quiz Personal" },
