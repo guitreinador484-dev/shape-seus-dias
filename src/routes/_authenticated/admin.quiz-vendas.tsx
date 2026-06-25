@@ -21,6 +21,7 @@ import {
 import {
   Plus, Pencil, Copy, Pause, Play, BarChart3, Download, Trash2, Wand2,
   Eye, ExternalLink, Zap, Target, MessageCircle, Sparkles, GitFork, Brain,
+  TrendingUp, Users, MousePointerClick, Globe,
 } from "lucide-react";
 import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
@@ -84,6 +85,8 @@ function QuizVendasPage() {
 
       <SellCards />
 
+      <TrustBar />
+
       <Tabs defaultValue="quizzes" className="w-full">
         <TabsList className="bg-white border border-slate-200 rounded-full p-1 h-11">
           <TabsTrigger value="quizzes" className="rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white px-5 h-9">Meus Quizzes</TabsTrigger>
@@ -103,6 +106,45 @@ function QuizVendasPage() {
       </Tabs>
 
       <Outlet />
+    </div>
+  );
+}
+
+function TrustBar() {
+  return (
+    <div className="rounded-2xl bg-white border border-slate-200 p-6 mb-7">
+      <div className="grid sm:grid-cols-3 gap-6 mb-5">
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-slate-900">+5K</p>
+          <p className="text-xs text-slate-500 mt-1">Leads captados por dia</p>
+        </div>
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-slate-900">+12</p>
+          <p className="text-xs text-slate-500 mt-1">Quizzes publicados</p>
+        </div>
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-slate-900">96%</p>
+          <p className="text-xs text-slate-500 mt-1">Satisfação dos leads</p>
+        </div>
+      </div>
+      <div className="border-t border-slate-100 pt-4">
+        <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold text-center mb-3">
+          Integrações nativas
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-bold text-slate-400">
+          <span className="text-slate-800">Hotmart</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-800">Kiwify</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-800">WhatsApp</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-800">Meta Ads</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-800">Google Ads</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-800">Webhook</span>
+        </div>
+      </div>
     </div>
   );
 }
