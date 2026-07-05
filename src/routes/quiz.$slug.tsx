@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
 import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
+import { Loader2, HelpCircle, Star, ChevronDown } from "lucide-react";
 
 const fontSizeMap: Record<string, string> = {
   xs: "0.75rem",
@@ -74,6 +75,8 @@ function PublicQuiz() {
       for (const b of s.blocks) {
         if (b.kind === "escolha") total += Math.max(...b.options.map((o) => o.points), 0);
         else if (b.kind === "sim-nao") total += Math.max(b.yesPoints, b.noPoints);
+        else if (b.kind === "multipla") total += b.options.reduce((s, o) => s + Math.max(o.points, 0), 0);
+        else if (b.kind === "escala") total += b.max;
       }
     }
     return total || 1;
@@ -132,6 +135,14 @@ function PublicQuiz() {
     if (autoAdvance) setTimeout(() => goNext(), 250);
   }
 
+  function answerMulti(blockId: string, values: string[], points: number) {
+    setAnswers((a) => ({ ...a, [blockId]: { value: values.join(", "), points } }));
+  }
+
+  function answerScale(blockId: string, value: number) {
+    setAnswers((a) => ({ ...a, [blockId]: { value: String(value), points: value } }));
+  }
+
   function goNext() {
     if (stepIdx + 1 >= totalSteps) return finalize();
     setStepIdx((i) => i + 1);
@@ -168,7 +179,14 @@ function PublicQuiz() {
   function canAdvanceFromStep(): boolean {
     if (!step) return false;
     for (const b of step.blocks) {
-      if ((b.kind === "escolha" || b.kind === "sim-nao") && !answers[b.id]) return false;
+      if (
+        (b.kind === "escolha" ||
+          b.kind === "sim-nao" ||
+          b.kind === "multipla" ||
+          b.kind === "escala") &&
+        !answers[b.id]
+      )
+        return false;
       if (b.kind === "entrada" && b.required) {
         const v = (form as any)[b.field] as string;
         if (!v || !v.trim()) return false;
