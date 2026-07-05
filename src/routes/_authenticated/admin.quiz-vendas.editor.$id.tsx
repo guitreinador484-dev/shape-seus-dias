@@ -923,7 +923,128 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
           Espaçador {block.height}px
         </div>
       );
+    case "video":
+      return block.url ? (
+        <div className="w-full aspect-video rounded-xl overflow-hidden bg-black">
+          {isYoutube(block.url) ? (
+            <iframe
+              src={toYoutubeEmbed(block.url)}
+              className="w-full h-full"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <video src={block.url} controls className="w-full h-full" />
+          )}
+        </div>
+      ) : (
+        <div className="w-full aspect-video rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+          <VideoIcon className="h-10 w-10" />
+        </div>
+      );
+    case "escala":
+      return (
+        <div>
+          <p className="text-lg font-bold text-slate-900 mb-3">{block.question}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from({ length: block.max - block.min + 1 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-10 min-w-10 px-2 rounded-lg border-2 border-slate-200 flex items-center justify-center text-sm font-semibold text-slate-700"
+              >
+                {block.min + i}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-[11px] text-slate-500 mt-2">
+            <span>{block.minLabel}</span>
+            <span>{block.maxLabel}</span>
+          </div>
+        </div>
+      );
+    case "multipla":
+      return (
+        <div>
+          <p className="text-lg font-bold text-slate-900 mb-3">{block.question}</p>
+          <div className="space-y-2">
+            {block.options.map((o) => (
+              <div
+                key={o.id}
+                className="rounded-xl border-2 border-slate-200 px-5 py-3 flex items-center gap-3"
+              >
+                <span className="h-4 w-4 rounded border-2 border-slate-300 shrink-0" />
+                <span className="text-slate-800">{o.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    case "faq":
+      return (
+        <div className="space-y-2">
+          {block.items.map((it) => (
+            <div key={it.id} className="rounded-xl border border-slate-200 p-4">
+              <p className="font-bold text-slate-900 flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-slate-500" /> {it.q}
+              </p>
+              <p className="text-sm text-slate-600 mt-1">{it.a}</p>
+            </div>
+          ))}
+        </div>
+      );
+    case "loading":
+      return (
+        <div className="py-10 flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin" style={{ color: accent }} />
+          <p className="text-slate-700 font-medium">{block.message}</p>
+          <div className="w-full max-w-xs h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full w-2/3 rounded-full" style={{ backgroundColor: accent }} />
+          </div>
+        </div>
+      );
+    case "depoimento":
+      return (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {block.items.map((t) => (
+            <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm overflow-hidden">
+                  {t.avatarUrl ? (
+                    <img src={t.avatarUrl} alt={t.name} className="h-full w-full object-cover" />
+                  ) : (
+                    t.name.charAt(0)
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-slate-900 truncate">{t.name}</p>
+                  {t.role && <p className="text-[11px] text-slate-500 truncate">{t.role}</p>}
+                </div>
+              </div>
+              {typeof t.rating === "number" && (
+                <div className="flex gap-0.5 mb-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-3.5 w-3.5 ${i < (t.rating ?? 0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
+                    />
+                  ))}
+                </div>
+              )}
+              <p className="text-sm text-slate-700">{t.text}</p>
+            </div>
+          ))}
+        </div>
+      );
   }
+}
+
+function isYoutube(url: string) {
+  return /youtube\.com|youtu\.be/.test(url);
+}
+function toYoutubeEmbed(url: string) {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/);
+  const id = m?.[1];
+  return id ? `https://www.youtube.com/embed/${id}` : url;
 }
 
 // ============ Inspector ============
