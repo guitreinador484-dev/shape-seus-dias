@@ -416,8 +416,6 @@ function RuntimeBlock({
       return block.url ? (
         <img src={block.url} alt={block.alt ?? ""} className="w-full rounded-2xl" />
       ) : null;
-    case "espacador":
-      return <div style={{ height: block.height }} />;
     case "escolha": {
       const a = answers[block.id];
       return (
