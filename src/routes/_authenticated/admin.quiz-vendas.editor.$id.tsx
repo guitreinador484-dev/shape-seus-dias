@@ -1402,6 +1402,225 @@ function BlockInspector({ block, update }: { block: Block; update: (p: Partial<B
           />
         </div>
       );
+    case "video":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">URL do vídeo (YouTube ou MP4)</Label>
+          <Input2
+            value={block.url}
+            onChange={(e) => update({ url: e.target.value })}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+          <Label className="text-xs text-slate-400">Legenda (opcional)</Label>
+          <Input2 value={block.caption ?? ""} onChange={(e) => update({ caption: e.target.value })} />
+        </div>
+      );
+    case "escala":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Pergunta</Label>
+          <Input2 value={block.question} onChange={(e) => update({ question: e.target.value })} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs text-slate-400">Mín</Label>
+              <Input2 type="number" value={block.min} onChange={(e) => update({ min: Number(e.target.value) })} />
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Máx</Label>
+              <Input2 type="number" value={block.max} onChange={(e) => update({ max: Number(e.target.value) })} />
+            </div>
+          </div>
+          <Label className="text-xs text-slate-400">Rótulo mínimo</Label>
+          <Input2 value={block.minLabel ?? ""} onChange={(e) => update({ minLabel: e.target.value })} />
+          <Label className="text-xs text-slate-400">Rótulo máximo</Label>
+          <Input2 value={block.maxLabel ?? ""} onChange={(e) => update({ maxLabel: e.target.value })} />
+        </div>
+      );
+    case "multipla":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Pergunta</Label>
+          <Input2 value={block.question} onChange={(e) => update({ question: e.target.value })} />
+          <Label className="text-xs text-slate-400">Opções (texto + pontos)</Label>
+          {block.options.map((o) => (
+            <div key={o.id} className="flex gap-1.5">
+              <Input2
+                value={o.text}
+                onChange={(e) =>
+                  update({
+                    options: block.options.map((x) => (x.id === o.id ? { ...x, text: e.target.value } : x)),
+                  })
+                }
+              />
+              <input
+                type="number"
+                min={0}
+                value={o.points}
+                onChange={(e) =>
+                  update({
+                    options: block.options.map((x) =>
+                      x.id === o.id ? { ...x, points: Number(e.target.value) } : x,
+                    ),
+                  })
+                }
+                className="w-14 bg-slate-800 border border-slate-700 rounded-lg h-9 px-2 text-sm text-white text-center"
+              />
+              <button
+                onClick={() => update({ options: block.options.filter((x) => x.id !== o.id) })}
+                className="h-9 w-9 rounded-lg hover:bg-slate-800 text-rose-400 flex items-center justify-center"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() =>
+              update({ options: [...block.options, { id: uid(), text: "Nova opção", points: 3 }] })
+            }
+            className="w-full rounded-lg border border-dashed border-slate-700 hover:border-blue-500 px-3 py-2 text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1"
+          >
+            <Plus className="h-3 w-3" /> Adicionar opção
+          </button>
+        </div>
+      );
+    case "faq":
+      return (
+        <div className="space-y-2">
+          {block.items.map((it) => (
+            <div key={it.id} className="rounded-lg bg-slate-800 p-2 space-y-1.5">
+              <Input2
+                value={it.q}
+                placeholder="Pergunta"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === it.id ? { ...x, q: e.target.value } : x)),
+                  })
+                }
+              />
+              <TA
+                value={it.a}
+                rows={2}
+                placeholder="Resposta"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === it.id ? { ...x, a: e.target.value } : x)),
+                  })
+                }
+              />
+              <button
+                onClick={() => update({ items: block.items.filter((x) => x.id !== it.id) })}
+                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
+              >
+                <Trash2 className="h-3 w-3" /> Remover
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() =>
+              update({ items: [...block.items, { id: uid(), q: "Nova pergunta", a: "Resposta" }] })
+            }
+            className="w-full rounded-lg border border-dashed border-slate-700 hover:border-blue-500 px-3 py-2 text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1"
+          >
+            <Plus className="h-3 w-3" /> Adicionar item
+          </button>
+        </div>
+      );
+    case "loading":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Mensagem</Label>
+          <Input2 value={block.message} onChange={(e) => update({ message: e.target.value })} />
+          <Label className="text-xs text-slate-400">Duração (ms)</Label>
+          <Input2
+            type="number"
+            value={block.durationMs}
+            onChange={(e) => update({ durationMs: Number(e.target.value) })}
+          />
+          <p className="text-[11px] text-slate-500">Avança automaticamente para a próxima etapa.</p>
+        </div>
+      );
+    case "depoimento":
+      return (
+        <div className="space-y-2">
+          {block.items.map((t) => (
+            <div key={t.id} className="rounded-lg bg-slate-800 p-2 space-y-1.5">
+              <Input2
+                value={t.name}
+                placeholder="Nome"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === t.id ? { ...x, name: e.target.value } : x)),
+                  })
+                }
+              />
+              <Input2
+                value={t.role ?? ""}
+                placeholder="Cargo / contexto"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === t.id ? { ...x, role: e.target.value } : x)),
+                  })
+                }
+              />
+              <Input2
+                value={t.avatarUrl ?? ""}
+                placeholder="URL da foto (opcional)"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === t.id ? { ...x, avatarUrl: e.target.value } : x)),
+                  })
+                }
+              />
+              <TA
+                value={t.text}
+                rows={2}
+                placeholder="Depoimento"
+                onChange={(e) =>
+                  update({
+                    items: block.items.map((x) => (x.id === t.id ? { ...x, text: e.target.value } : x)),
+                  })
+                }
+              />
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-400">Estrelas</Label>
+                <input
+                  type="number"
+                  min={0}
+                  max={5}
+                  value={t.rating ?? 5}
+                  onChange={(e) =>
+                    update({
+                      items: block.items.map((x) =>
+                        x.id === t.id ? { ...x, rating: Number(e.target.value) } : x,
+                      ),
+                    })
+                  }
+                  className="w-14 bg-slate-800 border border-slate-700 rounded-lg h-9 px-2 text-sm text-white text-center"
+                />
+                <button
+                  onClick={() => update({ items: block.items.filter((x) => x.id !== t.id) })}
+                  className="ml-auto text-rose-400"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() =>
+              update({
+                items: [
+                  ...block.items,
+                  { id: uid(), name: "Novo cliente", text: "Ótima experiência!", rating: 5 },
+                ],
+              })
+            }
+            className="w-full rounded-lg border border-dashed border-slate-700 hover:border-blue-500 px-3 py-2 text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1"
+          >
+            <Plus className="h-3 w-3" /> Adicionar depoimento
+          </button>
+        </div>
+      );
   }
 }
 
