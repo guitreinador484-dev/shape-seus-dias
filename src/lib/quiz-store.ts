@@ -17,7 +17,13 @@ export type BlockKind =
   | "sim-nao"
   | "entrada"
   | "botao"
-  | "espacador";
+  | "espacador"
+  | "video"
+  | "escala"
+  | "multipla"
+  | "faq"
+  | "loading"
+  | "depoimento";
 
 export type Block =
   | { id: string; kind: "titulo"; text: string; align?: "left" | "center"; style?: TextStyle }
@@ -39,7 +45,46 @@ export type Block =
       required: boolean;
     }
   | { id: string; kind: "botao"; text: string; action: "next" | "submit"; style?: TextStyle }
-  | { id: string; kind: "espacador"; height: number };
+  | { id: string; kind: "espacador"; height: number }
+  | { id: string; kind: "video"; url: string; caption?: string }
+  | {
+      id: string;
+      kind: "escala";
+      question: string;
+      min: number;
+      max: number;
+      minLabel?: string;
+      maxLabel?: string;
+    }
+  | {
+      id: string;
+      kind: "multipla";
+      question: string;
+      options: { id: string; text: string; points: number }[];
+    }
+  | {
+      id: string;
+      kind: "faq";
+      items: { id: string; q: string; a: string }[];
+    }
+  | {
+      id: string;
+      kind: "loading";
+      message: string;
+      durationMs: number;
+    }
+  | {
+      id: string;
+      kind: "depoimento";
+      items: {
+        id: string;
+        name: string;
+        role?: string;
+        text: string;
+        avatarUrl?: string;
+        rating?: number;
+      }[];
+    };
 
 export type Step = {
   id: string;
