@@ -44,6 +44,13 @@ import {
   Tablet,
   Smartphone,
   Settings,
+  Video as VideoIcon,
+  Sliders,
+  CheckSquare,
+  HelpCircle,
+  Loader2,
+  Quote,
+  Star,
 } from "lucide-react";
 import {
   getQuiz,
@@ -68,10 +75,16 @@ const BLOCK_LIB: { kind: BlockKind; label: string; icon: typeof Type }[] = [
   { kind: "titulo", label: "Título", icon: Type },
   { kind: "paragrafo", label: "Parágrafo", icon: AlignLeft },
   { kind: "imagem", label: "Imagem", icon: ImageIcon },
+  { kind: "video", label: "Vídeo", icon: VideoIcon },
   { kind: "escolha", label: "Escolha", icon: ListChecks },
+  { kind: "multipla", label: "Múltipla", icon: CheckSquare },
   { kind: "sim-nao", label: "Sim / Não", icon: Check },
+  { kind: "escala", label: "Escala 1-10", icon: Sliders },
   { kind: "entrada", label: "Entrada", icon: ArrowDownToLine },
   { kind: "botao", label: "Botão", icon: MousePointerClick },
+  { kind: "loading", label: "Loading", icon: Loader2 },
+  { kind: "depoimento", label: "Depoimentos", icon: Quote },
+  { kind: "faq", label: "FAQ", icon: HelpCircle },
   { kind: "espacador", label: "Espaçador", icon: SeparatorHorizontal },
 ];
 
@@ -103,6 +116,66 @@ function makeBlock(kind: BlockKind): Block {
       return { id, kind, text: "Continuar", action: "next" };
     case "espacador":
       return { id, kind, height: 24 };
+    case "video":
+      return { id, kind, url: "", caption: "" };
+    case "escala":
+      return {
+        id,
+        kind,
+        question: "De 0 a 10, quanto você concorda?",
+        min: 0,
+        max: 10,
+        minLabel: "Discordo",
+        maxLabel: "Concordo",
+      };
+    case "multipla":
+      return {
+        id,
+        kind,
+        question: "Selecione tudo que se aplica",
+        options: [
+          { id: uid(), text: "Opção A", points: 3 },
+          { id: uid(), text: "Opção B", points: 3 },
+          { id: uid(), text: "Opção C", points: 3 },
+        ],
+      };
+    case "faq":
+      return {
+        id,
+        kind,
+        items: [
+          { id: uid(), q: "Como funciona?", a: "Explique aqui como funciona." },
+          { id: uid(), q: "Tem garantia?", a: "Sim, 7 dias de garantia." },
+        ],
+      };
+    case "loading":
+      return {
+        id,
+        kind,
+        message: "Analisando suas respostas...",
+        durationMs: 2500,
+      };
+    case "depoimento":
+      return {
+        id,
+        kind,
+        items: [
+          {
+            id: uid(),
+            name: "Ana C.",
+            role: "Aluna há 6 meses",
+            text: "Mudou minha rotina completamente. Recomendo demais!",
+            rating: 5,
+          },
+          {
+            id: uid(),
+            name: "Ricardo S.",
+            role: "Aluno há 1 ano",
+            text: "Resultados incríveis em pouco tempo.",
+            rating: 5,
+          },
+        ],
+      };
   }
 }
 
