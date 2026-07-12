@@ -11,7 +11,6 @@ import {
   Video,
   Dumbbell,
   ShoppingBag,
-  ClipboardList,
   Sparkles,
   Settings,
 } from "lucide-react";
@@ -46,7 +45,6 @@ const navItems: NavItem[] = [
   { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
-  { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList },
   { title: "Quiz de Vendas", url: "/admin/quiz-vendas", icon: Sparkles },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
 ];
