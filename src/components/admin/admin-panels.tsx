@@ -1415,7 +1415,12 @@ export function AdminPlatformPanel() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <PageHeader title="Plataforma do aluno" description="Configure o banner em destaque e a ordem das prateleiras da experiência estilo Netflix." />
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <PageHeader title="Plataforma do aluno" description="Configure o banner em destaque e a ordem das prateleiras da experiência estilo Netflix." />
+        <Button asChild variant="outline" className="mt-1">
+          <Link to="/plataforma"><ExternalLink className="h-4 w-4 mr-2" />Ver como o aluno</Link>
+        </Button>
+      </div>
       {loading ? <Skeleton className="h-96" /> : (
         <div className="space-y-6">
           <Card>
