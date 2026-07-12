@@ -11,7 +11,6 @@ import {
   Video,
   Dumbbell,
   ShoppingBag,
-  ClipboardList,
   Sparkles,
   Settings,
 } from "lucide-react";
