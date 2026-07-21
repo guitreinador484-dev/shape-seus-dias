@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { signedAsset, type Course } from "@/lib/courses-api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,23 +21,34 @@ type Row = {
 };
 
 function MyCoursesPage() {
-  const { user } = useAuth();
+  const { user, role, loading: authLoading } = useAuth();
+  const isAdmin = role === "admin" || isAdminEmail(user?.email);
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (authLoading) return;
+    if (!user) { setLoading(false); return; }
     (async () => {
       setLoading(true);
-      const { data: enrolls } = await supabase
-        .from("course_enrollments")
-        .select("course_id, courses(*)")
-        .eq("user_id", user.id);
-
-      const courses = (enrolls ?? [])
-        .map((e) => (e as any).courses as Course)
-        .filter((c): c is Course => !!c && c.is_published);
+      let courses: Course[] = [];
+      if (isAdmin) {
+        const { data } = await supabase
+          .from("courses")
+          .select("*")
+          .eq("is_published", true)
+          .order("order_index");
+        courses = (data ?? []) as Course[];
+      } else {
+        const { data: enrolls } = await supabase
+          .from("course_enrollments")
+          .select("course_id, courses(*)")
+          .eq("user_id", user.id);
+        courses = (enrolls ?? [])
+          .map((e) => (e as any).courses as Course)
+          .filter((c): c is Course => !!c && c.is_published);
+      }
 
       const built = await Promise.all(
         courses.map(async (course) => {
@@ -62,7 +73,7 @@ function MyCoursesPage() {
       setRows(built);
       setLoading(false);
     })();
-  }, [user]);
+  }, [authLoading, user, isAdmin]);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -83,8 +94,17 @@ function MyCoursesPage() {
           <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
             <BookOpen className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="font-display text-xl">Você ainda não tem cursos</p>
-          <p className="text-sm text-muted-foreground">Fale com seu personal para liberar acesso.</p>
+          <p className="font-display text-xl">
+            {isAdmin ? "Nenhum curso publicado ainda" : "Você ainda não tem cursos"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isAdmin ? "Crie e publique um curso na área administrativa." : "Fale com seu personal para liberar acesso."}
+          </p>
+          {isAdmin && (
+            <Button asChild size="sm" className="mt-2">
+              <Link to="/admin/cursos">Ir para admin</Link>
+            </Button>
+          )}
         </CardContent></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
