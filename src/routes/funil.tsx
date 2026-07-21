@@ -157,10 +157,58 @@ function FunnelPage() {
           </div>
         </div>
       </header>
+      {cfg.urgencyText && (
+        <div className="bg-blue-600 text-white text-center text-xs font-semibold py-1.5 px-4 sticky top-[57px] z-30">
+          {cfg.urgencyText}
+        </div>
+      )}
 
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-5">
         {stage === "form" && (
           <>
+            {cfg.banner?.enabled && cfg.banner.image && (
+              <section className="relative overflow-hidden rounded-3xl shadow-lg">
+                <img src={cfg.banner.image} alt="" className="h-56 w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/85 via-blue-800/60 to-transparent flex items-center">
+                  <div className="px-6 py-4 text-white max-w-md">
+                    <h2 className="text-2xl font-extrabold leading-tight">{cfg.banner.title}</h2>
+                    <p className="text-sm text-blue-100 mt-1">{cfg.banner.subtitle}</p>
+                    {cfg.banner.ctaLabel && (
+                      <div className="mt-3 inline-block rounded-full bg-white text-blue-700 text-xs font-bold px-4 py-2">
+                        {cfg.banner.ctaLabel}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {cfg.video?.enabled && cfg.video.url && (
+              <Card>
+                <div className="text-center mb-3">
+                  <h3 className="text-lg font-bold">{cfg.video.title}</h3>
+                  <p className="text-xs text-slate-500">{cfg.video.subtitle}</p>
+                </div>
+                <VideoEmbed url={cfg.video.url} />
+              </Card>
+            )}
+
+            {!!cfg.trustBadges?.length && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {cfg.trustBadges.map((b) => (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-center shadow-sm"
+                  >
+                    <div className="text-xl">{b.emoji}</div>
+                    <div className="text-[11px] font-semibold text-slate-700 mt-0.5 leading-tight">
+                      {b.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Medidas Corporais */}
             <Card>
               <CardHeader
