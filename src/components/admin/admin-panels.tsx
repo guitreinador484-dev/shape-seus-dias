@@ -858,6 +858,7 @@ export function AdminTrainingPanel() {
   const [students, setStudents] = useState<Student[]>([]);
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [selectedStudent, setSelectedStudent] = useState("");
+  const [filterStudent, setFilterStudent] = useState<string>("all");
   const [planName, setPlanName] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [loading, setLoading] = useState(true);
@@ -916,10 +917,27 @@ export function AdminTrainingPanel() {
   }
 
   const studentById = new Map(students.map((student) => [student.id, student]));
+  const filteredPlans = filterStudent === "all" ? plans : plans.filter((plan) => plan.student_id === filterStudent);
+  const sortedStudents = [...students].sort((a, b) => (a.full_name || a.email).localeCompare(b.full_name || b.email));
 
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader title="Treinos" description="Crie planos por aluno e adicione exercícios com séries, repetições e descanso." />
+      <Card className="mb-6">
+        <CardHeader><CardTitle>Filtrar por aluno</CardTitle></CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button size="sm" variant={filterStudent === "all" ? "default" : "outline"} onClick={() => setFilterStudent("all")}>Todos ({plans.length})</Button>
+          {sortedStudents.map((student) => {
+            const count = plans.filter((plan) => plan.student_id === student.id).length;
+            if (count === 0) return null;
+            return (
+              <Button key={student.id} size="sm" variant={filterStudent === student.id ? "default" : "outline"} onClick={() => setFilterStudent(student.id)}>
+                {student.full_name || student.email} ({count})
+              </Button>
+            );
+          })}
+        </CardContent>
+      </Card>
       <Card className="mb-6">
         <CardHeader><CardTitle>Novo treino para aluno</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-4">
@@ -935,9 +953,9 @@ export function AdminTrainingPanel() {
           <Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button>
         </CardContent>
       </Card>
-      {loading ? <Skeleton className="h-80" /> : plans.length === 0 ? <EmptyState title="Nenhum treino criado" description="Selecione um aluno e crie o primeiro plano de treino." /> : (
+      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyState title="Nenhum treino encontrado" description={filterStudent === "all" ? "Selecione um aluno e crie o primeiro plano de treino." : "Este aluno ainda não possui treinos."} /> : (
         <div className="space-y-4">
-          {plans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} />)}
+          {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} />)}
         </div>
       )}
     </div>
