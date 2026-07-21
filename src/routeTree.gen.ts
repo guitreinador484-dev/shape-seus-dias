@@ -18,6 +18,7 @@ import { Route as QuizSlugRouteImport } from './routes/quiz.$slug'
 import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_authenticated/plataforma.cursos'
 import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
 import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
 import { Route as AuthenticatedAdminQuizVendasRouteImport } from './routes/_authenticated/admin.quiz-vendas'
@@ -74,6 +75,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedPlataformaCursosRoute =
+  AuthenticatedPlataformaCursosRouteImport.update({
+    id: '/cursos',
+    path: '/cursos',
+    getParentRoute: () => AuthenticatedPlataformaRoute,
+  } as any)
 const AuthenticatedAdminVendasRoute =
   AuthenticatedAdminVendasRouteImport.update({
     id: '/vendas',
@@ -145,7 +152,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/plataforma': typeof AuthenticatedPlataformaRoute
+  '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/quiz/$slug': typeof QuizSlugRoute
   '/quiz/': typeof QuizIndexRoute
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
+  '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
@@ -165,7 +173,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
-  '/plataforma': typeof AuthenticatedPlataformaRoute
+  '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/quiz/$slug': typeof QuizSlugRoute
   '/quiz': typeof QuizIndexRoute
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
@@ -177,6 +185,7 @@ export interface FileRoutesByTo {
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
+  '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
@@ -188,7 +197,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/plataforma': typeof AuthenticatedPlataformaRoute
+  '/_authenticated/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/quiz/$slug': typeof QuizSlugRoute
   '/quiz/': typeof QuizIndexRoute
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
+  '/_authenticated/plataforma/cursos': typeof AuthenticatedPlataformaCursosRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin/quiz-vendas'
     | '/admin/treinos'
     | '/admin/vendas'
+    | '/plataforma/cursos'
     | '/admin/'
     | '/admin/cursos/$id'
     | '/admin/quiz-vendas/editor/$id'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/admin/quiz-vendas'
     | '/admin/treinos'
     | '/admin/vendas'
+    | '/plataforma/cursos'
     | '/admin'
     | '/admin/cursos/$id'
     | '/admin/quiz-vendas/editor/$id'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/quiz-vendas'
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
+    | '/_authenticated/plataforma/cursos'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/admin/quiz-vendas/editor/$id'
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/plataforma/cursos': {
+      id: '/_authenticated/plataforma/cursos'
+      path: '/cursos'
+      fullPath: '/plataforma/cursos'
+      preLoaderRoute: typeof AuthenticatedPlataformaCursosRouteImport
+      parentRoute: typeof AuthenticatedPlataformaRoute
     }
     '/_authenticated/admin/vendas': {
       id: '/_authenticated/admin/vendas'
@@ -483,14 +503,28 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedPlataformaRouteChildren {
+  AuthenticatedPlataformaCursosRoute: typeof AuthenticatedPlataformaCursosRoute
+}
+
+const AuthenticatedPlataformaRouteChildren: AuthenticatedPlataformaRouteChildren =
+  {
+    AuthenticatedPlataformaCursosRoute: AuthenticatedPlataformaCursosRoute,
+  }
+
+const AuthenticatedPlataformaRouteWithChildren =
+  AuthenticatedPlataformaRoute._addFileChildren(
+    AuthenticatedPlataformaRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedPlataformaRoute: typeof AuthenticatedPlataformaRoute
+  AuthenticatedPlataformaRoute: typeof AuthenticatedPlataformaRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedPlataformaRoute: AuthenticatedPlataformaRoute,
+  AuthenticatedPlataformaRoute: AuthenticatedPlataformaRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
