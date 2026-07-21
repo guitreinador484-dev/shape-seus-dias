@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2 } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Volume2, VolumeX, Maximize2 } from "lucide-react";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -37,6 +37,59 @@ function readConfig(value: Json | null): PlatformConfig {
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+
+function ImmersivePlayer({ title, url, poster, onClose }: { title: string; url: string; poster?: string; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showChrome, setShowChrome] = useState(true);
+  const hideTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === " ") { e.preventDefault(); const v = videoRef.current; if (v) { v.paused ? v.play() : v.pause(); } }
+      if (e.key === "f" || e.key === "F") { videoRef.current?.requestFullscreen?.(); }
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const bumpChrome = () => {
+    setShowChrome(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setShowChrome(false), 2600);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center animate-fade-in" onMouseMove={bumpChrome}>
+      {poster && (
+        <img src={poster} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-40 blur-3xl scale-110" />
+      )}
+      <div className="absolute inset-0 bg-black/70" />
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar"
+        className={`absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-black/60 hover:bg-black/80 text-white grid place-items-center backdrop-blur ring-1 ring-white/20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <div className={`absolute top-4 left-4 right-20 z-20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}>
+        <p className="text-white/60 text-xs uppercase tracking-widest">Assistindo</p>
+        <h3 className="text-white font-display text-xl sm:text-2xl truncate drop-shadow">{title}</h3>
+      </div>
+      <video
+        ref={videoRef}
+        src={url}
+        poster={poster}
+        controls
+        autoPlay
+        controlsList="nodownload"
+        className="relative z-10 w-full h-full max-h-screen bg-black object-contain"
+      />
+    </div>
+  );
+}
 
 function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
   const today = new Date().getDay();
@@ -388,73 +441,88 @@ function PlataformaPage() {
               ) : (
                 <div className={`space-y-10 pb-12 -mt-2 ${isLight ? "bg-background text-foreground" : "bg-black/95 text-white"}`}>
                   {heroWorkout && (
-                    <div className="relative h-[60vh] min-h-[380px] w-full overflow-hidden">
+                    <div className="relative h-[72vh] min-h-[460px] w-full overflow-hidden">
                       {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
                         <img
                           src={heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url || ""}
                           alt={config.hero_title || heroWorkout.title}
-                          className="absolute inset-0 w-full h-full object-cover"
+                          className="absolute inset-0 w-full h-full object-cover animate-[kenburns_20s_ease-in-out_infinite_alternate]"
                         />
                       )}
                       {isLight ? (
                         <div className="absolute inset-0 bg-black/30" />
                       ) : (
                         <>
-                          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.6)_100%)]" />
                         </>
                       )}
-                      <div className="relative h-full flex items-end px-4 sm:px-12 pb-12 max-w-7xl mx-auto">
-                        <div className="max-w-2xl space-y-4">
-                          <h2 className="font-display text-4xl sm:text-6xl font-bold leading-tight text-white drop-shadow-lg">
+                      <div className="relative h-full flex items-end px-4 sm:px-12 pb-16 max-w-7xl mx-auto">
+                        <div className="max-w-2xl space-y-4 animate-fade-in">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 backdrop-blur px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary-foreground ring-1 ring-primary/40">
+                            <Flame className="h-3.5 w-3.5" /> Em destaque
+                          </div>
+                          <h2 className="font-display text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.05] text-white drop-shadow-2xl">
                             {config.hero_title || heroWorkout.title}
                           </h2>
-                          <p className="text-base sm:text-lg text-white/90 line-clamp-3 drop-shadow">
+                          <p className="text-base sm:text-lg text-white/85 line-clamp-3 drop-shadow max-w-xl">
                             {config.hero_subtitle || heroWorkout.description || ""}
                           </p>
-                          <div className="flex gap-3 pt-2">
-                            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => playWorkout(heroWorkout)}>
+                          <div className="flex gap-3 pt-3">
+                            <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/30 h-12 px-8 text-base" onClick={() => playWorkout(heroWorkout)}>
                               <Play className="h-5 w-5 mr-2 fill-current" /> Assistir
                             </Button>
-                            <Button size="lg" variant="secondary" className="bg-black/40 text-white hover:bg-black/60 border-0 backdrop-blur">
+                            <Button size="lg" variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur h-12 px-8 text-base">
                               <Info className="h-5 w-5 mr-2" /> Mais informações
                             </Button>
                           </div>
                         </div>
                       </div>
+                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-black" />
                     </div>
                   )}
 
                   {orderedCats.map((cat) => (
                     <section key={cat} className="px-4 sm:px-12 max-w-7xl mx-auto">
-                      <h3 className="text-xl sm:text-2xl font-semibold mb-3">{cat}</h3>
-                      <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-thin">
+                      <h3 className="text-xl sm:text-2xl font-semibold mb-4 flex items-center gap-3">
+                        <span className="inline-block h-6 w-1.5 rounded-full bg-primary" /> {cat}
+                      </h3>
+                      <div className="relative">
+                        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scroll-smooth">
                         {(byCategory.get(cat) ?? []).map((w) => {
                           const thumb = signedUrls[w.id]?.thumb || w.thumbnail_url;
                           return (
                             <button
                               key={w.id}
                               onClick={() => playWorkout(w)}
-                              className={`group relative shrink-0 snap-start w-[240px] sm:w-[280px] aspect-video rounded-md overflow-hidden transition-transform hover:scale-105 hover:z-10 ${isLight ? "bg-muted ring-1 ring-black/10 hover:ring-primary" : "bg-neutral-900 ring-1 ring-white/5"}`}
+                              className={`group relative shrink-0 snap-start w-[260px] sm:w-[320px] aspect-video rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.08] hover:z-10 hover:shadow-2xl hover:shadow-primary/30 ${isLight ? "bg-muted ring-1 ring-black/10 hover:ring-2 hover:ring-primary" : "bg-neutral-900 ring-1 ring-white/10 hover:ring-2 hover:ring-primary"}`}
                             >
                               {thumb ? (
-                                <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover" />
+                                <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                               ) : (
                                 <div className={`absolute inset-0 grid place-items-center ${isLight ? "text-muted-foreground/40" : "text-white/30"}`}><Video className="h-10 w-10" /></div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90 group-hover:opacity-100" />
-                              <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                                <p className="font-medium text-sm line-clamp-1">{w.title}</p>
-                                <p className="text-xs text-white/70 line-clamp-1">{w.difficulty || w.category}</p>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 group-hover:opacity-100" />
+                              <div className="absolute inset-x-0 bottom-0 p-4 text-white translate-y-1 group-hover:translate-y-0 transition-transform">
+                                <p className="font-semibold text-sm sm:text-base line-clamp-1 drop-shadow">{w.title}</p>
+                                <p className="text-xs text-white/70 line-clamp-1 mt-0.5">{w.difficulty || w.category}</p>
                               </div>
-                              <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="h-12 w-12 rounded-full bg-primary grid place-items-center shadow-lg">
+                              <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
+                                <div className="h-14 w-14 rounded-full bg-primary grid place-items-center shadow-2xl shadow-primary/50 ring-4 ring-white/20">
                                   <Play className="h-6 w-6 text-primary-foreground fill-current ml-0.5" />
                                 </div>
                               </div>
                             </button>
                           );
                         })}
+                        </div>
+                        {!isLight && (
+                          <>
+                            <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-black to-transparent" />
+                            <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-black to-transparent" />
+                          </>
+                        )}
                       </div>
                     </section>
                   ))}
@@ -466,22 +534,12 @@ function PlataformaPage() {
         </div>
       </Tabs>
       {activeVideo && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setActiveVideo(null)}>
-          <div className="bg-background rounded-xl overflow-hidden max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-3 border-b border-border">
-              <p className="font-medium text-sm">{activeVideo.title}</p>
-              <Button size="sm" variant="ghost" onClick={() => setActiveVideo(null)}>Fechar</Button>
-            </div>
-            <video
-              src={activeVideo.url}
-              poster={signedUrls[activeVideo.id]?.thumb || workouts.find((w) => w.id === activeVideo.id)?.thumbnail_url || undefined}
-              controls
-              autoPlay
-              controlsList="nodownload"
-              className="w-full max-h-[70vh] bg-black"
-            />
-          </div>
-        </div>
+        <ImmersivePlayer
+          title={activeVideo.title}
+          url={activeVideo.url}
+          poster={signedUrls[activeVideo.id]?.thumb || workouts.find((w) => w.id === activeVideo.id)?.thumbnail_url || undefined}
+          onClose={() => setActiveVideo(null)}
+        />
       )}
     </div>
   );
