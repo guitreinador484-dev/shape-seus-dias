@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
@@ -37,6 +37,59 @@ function readConfig(value: Json | null): PlatformConfig {
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+
+function ImmersivePlayer({ title, url, poster, onClose }: { title: string; url: string; poster?: string; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showChrome, setShowChrome] = useState(true);
+  const hideTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === " ") { e.preventDefault(); const v = videoRef.current; if (v) { v.paused ? v.play() : v.pause(); } }
+      if (e.key === "f" || e.key === "F") { videoRef.current?.requestFullscreen?.(); }
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const bumpChrome = () => {
+    setShowChrome(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setShowChrome(false), 2600);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center animate-fade-in" onMouseMove={bumpChrome}>
+      {poster && (
+        <img src={poster} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-40 blur-3xl scale-110" />
+      )}
+      <div className="absolute inset-0 bg-black/70" />
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar"
+        className={`absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-black/60 hover:bg-black/80 text-white grid place-items-center backdrop-blur ring-1 ring-white/20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <div className={`absolute top-4 left-4 right-20 z-20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}>
+        <p className="text-white/60 text-xs uppercase tracking-widest">Assistindo</p>
+        <h3 className="text-white font-display text-xl sm:text-2xl truncate drop-shadow">{title}</h3>
+      </div>
+      <video
+        ref={videoRef}
+        src={url}
+        poster={poster}
+        controls
+        autoPlay
+        controlsList="nodownload"
+        className="relative z-10 w-full h-full max-h-screen bg-black object-contain"
+      />
+    </div>
+  );
+}
 
 function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
   const today = new Date().getDay();
