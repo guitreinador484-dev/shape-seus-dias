@@ -1642,6 +1642,27 @@ function BlockInspector({ block, update }: { block: Block; update: (p: Partial<B
           </button>
         </div>
       );
+    case "beneficio":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Texto do benefício</Label>
+          <Input2 value={block.text} onChange={(e) => update({ text: e.target.value })} />
+          <Label className="text-xs text-slate-400">Cor</Label>
+          <Select value={block.color ?? "green"} onValueChange={(v) => update({ color: v as any })}>
+            <SelectTrigger className="bg-slate-800 border-slate-700 text-white rounded-lg h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="green">Verde</SelectItem>
+              <SelectItem value="blue">Azul</SelectItem>
+              <SelectItem value="red">Vermelho</SelectItem>
+              <SelectItem value="amber">Âmbar</SelectItem>
+              <SelectItem value="slate">Cinza</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-slate-500">Pílula com ✅ no estilo XQuiz/Exodus.</p>
+        </div>
+      );
   }
 }
 
