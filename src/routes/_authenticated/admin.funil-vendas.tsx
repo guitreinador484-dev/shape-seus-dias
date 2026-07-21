@@ -11,6 +11,8 @@ import {
   DEFAULT_FUNNEL,
   type FunnelConfig,
   type FunnelPlan,
+  type FunnelTestimonial,
+  type FunnelTrustBadge,
   loadFunnelLocal,
   saveFunnelLocal,
   loadFunnelLeads,
