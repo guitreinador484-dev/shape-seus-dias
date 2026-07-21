@@ -400,11 +400,22 @@ function QuizEditor() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative">
         {tab === "construtor" && (
           <>
+            {/* Mobile backdrop */}
+            {(showLeftSidebar || showRightSidebar) && isMobile && (
+              <div
+                onClick={() => {
+                  setShowLeftSidebar(false);
+                  setShowRightSidebar(false);
+                }}
+                className="md:hidden absolute inset-0 bg-black/50 z-20"
+              />
+            )}
             {/* Steps sidebar */}
             {showLeftSidebar && (
+              <div className="md:contents absolute inset-y-0 left-0 z-30 flex bg-slate-950">
               <StepsSidebar
                 quiz={quiz}
                 stepIdx={stepIdx}
@@ -414,11 +425,12 @@ function QuizEditor() {
                 moveStep={moveStep}
                 patchStep={patchStep}
               />
+              </div>
             )}
 
             {/* Block library */}
             {showLeftSidebar && (
-              <div className="w-[152px] xl:w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0">
+              <div className="w-[152px] xl:w-[180px] border-r border-slate-800 overflow-y-auto p-3 shrink-0 absolute md:relative inset-y-0 left-[140px] xl:left-[160px] md:left-auto z-30 bg-slate-950">
                 <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2 px-2">
                   Componentes
                 </p>
@@ -438,7 +450,7 @@ function QuizEditor() {
             )}
 
             {/* Canvas */}
-            <div className="flex-1 min-w-0 min-h-0 bg-slate-900/50 overflow-y-auto p-4 flex flex-col items-center justify-start">
+            <div className="flex-1 min-w-0 min-h-0 bg-slate-900/50 overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start">
               {/* Canvas Toolbar */}
               <div className="w-full max-w-4xl mb-4 flex flex-wrap items-center justify-between gap-3 px-3 py-2 bg-slate-950/80 backdrop-blur border border-slate-800 rounded-xl shrink-0">
                 <div className="flex items-center gap-1.5">
@@ -538,6 +550,7 @@ function QuizEditor() {
 
             {/* Inspector */}
             {showRightSidebar && (
+              <div className="md:contents absolute inset-y-0 right-0 z-30 flex bg-slate-950">
               <Inspector
                 quiz={quiz}
                 step={step}
@@ -546,6 +559,7 @@ function QuizEditor() {
                 selectedBlock={selectedBlock}
                 updateBlock={updateBlock}
               />
+              </div>
             )}
           </>
         )}
