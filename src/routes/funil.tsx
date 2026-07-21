@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import {
   DEFAULT_FUNNEL,
@@ -138,35 +138,83 @@ function FunnelPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-blue-700" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f6fbf7] text-slate-900">
+    <div className="min-h-screen bg-[#f5f8ff] text-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-emerald-100 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 font-bold text-emerald-700">
+          <div className="flex items-center gap-2 font-bold text-blue-700">
             <span className="text-xl">{cfg.brandEmoji}</span>
             <span className="text-lg tracking-tight">{cfg.brand}</span>
           </div>
           <div className="text-xs text-slate-500 hidden sm:flex items-center gap-1">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" /> Pagamento seguro
+            <ShieldCheck className="h-4 w-4 text-blue-700" /> Pagamento seguro
           </div>
         </div>
       </header>
+      {cfg.urgencyText && (
+        <div className="bg-blue-600 text-white text-center text-xs font-semibold py-1.5 px-4 sticky top-[57px] z-30">
+          {cfg.urgencyText}
+        </div>
+      )}
 
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-5">
         {stage === "form" && (
           <>
+            {cfg.banner?.enabled && cfg.banner.image && (
+              <section className="relative overflow-hidden rounded-3xl shadow-lg">
+                <img src={cfg.banner.image} alt="" className="h-56 w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/85 via-blue-800/60 to-transparent flex items-center">
+                  <div className="px-6 py-4 text-white max-w-md">
+                    <h2 className="text-2xl font-extrabold leading-tight">{cfg.banner.title}</h2>
+                    <p className="text-sm text-blue-100 mt-1">{cfg.banner.subtitle}</p>
+                    {cfg.banner.ctaLabel && (
+                      <div className="mt-3 inline-block rounded-full bg-white text-blue-700 text-xs font-bold px-4 py-2">
+                        {cfg.banner.ctaLabel}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {cfg.video?.enabled && cfg.video.url && (
+              <Card>
+                <div className="text-center mb-3">
+                  <h3 className="text-lg font-bold">{cfg.video.title}</h3>
+                  <p className="text-xs text-slate-500">{cfg.video.subtitle}</p>
+                </div>
+                <VideoEmbed url={cfg.video.url} />
+              </Card>
+            )}
+
+            {!!cfg.trustBadges?.length && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {cfg.trustBadges.map((b) => (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-center shadow-sm"
+                  >
+                    <div className="text-xl">{b.emoji}</div>
+                    <div className="text-[11px] font-semibold text-slate-700 mt-0.5 leading-tight">
+                      {b.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Medidas Corporais */}
             <Card>
               <CardHeader
                 title={cfg.headline}
                 subtitle={cfg.subheadline}
-                icon={<Activity className="h-4 w-4 text-emerald-600" />}
+                icon={<Activity className="h-4 w-4 text-blue-700" />}
                 progress={measurementProgress}
               />
               <div className="grid gap-3">
@@ -213,8 +261,8 @@ function FunnelPage() {
                       onClick={() => setMeasurements((m) => ({ ...m, sexo: s }))}
                       className={`rounded-xl border py-3 text-sm font-medium transition ${
                         measurements.sexo === s
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300"
+                          ? "border-blue-600 bg-blue-50 text-blue-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
                       }`}
                     >
                       {s === "M" ? "Masculino" : "Feminino"}
@@ -255,7 +303,7 @@ function FunnelPage() {
                       {g.name} <span>{g.emoji}</span>
                     </h3>
                     <span
-                      className={`text-xs font-medium ${chosen.length ? "text-emerald-600" : "text-slate-400"}`}
+                      className={`text-xs font-medium ${chosen.length ? "text-blue-700" : "text-slate-400"}`}
                     >
                       {chosen.length}/5 {chosen.length > 0 && <Check className="inline h-3 w-3" />}
                     </span>
@@ -265,7 +313,7 @@ function FunnelPage() {
                     <p className="text-xs text-slate-400">Selecione até 5 exercícios (ou deixe a gente sugerir)</p>
                     <button
                       onClick={() => setSelections((prev) => ({ ...prev, [g.key]: [...g.beginners] }))}
-                      className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full px-3 py-1 whitespace-nowrap"
+                      className="text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-full px-3 py-1 whitespace-nowrap"
                     >
                       Sugerir pra mim
                     </button>
@@ -281,14 +329,14 @@ function FunnelPage() {
                           title={beginner ? "Recomendado para iniciantes" : undefined}
                           className={`text-xs rounded-lg border px-3 py-2 text-left transition ${
                             active
-                              ? "border-emerald-500 bg-emerald-500 text-white font-medium shadow-sm"
-                              : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300"
+                              ? "border-blue-600 bg-blue-600 text-white font-medium shadow-sm"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
                           }`}
                         >
                           <span className="mr-1">{g.emoji}</span>
                           {ex}
                           {beginner && !active && (
-                            <span className="ml-1 text-[10px] text-emerald-600 font-semibold">• fácil</span>
+                            <span className="ml-1 text-[10px] text-blue-700 font-semibold">• fácil</span>
                           )}
                           {active && <Check className="inline h-3 w-3 ml-1" />}
                         </button>
@@ -304,7 +352,7 @@ function FunnelPage() {
               <CardHeader
                 title="Informações de Rotina"
                 subtitle="Detalhes sobre sua rotina de treinos"
-                icon={<Sparkles className="h-4 w-4 text-emerald-600" />}
+                icon={<Sparkles className="h-4 w-4 text-blue-700" />}
                 progress={Math.round((routineFilled / cfg.routine.length) * 100)}
               />
               <div className="grid gap-3">
@@ -356,20 +404,20 @@ function FunnelPage() {
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 text-left">
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-emerald-600" /> Treino personalizado completo
+                    <Check className="h-3 w-3 text-blue-700" /> Treino personalizado completo
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-emerald-600" /> Baseado nas suas preferências
+                    <Check className="h-3 w-3 text-blue-700" /> Baseado nas suas preferências
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-emerald-600" /> Modifique quando quiser
+                    <Check className="h-3 w-3 text-blue-700" /> Modifique quando quiser
                   </li>
                 </ul>
               </div>
               <button
                 onClick={handleGoPlans}
                 disabled={!canSubmit}
-                className="mt-5 w-full rounded-full bg-emerald-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-5 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cfg.ctaLabel} →
               </button>
@@ -377,6 +425,68 @@ function FunnelPage() {
                 <Lock className="h-3 w-3" /> Pagamento seguro
               </p>
             </Card>
+
+            {!!cfg.testimonials?.length && (
+              <Card>
+                <h3 className="text-lg font-bold text-center">O que nossos alunos dizem</h3>
+                <p className="text-xs text-slate-500 text-center mb-4">
+                  Resultados reais de quem já começou
+                </p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {cfg.testimonials.map((t) => (
+                    <div
+                      key={t.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 flex flex-col"
+                    >
+                      <div className="flex items-center gap-3">
+                        {t.avatar && (
+                          <img
+                            src={t.avatar}
+                            alt=""
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        )}
+                        <div>
+                          <div className="text-sm font-bold">{t.name}</div>
+                          {t.role && (
+                            <div className="text-[10px] text-blue-700 font-medium">{t.role}</div>
+                          )}
+                        </div>
+                      </div>
+                      {typeof t.rating === "number" && (
+                        <div className="flex gap-0.5 mt-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${
+                                i < (t.rating ?? 0)
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-slate-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-600 mt-2 leading-relaxed">"{t.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {cfg.guarantee?.enabled && (
+              <Card className="border-2 border-blue-200 bg-blue-50/50">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-blue-600 p-2 text-white shrink-0">
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-blue-900">{cfg.guarantee.title}</h3>
+                    <p className="text-xs text-slate-700 mt-1">{cfg.guarantee.description}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             <div className="text-center text-xs text-slate-400 pb-6">
               Já são mais de 850 mil pessoas com seus objetivos alcançados
@@ -391,7 +501,7 @@ function FunnelPage() {
               <p className="text-sm text-slate-500">Selecione o melhor plano para você</p>
               <button
                 onClick={() => setStage("form")}
-                className="mt-2 text-xs text-emerald-600 hover:underline"
+                className="mt-2 text-xs text-blue-700 hover:underline"
               >
                 ← Mudar objetivo
               </button>
@@ -402,16 +512,16 @@ function FunnelPage() {
                   key={p.id}
                   className={`relative rounded-2xl border-2 bg-white p-5 flex flex-col transition ${
                     p.highlighted
-                      ? "border-emerald-500 shadow-lg shadow-emerald-500/10"
+                      ? "border-blue-600 shadow-lg shadow-blue-600/10"
                       : "border-slate-200"
                   }`}
                 >
                   {p.badge && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                       {p.badge}
                     </div>
                   )}
-                  <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
+                  <div className="text-xs text-blue-700 font-semibold flex items-center gap-1">
                     {cfg.brandEmoji} {cfg.brand}
                   </div>
                   <h3 className="mt-2 text-lg font-bold">{p.name}</h3>
@@ -419,7 +529,7 @@ function FunnelPage() {
                   <ul className="mt-4 space-y-2 text-sm text-slate-700 flex-1">
                     {p.features.map((f, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                        <Check className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                         <span>{f}</span>
                       </li>
                     ))}
@@ -428,8 +538,8 @@ function FunnelPage() {
                     onClick={() => handlePickPlan(p)}
                     className={`mt-5 rounded-full py-2.5 text-sm font-semibold transition ${
                       p.highlighted
-                        ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                        : "border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "border-2 border-blue-600 text-blue-700 hover:bg-blue-50"
                     }`}
                   >
                     Escolher Plano
@@ -449,7 +559,7 @@ function FunnelPage() {
               >
                 ← Voltar
               </button>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-3 py-1 flex items-center gap-1">
+              <span className="text-xs font-semibold text-blue-700 bg-blue-50 rounded-full px-3 py-1 flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" /> Pagamento Seguro
               </span>
             </div>
@@ -461,7 +571,7 @@ function FunnelPage() {
                   onClick={() => setMethod(m)}
                   className={`rounded-xl border-2 py-3 text-sm font-semibold transition ${
                     method === m
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
                       : "border-slate-200 bg-white text-slate-500"
                   }`}
                 >
@@ -471,19 +581,19 @@ function FunnelPage() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 p-5 bg-white">
-              <div className="text-center font-bold text-emerald-700 flex items-center justify-center gap-1">
+              <div className="text-center font-bold text-blue-700 flex items-center justify-center gap-1">
                 {cfg.brandEmoji} {cfg.brand}
               </div>
               <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                 <span className="text-sm font-medium text-slate-700 flex items-center gap-2">
                   {method === "pix" ? "✚ Pagamento via PIX" : "💳 Pagamento via Cartão"}
                 </span>
-                <span className="text-lg font-bold text-emerald-600">{selectedPlan.price}</span>
+                <span className="text-lg font-bold text-blue-700">{selectedPlan.price}</span>
               </div>
               <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
                 {selectedPlan.features.slice(0, 3).map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
-                    <span className="text-emerald-500">🎯</span> {f}
+                    <span className="text-blue-600">🎯</span> {f}
                   </li>
                 ))}
               </ul>
@@ -511,7 +621,7 @@ function FunnelPage() {
               <button
                 onClick={handleFinish}
                 disabled={!contact.email || submitting}
-                className="mt-5 w-full rounded-full bg-emerald-500 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-5 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -527,7 +637,7 @@ function FunnelPage() {
 
         {stage === "done" && (
           <Card className="text-center py-10">
-            <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500 flex items-center justify-center text-white text-3xl">
+            <div className="mx-auto h-14 w-14 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl">
               ✓
             </div>
             <h2 className="mt-4 text-2xl font-extrabold">Tudo pronto, {contact.name || "atleta"}!</h2>
@@ -573,7 +683,7 @@ function CardHeader({
         {typeof progress === "number" && (
           <div className="h-1.5 w-20 rounded-full bg-slate-100 overflow-hidden">
             <div
-              className="h-full bg-emerald-500 transition-all"
+              className="h-full bg-blue-600 transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -601,7 +711,7 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
     />
   );
 }
@@ -622,7 +732,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-9 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 ${
+        className={`w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-9 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 ${
           value ? "text-slate-900" : "text-slate-400"
         }`}
       >
@@ -637,5 +747,37 @@ function Select({
         ▾
       </span>
     </div>
+  );
+}
+
+function VideoEmbed({ url }: { url: string }) {
+  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (yt) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${yt[1]}`}
+          className="absolute inset-0 h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  if (vimeo) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeo[1]}`}
+          className="absolute inset-0 h-full w-full"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  return (
+    <video src={url} controls className="w-full rounded-xl bg-black" />
   );
 }
