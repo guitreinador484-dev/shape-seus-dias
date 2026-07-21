@@ -85,6 +85,7 @@ const BLOCK_LIB: { kind: BlockKind; label: string; icon: typeof Type }[] = [
   { kind: "loading", label: "Loading", icon: Loader2 },
   { kind: "depoimento", label: "Depoimentos", icon: Quote },
   { kind: "faq", label: "FAQ", icon: HelpCircle },
+  { kind: "beneficio", label: "Benefício", icon: Check },
   { kind: "espacador", label: "Espaçador", icon: SeparatorHorizontal },
 ];
 
@@ -176,6 +177,8 @@ function makeBlock(kind: BlockKind): Block {
           },
         ],
       };
+    case "beneficio":
+      return { id, kind, text: "Resultado personalizado em 2 minutos", color: "green" };
   }
 }
 
