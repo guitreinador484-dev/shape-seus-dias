@@ -14,12 +14,16 @@ export type ExerciseGroup = {
   name: string;
   emoji: string;
   image: string;
+  description: string;
+  beginners: string[];
   exercises: string[];
 };
 
 export const EXERCISE_GROUPS: ExerciseGroup[] = [
   {
     key: "peito", name: "Peito", emoji: "💪", image: peito,
+    description: "Trabalha os músculos do peito. Ajuda a deixar a parte da frente do corpo mais forte e definida.",
+    beginners: ["Flexão inclinada", "Supino na máquina", "Supino reto com halteres"],
     exercises: [
       "Supino reto com barra","Supino inclinado com barra","Supino declinado com barra",
       "Supino reto com halteres","Supino inclinado com halteres","Crucifixo reto com halteres",
@@ -31,6 +35,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "costas", name: "Costas", emoji: "🔙", image: costas,
+    description: "Fortalece as costas e melhora a postura. Ótimo para quem passa o dia sentado.",
+    beginners: ["Puxada frontal na polia", "Remada na máquina", "Remada baixa na polia (triângulo)"],
     exercises: [
       "Barra fixa pegada pronada","Barra fixa pegada supinada","Puxada frontal na polia",
       "Puxada atrás na polia","Remada curvada com barra","Remada cavalinho",
@@ -42,6 +48,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "pernas", name: "Pernas", emoji: "🦵", image: pernas,
+    description: "Fortalece coxas, quadríceps e posterior. Base para qualquer treino, dá firmeza no dia a dia.",
+    beginners: ["Leg press 45º", "Cadeira extensora", "Cadeira flexora"],
     exercises: [
       "Agachamento livre","Agachamento frontal","Agachamento búlgaro","Agachamento sumô",
       "Leg press 45º","Leg press horizontal","Hack squat","Avanço com halteres",
@@ -53,6 +61,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "ombros", name: "Ombros", emoji: "🏋️", image: ombros,
+    description: "Deixa os ombros mais largos e fortes. Melhora a postura e o formato do tronco.",
+    beginners: ["Desenvolvimento na máquina", "Elevação lateral com halteres", "Elevação frontal com halteres"],
     exercises: [
       "Desenvolvimento militar com barra","Desenvolvimento com halteres","Desenvolvimento Arnold",
       "Desenvolvimento na máquina","Elevação lateral com halteres","Elevação lateral na polia",
@@ -63,6 +73,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "biceps", name: "Bíceps", emoji: "💪", image: biceps,
+    description: "Trabalha o músculo da frente do braço — aquele que aparece quando você dobra o cotovelo.",
+    beginners: ["Rosca direta com barra", "Rosca alternada com halteres", "Rosca martelo"],
     exercises: [
       "Rosca direta com barra","Rosca direta com barra W","Rosca alternada com halteres",
       "Rosca martelo","Rosca concentrada","Rosca scott com barra","Rosca scott com halter",
@@ -71,6 +83,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "triceps", name: "Tríceps", emoji: "🔱", image: triceps,
+    description: "Trabalha a parte de trás do braço. Ajuda a tirar a 'flacidez' e dar volume ao braço.",
+    beginners: ["Tríceps pulley (corda)", "Tríceps na máquina", "Mergulho no banco"],
     exercises: [
       "Tríceps pulley (corda)","Tríceps pulley (barra)","Tríceps testa com barra W",
       "Tríceps francês com halter","Tríceps coice com halter","Mergulho em paralelas",
@@ -80,6 +94,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "abdomen", name: "Abdômen", emoji: "🔥", image: abdomen,
+    description: "Fortalece a barriga e o core. Melhora a postura e protege a coluna.",
+    beginners: ["Abdominal supra", "Prancha frontal", "Elevação de pernas suspenso"],
     exercises: [
       "Abdominal supra","Abdominal infra","Abdominal oblíquo","Abdominal bicicleta",
       "Prancha frontal","Prancha lateral","Elevação de pernas suspenso",
@@ -89,6 +105,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "gluteos", name: "Glúteos", emoji: "🍑", image: gluteos,
+    description: "Modela e fortalece o bumbum. Também ajuda muito na postura e na força das pernas.",
+    beginners: ["Elevação pélvica com barra (hip thrust)", "Glúteo na máquina", "Cadeira abdutora"],
     exercises: [
       "Elevação pélvica com barra (hip thrust)","Elevação pélvica unilateral","Glúteo na polia (coice)",
       "Glúteo na máquina","Agachamento sumô com halter","Avanço (lunge)","Passada com halteres",
@@ -98,6 +116,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "antebraco", name: "Antebraço", emoji: "🤜", image: antebraco,
+    description: "Fortalece o antebraço e melhora a pegada — útil pra pegar peso e para o dia a dia.",
+    beginners: ["Rosca martelo", "Rosca de punho (palma para cima)", "Caminhada do fazendeiro (farmer's walk)"],
     exercises: [
       "Rosca de punho (palma para cima)","Rosca de punho invertida","Rosca martelo",
       "Rosca inversa com barra W","Caminhada do fazendeiro (farmer's walk)",
@@ -106,6 +126,8 @@ export const EXERCISE_GROUPS: ExerciseGroup[] = [
   },
   {
     key: "cardio", name: "Cardio / Funcional", emoji: "🏃", image: cardio,
+    description: "Melhora o fôlego, queima gordura e dá energia. Escolha o que você tem mais facilidade em fazer.",
+    beginners: ["Esteira (corrida)", "Bicicleta ergométrica", "Polichinelo (jumping jack)"],
     exercises: [
       "Esteira (corrida)","Bicicleta ergométrica","Elíptico","Escada (stair master)",
       "Pular corda","Burpee","Mountain climber","Polichinelo (jumping jack)",
