@@ -426,6 +426,68 @@ function FunnelPage() {
               </p>
             </Card>
 
+            {!!cfg.testimonials?.length && (
+              <Card>
+                <h3 className="text-lg font-bold text-center">O que nossos alunos dizem</h3>
+                <p className="text-xs text-slate-500 text-center mb-4">
+                  Resultados reais de quem já começou
+                </p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {cfg.testimonials.map((t) => (
+                    <div
+                      key={t.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 flex flex-col"
+                    >
+                      <div className="flex items-center gap-3">
+                        {t.avatar && (
+                          <img
+                            src={t.avatar}
+                            alt=""
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        )}
+                        <div>
+                          <div className="text-sm font-bold">{t.name}</div>
+                          {t.role && (
+                            <div className="text-[10px] text-blue-700 font-medium">{t.role}</div>
+                          )}
+                        </div>
+                      </div>
+                      {typeof t.rating === "number" && (
+                        <div className="flex gap-0.5 mt-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${
+                                i < (t.rating ?? 0)
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-slate-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-600 mt-2 leading-relaxed">"{t.text}"</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {cfg.guarantee?.enabled && (
+              <Card className="border-2 border-blue-200 bg-blue-50/50">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-blue-600 p-2 text-white shrink-0">
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-blue-900">{cfg.guarantee.title}</h3>
+                    <p className="text-xs text-slate-700 mt-1">{cfg.guarantee.description}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             <div className="text-center text-xs text-slate-400 pb-6">
               Já são mais de 850 mil pessoas com seus objetivos alcançados
             </div>
