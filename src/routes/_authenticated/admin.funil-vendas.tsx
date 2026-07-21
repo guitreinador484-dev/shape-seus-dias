@@ -186,6 +186,201 @@ function AdminFunnelPage() {
         </Field>
       </Section>
 
+      <Section title="Banner de destaque">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!cfg.banner?.enabled}
+            onChange={(e) => updateBanner({ enabled: e.target.checked })}
+          />
+          Exibir banner no topo do funil
+        </label>
+        <Row>
+          <Field label="Imagem do banner (URL)">
+            <Input
+              value={cfg.banner?.image ?? ""}
+              onChange={(e) => updateBanner({ image: e.target.value })}
+              placeholder="https://..."
+            />
+          </Field>
+          <Field label="Texto do botão (opcional)">
+            <Input
+              value={cfg.banner?.ctaLabel ?? ""}
+              onChange={(e) => updateBanner({ ctaLabel: e.target.value })}
+            />
+          </Field>
+        </Row>
+        <Row>
+          <Field label="Título">
+            <Input
+              value={cfg.banner?.title ?? ""}
+              onChange={(e) => updateBanner({ title: e.target.value })}
+            />
+          </Field>
+          <Field label="Subtítulo">
+            <Input
+              value={cfg.banner?.subtitle ?? ""}
+              onChange={(e) => updateBanner({ subtitle: e.target.value })}
+            />
+          </Field>
+        </Row>
+        {cfg.banner?.image && (
+          <div className="overflow-hidden rounded-xl border border-border">
+            <img src={cfg.banner.image} alt="" className="h-32 w-full object-cover" />
+          </div>
+        )}
+      </Section>
+
+      <Section title="Vídeo de apresentação">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!cfg.video?.enabled}
+            onChange={(e) => updateVideo({ enabled: e.target.checked })}
+          />
+          Mostrar vídeo no funil
+        </label>
+        <Field label="URL do vídeo (YouTube, Vimeo ou MP4)">
+          <Input
+            value={cfg.video?.url ?? ""}
+            onChange={(e) => updateVideo({ url: e.target.value })}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+        </Field>
+        <Row>
+          <Field label="Título">
+            <Input
+              value={cfg.video?.title ?? ""}
+              onChange={(e) => updateVideo({ title: e.target.value })}
+            />
+          </Field>
+          <Field label="Subtítulo">
+            <Input
+              value={cfg.video?.subtitle ?? ""}
+              onChange={(e) => updateVideo({ subtitle: e.target.value })}
+            />
+          </Field>
+        </Row>
+      </Section>
+
+      <Section title="Barra de urgência">
+        <Field label="Texto de urgência (deixe vazio para ocultar)">
+          <Input
+            value={cfg.urgencyText ?? ""}
+            onChange={(e) => update("urgencyText", e.target.value)}
+            placeholder="🔥 Oferta por tempo limitado — só hoje"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Selos de confiança">
+        <p className="text-xs text-muted-foreground">
+          Aparecem em cards no topo do funil para aumentar a conversão.
+        </p>
+        <div className="grid gap-2 md:grid-cols-2">
+          {(cfg.trustBadges ?? []).map((b, i) => (
+            <div key={b.id} className="rounded-xl border border-border bg-background p-3 flex gap-2 items-end">
+              <div className="w-16">
+                <Label className="text-xs">Emoji</Label>
+                <Input value={b.emoji} onChange={(e) => updateBadge(i, { emoji: e.target.value })} maxLength={4} />
+              </div>
+              <div className="flex-1">
+                <Label className="text-xs">Texto</Label>
+                <Input value={b.label} onChange={(e) => updateBadge(i, { label: e.target.value })} />
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => removeBadge(i)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={addBadge}>
+          + Adicionar selo
+        </Button>
+      </Section>
+
+      <Section title="Depoimentos">
+        <div className="grid gap-3 md:grid-cols-2">
+          {(cfg.testimonials ?? []).map((t, i) => (
+            <div key={t.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <b>Depoimento {i + 1}</b>
+                <Button variant="ghost" size="sm" onClick={() => removeTestimonial(i)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Row>
+                <Field label="Nome">
+                  <Input value={t.name} onChange={(e) => updateTestimonial(i, { name: e.target.value })} />
+                </Field>
+                <Field label="Resultado / cargo">
+                  <Input
+                    value={t.role ?? ""}
+                    onChange={(e) => updateTestimonial(i, { role: e.target.value })}
+                    placeholder="Perdeu 8kg em 3 meses"
+                  />
+                </Field>
+              </Row>
+              <Row>
+                <Field label="Foto (URL)">
+                  <Input value={t.avatar ?? ""} onChange={(e) => updateTestimonial(i, { avatar: e.target.value })} />
+                </Field>
+                <Field label="Estrelas (0-5)">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={5}
+                    value={t.rating ?? 5}
+                    onChange={(e) =>
+                      updateTestimonial(i, { rating: Math.max(0, Math.min(5, +e.target.value)) })
+                    }
+                  />
+                </Field>
+              </Row>
+              <Field label="Depoimento">
+                <Textarea rows={3} value={t.text} onChange={(e) => updateTestimonial(i, { text: e.target.value })} />
+              </Field>
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={addTestimonial}>
+          + Adicionar depoimento
+        </Button>
+      </Section>
+
+      <Section title="Garantia">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={!!cfg.guarantee?.enabled}
+            onChange={(e) => updateGuarantee({ enabled: e.target.checked })}
+          />
+          Exibir bloco de garantia
+        </label>
+        <Row>
+          <Field label="Título">
+            <Input
+              value={cfg.guarantee?.title ?? ""}
+              onChange={(e) => updateGuarantee({ title: e.target.value })}
+            />
+          </Field>
+          <Field label="Dias">
+            <Input
+              type="number"
+              value={cfg.guarantee?.days ?? 7}
+              onChange={(e) => updateGuarantee({ days: +e.target.value })}
+            />
+          </Field>
+        </Row>
+        <Field label="Descrição">
+          <Textarea
+            rows={3}
+            value={cfg.guarantee?.description ?? ""}
+            onChange={(e) => updateGuarantee({ description: e.target.value })}
+          />
+        </Field>
+      </Section>
+
       {/* Opções do formulário */}
       <Section title="Opções do formulário">
         <Field label="Objetivos (uma opção por linha)">
