@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Volume2, VolumeX, Maximize2 } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Volume2, VolumeX, Maximize2, BookOpen } from "lucide-react";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -406,6 +406,12 @@ function PlataformaPage() {
                   <Video className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Aulas em vídeo</span>
                 </TabsTrigger>
               )}
+              <Link
+                to="/plataforma/cursos"
+                className="ml-1 inline-flex items-center gap-2 rounded-full px-4 h-9 text-sm hover:bg-background transition"
+              >
+                <BookOpen className="h-4 w-4" /> <span className="hidden sm:inline">Cursos</span>
+              </Link>
             </TabsList>
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               <p className="text-xs text-muted-foreground truncate max-w-[160px]">{user?.email}</p>
