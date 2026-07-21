@@ -74,47 +74,47 @@
 
 :root {
   --radius: 0.5rem;
-  /* Dark-only design system. Hex values from brief mapped to oklch. */
-  --background: oklch(0.05 0 0);              /* #0a0a0a */
-  --foreground: oklch(0.95 0.012 80);         /* #F5F0E8 */
-  --card: oklch(0.10 0 0);                    /* #1a1a1a */
-  --card-foreground: oklch(0.95 0.012 80);
-  --popover: oklch(0.08 0 0);                 /* #111111 */
-  --popover-foreground: oklch(0.95 0.012 80);
-  --primary: oklch(0.55 0.22 25);             /* #C8102E */
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.10 0 0);
-  --secondary-foreground: oklch(0.95 0.012 80);
-  --muted: oklch(0.10 0 0);
-  --muted-foreground: oklch(0.65 0.012 80);   /* #A09A8E */
-  --accent: oklch(0.55 0.22 25);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.20 0 0);                  /* #2a2a2a */
-  --input: oklch(0.10 0 0);
-  --ring: oklch(0.55 0.22 25);
-  --surface-2: oklch(0.10 0 0);
+  /* Light theme: white background, black text, blue primary. */
+  --background: oklch(1 0 0);                 /* #ffffff */
+  --foreground: oklch(0.12 0 0);              /* near-black */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.12 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.12 0 0);
+  --primary: oklch(0.55 0.22 255);            /* blue #2563eb-ish */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.12 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.55 0.22 255);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.60 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.90 0 0);
+  --input: oklch(0.97 0 0);
+  --ring: oklch(0.55 0.22 255);
+  --surface-2: oklch(0.97 0 0);
   --success: oklch(0.70 0.17 145);            /* #4CAF50 */
   --warning: oklch(0.78 0.17 65);             /* #FF9800 */
-  --chart-1: oklch(0.55 0.22 25);
+  --chart-1: oklch(0.55 0.22 255);
   --chart-2: oklch(0.70 0.17 145);
   --chart-3: oklch(0.78 0.17 65);
-  --chart-4: oklch(0.65 0.012 80);
-  --chart-5: oklch(0.45 0.18 25);
-  --sidebar: oklch(0.05 0 0);
-  --sidebar-foreground: oklch(0.95 0.012 80);
-  --sidebar-primary: oklch(0.55 0.22 25);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.10 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0.012 80);
-  --sidebar-border: oklch(0.20 0 0);
-  --sidebar-ring: oklch(0.55 0.22 25);
+  --chart-4: oklch(0.65 0.15 255);
+  --chart-5: oklch(0.45 0.18 255);
+  --sidebar: oklch(0.98 0 0);
+  --sidebar-foreground: oklch(0.12 0 0);
+  --sidebar-primary: oklch(0.55 0.22 255);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent-foreground: oklch(0.12 0 0);
+  --sidebar-border: oklch(0.90 0 0);
+  --sidebar-ring: oklch(0.55 0.22 255);
 }
 
 .dark {
-  /* Dark is the only theme; mirror :root */
-  color-scheme: dark;
+  /* Light is the only theme; keep light-scheme to prevent UA dark override. */
+  color-scheme: light;
 }
 
 /* Light theme scope for the student platform (opt-in via wrapper class) */
@@ -126,17 +126,17 @@
   --card-foreground: oklch(0 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.55 0.22 25);
+  --primary: oklch(0.55 0.22 255);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.20 0 0);
-  --accent: oklch(0.55 0.22 25);
+  --accent: oklch(0.55 0.22 255);
   --accent-foreground: oklch(0.99 0 0);
   --border: oklch(0.88 0 0);
   --input: oklch(0.97 0 0);
-  --ring: oklch(0.55 0.22 25);
+  --ring: oklch(0.55 0.22 255);
   --surface-2: oklch(0.97 0 0);
   background-color: var(--color-background);
   color: var(--color-foreground);
@@ -207,7 +207,7 @@
   border-radius: 8px;
   transition: background-color 150ms ease, transform 150ms ease;
 }
-@utility btn-cta-hover { background-color: oklch(0.60 0.22 25); }
+@utility btn-cta-hover { background-color: oklch(0.60 0.22 255); }
 
 /* Quiz de Vendas — force light/black readable colors regardless of admin theme */
 .quiz-vendas-scope,
