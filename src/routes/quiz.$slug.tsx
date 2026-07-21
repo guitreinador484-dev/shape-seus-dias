@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
 import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
 import { Loader2, HelpCircle, Star, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 
 const fontSizeMap: Record<string, string> = {
   xs: "0.75rem",
@@ -24,6 +25,42 @@ function textStyle(s?: TextStyle): React.CSSProperties {
     fontSize: s.fontSize ? fontSizeMap[s.fontSize] : undefined,
     backgroundColor: s.bgColor,
   };
+}
+
+// Inline highlight parser: `[c=red]texto[/c]` -> colored span.
+// Also supports **bold**.
+const HIGHLIGHT_COLORS: Record<string, string> = {
+  red: "#ef4444",
+  green: "#16a34a",
+  blue: "#2563eb",
+  amber: "#f59e0b",
+  black: "#000000",
+};
+function renderRich(text: string): React.ReactNode {
+  const nodes: React.ReactNode[] = [];
+  const re = /\[c=(red|green|blue|amber|black)\]([\s\S]+?)\[\/c\]|\*\*([\s\S]+?)\*\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    if (m[1]) {
+      nodes.push(
+        <span key={key++} style={{ color: HIGHLIGHT_COLORS[m[1]], fontWeight: 800 }}>
+          {m[2]}
+        </span>,
+      );
+    } else if (m[3]) {
+      nodes.push(
+        <strong key={key++} style={{ fontWeight: 800 }}>
+          {m[3]}
+        </strong>,
+      );
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
 }
 
 export const Route = createFileRoute("/quiz/$slug")({
