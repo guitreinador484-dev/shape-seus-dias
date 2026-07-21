@@ -589,7 +589,7 @@ export function createNutriQuiz(): QuizConfig {
             kind: "depoimento",
             items: [
               { id: uid(), name: "Marina R.", role: "-14kg em 4 meses", text: "Sem passar fome, sem loucura. Aprendi de verdade.", rating: 5 },
-              { id: uid(), kind: undefined as never, id: uid(), name: "Paulo H.", role: "-9kg em 3 meses", text: "Cardápio simples que eu consegui seguir de verdade.", rating: 5 } as any,
+              { id: uid(), name: "Paulo H.", role: "-9kg em 3 meses", text: "Cardápio simples que eu consegui seguir de verdade.", rating: 5 },
             ],
           },
           { id: uid(), kind: "botao", text: "VER MEU DIAGNÓSTICO", action: "next" },
