@@ -23,6 +23,7 @@ import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminQuizVendasRouteImport } from './routes/_authenticated/admin.quiz-vendas'
 import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_authenticated/admin.plataforma'
 import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_authenticated/admin.funil-vendas'
+import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenticated/admin.cursos'
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
@@ -102,6 +103,12 @@ const AuthenticatedAdminFunilVendasRoute =
     path: '/funil-vendas',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCursosRoute =
+  AuthenticatedAdminCursosRouteImport.update({
+    id: '/cursos',
+    path: '/cursos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminConfiguracoesRoute =
   AuthenticatedAdminConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -137,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/cursos': typeof AuthenticatedAdminCursosRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
@@ -155,6 +163,7 @@ export interface FileRoutesByTo {
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/admin/cursos': typeof AuthenticatedAdminCursosRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
@@ -176,6 +185,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/_authenticated/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
+  '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRoute
   '/_authenticated/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/_authenticated/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/_authenticated/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin/alunos'
     | '/admin/aulas'
     | '/admin/configuracoes'
+    | '/admin/cursos'
     | '/admin/funil-vendas'
     | '/admin/plataforma'
     | '/admin/quiz-vendas'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/admin/alunos'
     | '/admin/aulas'
     | '/admin/configuracoes'
+    | '/admin/cursos'
     | '/admin/funil-vendas'
     | '/admin/plataforma'
     | '/admin/quiz-vendas'
@@ -235,6 +247,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/alunos'
     | '/_authenticated/admin/aulas'
     | '/_authenticated/admin/configuracoes'
+    | '/_authenticated/admin/cursos'
     | '/_authenticated/admin/funil-vendas'
     | '/_authenticated/admin/plataforma'
     | '/_authenticated/admin/quiz-vendas'
@@ -353,6 +366,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFunilVendasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cursos': {
+      id: '/_authenticated/admin/cursos'
+      path: '/cursos'
+      fullPath: '/admin/cursos'
+      preLoaderRoute: typeof AuthenticatedAdminCursosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/configuracoes': {
       id: '/_authenticated/admin/configuracoes'
       path: '/configuracoes'
@@ -403,6 +423,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRoute
   AuthenticatedAdminAulasRoute: typeof AuthenticatedAdminAulasRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
+  AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRoute
   AuthenticatedAdminFunilVendasRoute: typeof AuthenticatedAdminFunilVendasRoute
   AuthenticatedAdminPlataformaRoute: typeof AuthenticatedAdminPlataformaRoute
   AuthenticatedAdminQuizVendasRoute: typeof AuthenticatedAdminQuizVendasRouteWithChildren
@@ -415,6 +436,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAlunosRoute: AuthenticatedAdminAlunosRoute,
   AuthenticatedAdminAulasRoute: AuthenticatedAdminAulasRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
+  AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRoute,
   AuthenticatedAdminFunilVendasRoute: AuthenticatedAdminFunilVendasRoute,
   AuthenticatedAdminPlataformaRoute: AuthenticatedAdminPlataformaRoute,
   AuthenticatedAdminQuizVendasRoute:
