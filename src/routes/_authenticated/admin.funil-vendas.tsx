@@ -82,6 +82,43 @@ function AdminFunnelPage() {
     }));
   };
 
+  const updateBanner = (patch: Partial<NonNullable<FunnelConfig["banner"]>>) =>
+    setCfg((c) => ({ ...c, banner: { ...(c.banner ?? DEFAULT_FUNNEL.banner!), ...patch } }));
+  const updateVideo = (patch: Partial<NonNullable<FunnelConfig["video"]>>) =>
+    setCfg((c) => ({ ...c, video: { ...(c.video ?? DEFAULT_FUNNEL.video!), ...patch } }));
+  const updateGuarantee = (patch: Partial<NonNullable<FunnelConfig["guarantee"]>>) =>
+    setCfg((c) => ({ ...c, guarantee: { ...(c.guarantee ?? DEFAULT_FUNNEL.guarantee!), ...patch } }));
+  const updateTestimonial = (idx: number, patch: Partial<FunnelTestimonial>) =>
+    setCfg((c) => ({
+      ...c,
+      testimonials: (c.testimonials ?? []).map((t, i) => (i === idx ? { ...t, ...patch } : t)),
+    }));
+  const addTestimonial = () =>
+    setCfg((c) => ({
+      ...c,
+      testimonials: [
+        ...(c.testimonials ?? []),
+        { id: crypto.randomUUID(), name: "Nome do aluno", text: "Depoimento aqui", rating: 5, role: "" },
+      ],
+    }));
+  const removeTestimonial = (idx: number) =>
+    setCfg((c) => ({ ...c, testimonials: (c.testimonials ?? []).filter((_, i) => i !== idx) }));
+  const updateBadge = (idx: number, patch: Partial<FunnelTrustBadge>) =>
+    setCfg((c) => ({
+      ...c,
+      trustBadges: (c.trustBadges ?? []).map((b, i) => (i === idx ? { ...b, ...patch } : b)),
+    }));
+  const addBadge = () =>
+    setCfg((c) => ({
+      ...c,
+      trustBadges: [
+        ...(c.trustBadges ?? []),
+        { id: crypto.randomUUID(), emoji: "⭐", label: "Novo selo" },
+      ],
+    }));
+  const removeBadge = (idx: number) =>
+    setCfg((c) => ({ ...c, trustBadges: (c.trustBadges ?? []).filter((_, i) => i !== idx) }));
+
   return (
     <div className="funnel-admin-scope p-4 md:p-6 space-y-6 max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
