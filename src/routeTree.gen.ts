@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
+import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
 import { Route as AuthenticatedAdminQuizVendasEditorIdRouteImport } from './routes/_authenticated/admin.quiz-vendas.editor.$id'
 
 const FunilRoute = FunilRouteImport.update({
@@ -126,6 +127,12 @@ const AuthenticatedAdminAlunosRoute =
     path: '/alunos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCursosIdRoute =
+  AuthenticatedAdminCursosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminCursosRoute,
+  } as any)
 const AuthenticatedAdminQuizVendasEditorIdRoute =
   AuthenticatedAdminQuizVendasEditorIdRouteImport.update({
     id: '/editor/$id',
@@ -144,13 +151,14 @@ export interface FileRoutesByFullPath {
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
-  '/admin/cursos': typeof AuthenticatedAdminCursosRoute
+  '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRoutesByTo {
@@ -163,13 +171,14 @@ export interface FileRoutesByTo {
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
-  '/admin/cursos': typeof AuthenticatedAdminCursosRoute
+  '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRoutesById {
@@ -185,13 +194,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/_authenticated/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
-  '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRoute
+  '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/_authenticated/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/_authenticated/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/_authenticated/admin/quiz-vendas': typeof AuthenticatedAdminQuizVendasRouteWithChildren
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/admin/quiz-vendas/editor/$id': typeof AuthenticatedAdminQuizVendasEditorIdRoute
 }
 export interface FileRouteTypes {
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/admin/'
+    | '/admin/cursos/$id'
     | '/admin/quiz-vendas/editor/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/admin'
+    | '/admin/cursos/$id'
     | '/admin/quiz-vendas/editor/$id'
   id:
     | '__root__'
@@ -254,6 +266,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/admin/quiz-vendas/editor/$id'
   fileRoutesById: FileRoutesById
 }
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAlunosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cursos/$id': {
+      id: '/_authenticated/admin/cursos/$id'
+      path: '/$id'
+      fullPath: '/admin/cursos/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCursosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCursosRoute
+    }
     '/_authenticated/admin/quiz-vendas/editor/$id': {
       id: '/_authenticated/admin/quiz-vendas/editor/$id'
       path: '/editor/$id'
@@ -403,6 +423,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAdminCursosRouteChildren {
+  AuthenticatedAdminCursosIdRoute: typeof AuthenticatedAdminCursosIdRoute
+}
+
+const AuthenticatedAdminCursosRouteChildren: AuthenticatedAdminCursosRouteChildren =
+  {
+    AuthenticatedAdminCursosIdRoute: AuthenticatedAdminCursosIdRoute,
+  }
+
+const AuthenticatedAdminCursosRouteWithChildren =
+  AuthenticatedAdminCursosRoute._addFileChildren(
+    AuthenticatedAdminCursosRouteChildren,
+  )
 
 interface AuthenticatedAdminQuizVendasRouteChildren {
   AuthenticatedAdminQuizVendasEditorIdRoute: typeof AuthenticatedAdminQuizVendasEditorIdRoute
@@ -423,7 +457,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRoute
   AuthenticatedAdminAulasRoute: typeof AuthenticatedAdminAulasRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
-  AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRoute
+  AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRouteWithChildren
   AuthenticatedAdminFunilVendasRoute: typeof AuthenticatedAdminFunilVendasRoute
   AuthenticatedAdminPlataformaRoute: typeof AuthenticatedAdminPlataformaRoute
   AuthenticatedAdminQuizVendasRoute: typeof AuthenticatedAdminQuizVendasRouteWithChildren
@@ -436,7 +470,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAlunosRoute: AuthenticatedAdminAlunosRoute,
   AuthenticatedAdminAulasRoute: AuthenticatedAdminAulasRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
-  AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRoute,
+  AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRouteWithChildren,
   AuthenticatedAdminFunilVendasRoute: AuthenticatedAdminFunilVendasRoute,
   AuthenticatedAdminPlataformaRoute: AuthenticatedAdminPlataformaRoute,
   AuthenticatedAdminQuizVendasRoute:
