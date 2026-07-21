@@ -749,3 +749,35 @@ function Select({
     </div>
   );
 }
+
+function VideoEmbed({ url }: { url: string }) {
+  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (yt) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${yt[1]}`}
+          className="absolute inset-0 h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  if (vimeo) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+        <iframe
+          src={`https://player.vimeo.com/video/${vimeo[1]}`}
+          className="absolute inset-0 h-full w-full"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  return (
+    <video src={url} controls className="w-full rounded-xl bg-black" />
+  );
+}
