@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -194,6 +195,16 @@ function QuizEditor() {
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
   const [previewMode, setPreviewMode] = useState<"phone" | "tablet" | "desktop" | "quiz">("quiz");
+  const isMobile = useIsMobile();
+  useEffect(() => {
+    if (isMobile) {
+      setShowLeftSidebar(false);
+      setShowRightSidebar(false);
+    } else {
+      setShowLeftSidebar(true);
+      setShowRightSidebar(true);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     if (!quiz && id) {
