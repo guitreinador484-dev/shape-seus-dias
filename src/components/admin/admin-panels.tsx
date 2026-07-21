@@ -1418,7 +1418,7 @@ export function AdminPlatformPanel() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <PageHeader title="Plataforma do aluno" description="Configure o banner em destaque e a ordem das prateleiras da experiência estilo Netflix." />
         <Button asChild variant="outline" className="mt-1">
-          <Link to="/plataforma"><ExternalLink className="h-4 w-4 mr-2" />Ver como o aluno</Link>
+          <a href="/plataforma?preview=1" target="_blank" rel="noreferrer" className="inline-flex items-center"><ExternalLink className="h-4 w-4 mr-2" />Ver como o aluno</a>
         </Button>
       </div>
       {loading ? <Skeleton className="h-96" /> : (
