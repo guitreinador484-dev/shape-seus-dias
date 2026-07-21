@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   loadCourseBySlug,
@@ -29,7 +29,8 @@ type Progress = { lesson_id: string; completed_at: string | null };
 
 function CourseDetailPage() {
   const { slug } = useParams({ from: "/_authenticated/plataforma/cursos/$slug" });
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin" || isAdminEmail(user?.email);
   const [course, setCourse] = useState<CourseFull | null>(null);
   const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress[]>([]);
@@ -43,7 +44,7 @@ function CourseDetailPage() {
     if (!c) { setLoading(false); return; }
     setCourse(c);
     const { data: enroll } = await supabase.from("course_enrollments").select("enrolled_at").eq("course_id", c.id).eq("user_id", user.id).maybeSingle();
-    setEnrolledAt(enroll?.enrolled_at ?? null);
+    setEnrolledAt(enroll?.enrolled_at ?? (isAdmin ? c.created_at : null));
     const lessonIds = c.modules.flatMap((m) => m.lessons.map((l) => l.id));
     if (lessonIds.length) {
       const { data } = await supabase.from("lesson_progress").select("lesson_id, completed_at").eq("user_id", user.id).in("lesson_id", lessonIds);
