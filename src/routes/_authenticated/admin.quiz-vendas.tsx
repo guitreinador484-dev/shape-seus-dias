@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
-  createBlankQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
+  createBlankQuiz, createExodusQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
 } from "@/lib/quiz-store";
 import { publishQuizFn, unpublishQuizFn } from "@/lib/quiz.functions";
 import { toast } from "sonner";
@@ -62,6 +62,13 @@ function QuizVendasPage() {
     navigate({ to: "/admin/quiz-vendas/editor/$id", params: { id: q.id } });
   }
 
+  function newExodusQuiz() {
+    const q = createExodusQuiz();
+    upsertQuiz(q);
+    toast.success("Modelo Exodus criado! Personalize os textos e capa.");
+    navigate({ to: "/admin/quiz-vendas/editor/$id", params: { id: q.id } });
+  }
+
   return (
     <div className="quiz-vendas-scope -m-6 p-6 sm:p-8 min-h-[calc(100vh-3.5rem)] bg-[#f7f8fb] text-slate-900">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
@@ -74,9 +81,18 @@ function QuizVendasPage() {
             Crie quizzes interativos para qualificar e converter leads em alunos
           </p>
         </div>
-        <Button onClick={newQuiz} className="rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm h-11 px-5">
-          <Plus className="h-4 w-4 mr-2" /> Novo Quiz
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={newExodusQuiz}
+            variant="outline"
+            className="rounded-full h-11 px-5 border-slate-300 hover:bg-slate-50 font-semibold"
+          >
+            <Sparkles className="h-4 w-4 mr-2" /> Modelo Exodus
+          </Button>
+          <Button onClick={newQuiz} className="rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm h-11 px-5">
+            <Plus className="h-4 w-4 mr-2" /> Novo Quiz
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-7">

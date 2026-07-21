@@ -23,7 +23,8 @@ export type BlockKind =
   | "multipla"
   | "faq"
   | "loading"
-  | "depoimento";
+  | "depoimento"
+  | "beneficio";
 
 export type Block =
   | { id: string; kind: "titulo"; text: string; align?: "left" | "center"; style?: TextStyle }
@@ -84,6 +85,12 @@ export type Block =
         avatarUrl?: string;
         rating?: number;
       }[];
+    }
+  | {
+      id: string;
+      kind: "beneficio";
+      text: string;
+      color?: "green" | "blue" | "red" | "amber" | "slate";
     };
 
 export type Step = {
@@ -319,6 +326,115 @@ export function createBlankQuiz(): QuizConfig {
       },
     ],
     showLogo: true,
+    showProgress: true,
+    allowBack: true,
+    responses: 0,
+    createdAt: new Date().toISOString(),
+    width: "medium",
+  };
+  return q;
+}
+
+/** Preset in the XQuiz / Exodus style: bold centered title with red/green
+ * inline highlights, hero image, green benefit pills, big solid CTA. */
+export function createExodusQuiz(): QuizConfig {
+  const id = uid();
+  const q: QuizConfig = {
+    id,
+    slug: `quiz-${id.slice(0, 6)}`,
+    title: "Modelo Exodus",
+    description: "Estilo XQuiz — capa forte + benefícios + CTA sólido.",
+    status: "rascunho",
+    accent: "#0b5079",
+    offer: "",
+    steps: [
+      {
+        id: uid(),
+        name: "Capa",
+        blocks: [
+          {
+            id: uid(),
+            kind: "titulo",
+            text: "**RESPONDA ESSAS PERGUNTAS ATÉ O FINAL**",
+            align: "center",
+          },
+          {
+            id: uid(),
+            kind: "titulo",
+            text: "E VEJA O QUE ESTÁ [c=red]BLOQUEANDO[/c] SEU [c=green]RESULTADO[/c]!",
+            align: "center",
+          },
+          {
+            id: uid(),
+            kind: "paragrafo",
+            text: "VAMOS TE MOSTRAR O CAMINHO CERTO PARA CONQUISTAR ELE.",
+            style: { color: "#000000", fontWeight: "500" },
+          },
+          { id: uid(), kind: "imagem", url: "", alt: "Capa" },
+          {
+            id: uid(),
+            kind: "beneficio",
+            text: "97% aprovaram seguindo o diagnóstico",
+            color: "green",
+          },
+          {
+            id: uid(),
+            kind: "beneficio",
+            text: "Resultado personalizado em 2 minutos",
+            color: "green",
+          },
+          { id: uid(), kind: "espacador", height: 12 },
+          {
+            id: uid(),
+            kind: "botao",
+            text: "COMEÇAR ANÁLISE GRATUITA",
+            action: "next",
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Pergunta",
+        blocks: [
+          {
+            id: uid(),
+            kind: "escolha",
+            question: "Qual é o seu objetivo agora?",
+            autoAdvance: true,
+            options: [
+              { id: uid(), text: "Emagrecer", points: 8 },
+              { id: uid(), text: "Ganhar massa", points: 9 },
+              { id: uid(), text: "Condicionamento", points: 7 },
+            ],
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Captura",
+        blocks: [
+          { id: uid(), kind: "titulo", text: "Quase lá!", align: "center" },
+          { id: uid(), kind: "paragrafo", text: "Preencha para ver seu diagnóstico personalizado." },
+          { id: uid(), kind: "entrada", field: "name", label: "Nome", required: true },
+          { id: uid(), kind: "entrada", field: "email", label: "E-mail", required: true },
+          { id: uid(), kind: "entrada", field: "whatsapp", label: "WhatsApp", required: false },
+          { id: uid(), kind: "botao", text: "VER MEU RESULTADO", action: "submit" },
+        ],
+      },
+    ],
+    ranges: [
+      {
+        id: uid(),
+        min: 0,
+        max: 100,
+        profile: "Diagnóstico pronto",
+        message: "Analisamos suas respostas e temos o caminho ideal para você.",
+        offer: "Fale com um especialista",
+        ctaText: "Falar no WhatsApp",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+    ],
+    showLogo: false,
     showProgress: true,
     allowBack: true,
     responses: 0,

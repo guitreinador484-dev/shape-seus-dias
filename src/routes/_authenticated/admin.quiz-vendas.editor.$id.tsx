@@ -85,6 +85,7 @@ const BLOCK_LIB: { kind: BlockKind; label: string; icon: typeof Type }[] = [
   { kind: "loading", label: "Loading", icon: Loader2 },
   { kind: "depoimento", label: "Depoimentos", icon: Quote },
   { kind: "faq", label: "FAQ", icon: HelpCircle },
+  { kind: "beneficio", label: "Benefício", icon: Check },
   { kind: "espacador", label: "Espaçador", icon: SeparatorHorizontal },
 ];
 
@@ -176,6 +177,8 @@ function makeBlock(kind: BlockKind): Block {
           },
         ],
       };
+    case "beneficio":
+      return { id, kind, text: "Resultado personalizado em 2 minutos", color: "green" };
   }
 }
 
@@ -1035,6 +1038,24 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
           ))}
         </div>
       );
+    case "beneficio": {
+      const colorMap: Record<string, string> = {
+        green: "bg-emerald-500",
+        blue: "bg-blue-600",
+        red: "bg-red-600",
+        amber: "bg-amber-500",
+        slate: "bg-slate-700",
+      };
+      return (
+        <div className="flex justify-center">
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-white font-bold text-sm sm:text-base ${colorMap[block.color ?? "green"]}`}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} /> {block.text}
+          </span>
+        </div>
+      );
+    }
   }
 }
 
@@ -1619,6 +1640,27 @@ function BlockInspector({ block, update }: { block: Block; update: (p: Partial<B
           >
             <Plus className="h-3 w-3" /> Adicionar depoimento
           </button>
+        </div>
+      );
+    case "beneficio":
+      return (
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Texto do benefício</Label>
+          <Input2 value={block.text} onChange={(e) => update({ text: e.target.value })} />
+          <Label className="text-xs text-slate-400">Cor</Label>
+          <Select value={block.color ?? "green"} onValueChange={(v) => update({ color: v as any })}>
+            <SelectTrigger className="bg-slate-800 border-slate-700 text-white rounded-lg h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="green">Verde</SelectItem>
+              <SelectItem value="blue">Azul</SelectItem>
+              <SelectItem value="red">Vermelho</SelectItem>
+              <SelectItem value="amber">Âmbar</SelectItem>
+              <SelectItem value="slate">Cinza</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-slate-500">Pílula com ✅ no estilo XQuiz/Exodus.</p>
         </div>
       );
   }

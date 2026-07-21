@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
 import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
 import { Loader2, HelpCircle, Star, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 
 const fontSizeMap: Record<string, string> = {
   xs: "0.75rem",
@@ -24,6 +25,42 @@ function textStyle(s?: TextStyle): React.CSSProperties {
     fontSize: s.fontSize ? fontSizeMap[s.fontSize] : undefined,
     backgroundColor: s.bgColor,
   };
+}
+
+// Inline highlight parser: `[c=red]texto[/c]` -> colored span.
+// Also supports **bold**.
+const HIGHLIGHT_COLORS: Record<string, string> = {
+  red: "#ef4444",
+  green: "#16a34a",
+  blue: "#2563eb",
+  amber: "#f59e0b",
+  black: "#000000",
+};
+function renderRich(text: string): React.ReactNode {
+  const nodes: React.ReactNode[] = [];
+  const re = /\[c=(red|green|blue|amber|black)\]([\s\S]+?)\[\/c\]|\*\*([\s\S]+?)\*\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let key = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) nodes.push(text.slice(last, m.index));
+    if (m[1]) {
+      nodes.push(
+        <span key={key++} style={{ color: HIGHLIGHT_COLORS[m[1]], fontWeight: 800 }}>
+          {m[2]}
+        </span>,
+      );
+    } else if (m[3]) {
+      nodes.push(
+        <strong key={key++} style={{ fontWeight: 800 }}>
+          {m[3]}
+        </strong>,
+      );
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
 }
 
 export const Route = createFileRoute("/quiz/$slug")({
@@ -403,13 +440,13 @@ function RuntimeBlock({
           className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}
           style={textStyle(block.style)}
         >
-          {block.text}
+          {renderRich(block.text)}
         </h1>
       );
     case "paragrafo":
       return (
         <p className="text-slate-600 leading-relaxed" style={textStyle(block.style)}>
-          {block.text}
+          {renderRich(block.text)}
         </p>
       );
     case "imagem":
@@ -664,6 +701,25 @@ function RuntimeBlock({
       );
     case "espacador":
       return <div style={{ height: block.height }} />;
+    case "beneficio": {
+      const bg: Record<string, string> = {
+        green: "#16a34a",
+        blue: "#2563eb",
+        red: "#ef4444",
+        amber: "#f59e0b",
+        slate: "#334155",
+      };
+      return (
+        <div className="flex justify-center">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-white font-bold text-sm sm:text-base"
+            style={{ backgroundColor: bg[block.color ?? "green"] }}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} /> {block.text}
+          </span>
+        </div>
+      );
+    }
   }
 }
 
