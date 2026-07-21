@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Sparkles,
   Settings,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
