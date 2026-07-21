@@ -435,7 +435,7 @@ function PlataformaPage() {
               {dataLoading ? <Skeleton className="h-64 mx-4" /> : workouts.length === 0 ? (
                 <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
-                <div className={`space-y-10 pb-12 -mt-2 ${isLight ? "bg-background text-foreground" : "bg-black/95 text-white"}`}>
+                <div className="space-y-10 pb-12 -mt-2 bg-background text-foreground">
                   {heroWorkout && (
                     <div className="relative h-[72vh] min-h-[460px] w-full overflow-hidden">
                       {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
@@ -445,37 +445,30 @@ function PlataformaPage() {
                           className="absolute inset-0 w-full h-full object-cover animate-[kenburns_20s_ease-in-out_infinite_alternate]"
                         />
                       )}
-                      {isLight ? (
-                        <div className="absolute inset-0 bg-black/30" />
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.6)_100%)]" />
-                        </>
-                      )}
+                      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
                       <div className="relative h-full flex items-end px-4 sm:px-12 pb-16 max-w-7xl mx-auto">
                         <div className="max-w-2xl space-y-4 animate-fade-in">
                           <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 backdrop-blur px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary-foreground ring-1 ring-primary/40">
                             <Flame className="h-3.5 w-3.5" /> Em destaque
                           </div>
-                          <h2 className="font-display text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.05] text-white drop-shadow-2xl">
+                          <h2 className="font-display text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.05] text-foreground drop-shadow-2xl">
                             {config.hero_title || heroWorkout.title}
                           </h2>
-                          <p className="text-base sm:text-lg text-white/85 line-clamp-3 drop-shadow max-w-xl">
+                          <p className="text-base sm:text-lg text-foreground/80 line-clamp-3 drop-shadow max-w-xl">
                             {config.hero_subtitle || heroWorkout.description || ""}
                           </p>
                           <div className="flex gap-3 pt-3">
                             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/30 h-12 px-8 text-base" onClick={() => playWorkout(heroWorkout)}>
                               <Play className="h-5 w-5 mr-2 fill-current" /> Assistir
                             </Button>
-                            <Button size="lg" variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur h-12 px-8 text-base">
+                            <Button size="lg" variant="secondary" className="h-12 px-8 text-base backdrop-blur">
                               <Info className="h-5 w-5 mr-2" /> Mais informações
                             </Button>
                           </div>
                         </div>
                       </div>
-                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-black" />
+                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-background" />
                     </div>
                   )}
 
@@ -492,12 +485,12 @@ function PlataformaPage() {
                             <button
                               key={w.id}
                               onClick={() => playWorkout(w)}
-                              className={`group relative shrink-0 snap-start w-[260px] sm:w-[320px] aspect-video rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.08] hover:z-10 hover:shadow-2xl hover:shadow-primary/30 ${isLight ? "bg-muted ring-1 ring-black/10 hover:ring-2 hover:ring-primary" : "bg-neutral-900 ring-1 ring-white/10 hover:ring-2 hover:ring-primary"}`}
+                              className="group relative shrink-0 snap-start w-[260px] sm:w-[320px] aspect-video rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.08] hover:z-10 hover:shadow-2xl hover:shadow-primary/30 bg-muted ring-1 ring-border hover:ring-2 hover:ring-primary"
                             >
                               {thumb ? (
                                 <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                               ) : (
-                                <div className={`absolute inset-0 grid place-items-center ${isLight ? "text-muted-foreground/40" : "text-white/30"}`}><Video className="h-10 w-10" /></div>
+                                <div className="absolute inset-0 grid place-items-center text-muted-foreground/40"><Video className="h-10 w-10" /></div>
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 group-hover:opacity-100" />
                               <div className="absolute inset-x-0 bottom-0 p-4 text-white translate-y-1 group-hover:translate-y-0 transition-transform">
@@ -513,12 +506,8 @@ function PlataformaPage() {
                           );
                         })}
                         </div>
-                        {!isLight && (
-                          <>
-                            <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-black to-transparent" />
-                            <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-black to-transparent" />
-                          </>
-                        )}
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background to-transparent" />
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background to-transparent" />
                       </div>
                     </section>
                   ))}
