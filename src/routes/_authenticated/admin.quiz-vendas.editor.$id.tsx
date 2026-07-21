@@ -1038,6 +1038,24 @@ function BlockView({ block, accent }: { block: Block; accent: string }) {
           ))}
         </div>
       );
+    case "beneficio": {
+      const colorMap: Record<string, string> = {
+        green: "bg-emerald-500",
+        blue: "bg-blue-600",
+        red: "bg-red-600",
+        amber: "bg-amber-500",
+        slate: "bg-slate-700",
+      };
+      return (
+        <div className="flex justify-center">
+          <span
+            className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-white font-bold text-sm sm:text-base ${colorMap[block.color ?? "green"]}`}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} /> {block.text}
+          </span>
+        </div>
+      );
+    }
   }
 }
 
