@@ -9,6 +9,43 @@ export type FunnelPlan = {
   features: string[];
 };
 
+export type FunnelTestimonial = {
+  id: string;
+  name: string;
+  text: string;
+  rating?: number;
+  avatar?: string;
+  role?: string;
+};
+
+export type FunnelTrustBadge = {
+  id: string;
+  emoji: string;
+  label: string;
+};
+
+export type FunnelBanner = {
+  enabled: boolean;
+  image: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+};
+
+export type FunnelVideo = {
+  enabled: boolean;
+  url: string; // YouTube URL, Vimeo URL, or MP4
+  title: string;
+  subtitle: string;
+};
+
+export type FunnelGuarantee = {
+  enabled: boolean;
+  title: string;
+  description: string;
+  days: number;
+};
+
 export type FunnelConfig = {
   slug: string;
   brand: string;
@@ -27,6 +64,12 @@ export type FunnelConfig = {
   plans: FunnelPlan[];
   paymentDestination: { whatsapp?: string; email?: string };
   thankYou: string;
+  banner?: FunnelBanner;
+  video?: FunnelVideo;
+  testimonials?: FunnelTestimonial[];
+  trustBadges?: FunnelTrustBadge[];
+  guarantee?: FunnelGuarantee;
+  urgencyText?: string;
 };
 
 export const DEFAULT_RESULT_IMAGES = [
@@ -56,6 +99,58 @@ export const DEFAULT_FUNNEL: FunnelConfig = {
     { label: "Onde vai treinar?", options: ["Casa", "Academia", "Ar livre", "Ambos"] },
     { label: "Possui alguma restrição?", options: ["Nenhuma", "Joelho", "Coluna", "Ombro", "Outra"] },
   ],
+  banner: {
+    enabled: true,
+    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&h=400&fit=crop",
+    title: "Transforme seu corpo em 30 dias",
+    subtitle: "Treino 100% personalizado para você começar hoje",
+    ctaLabel: "Quero começar agora",
+  },
+  video: {
+    enabled: false,
+    url: "",
+    title: "Veja como funciona",
+    subtitle: "Em 2 minutos você entende tudo",
+  },
+  testimonials: [
+    {
+      id: "t1",
+      name: "Juliana M.",
+      role: "Perdeu 8kg em 3 meses",
+      text: "Achei que nunca ia conseguir treinar em casa. O plano é simples e o suporte é rápido demais!",
+      rating: 5,
+      avatar: "https://i.pravatar.cc/100?img=47",
+    },
+    {
+      id: "t2",
+      name: "Rafael S.",
+      role: "Ganhou massa magra",
+      text: "Melhor investimento que fiz. Treino curto, direto e cabe no meu dia.",
+      rating: 5,
+      avatar: "https://i.pravatar.cc/100?img=12",
+    },
+    {
+      id: "t3",
+      name: "Camila R.",
+      role: "Voltou a treinar depois de anos",
+      text: "Comecei do zero, sem saber nada. Hoje treino 4x na semana e amo!",
+      rating: 5,
+      avatar: "https://i.pravatar.cc/100?img=32",
+    },
+  ],
+  trustBadges: [
+    { id: "b1", emoji: "🔒", label: "Compra 100% segura" },
+    { id: "b2", emoji: "✅", label: "Satisfação garantida" },
+    { id: "b3", emoji: "⚡", label: "Acesso imediato" },
+    { id: "b4", emoji: "💳", label: "Pague no PIX ou cartão" },
+  ],
+  guarantee: {
+    enabled: true,
+    title: "Garantia de 7 dias",
+    description: "Se não gostar por qualquer motivo, devolvemos 100% do seu dinheiro. Sem burocracia.",
+    days: 7,
+  },
+  urgencyText: "🔥 Oferta por tempo limitado — só hoje",
   plans: [
     {
       id: "essencial",
