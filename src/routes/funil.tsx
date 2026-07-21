@@ -225,6 +225,27 @@ function FunnelPage() {
             </Card>
 
             {/* Grupos musculares */}
+            {groups.length > 0 && (
+              <Card>
+                <h3 className="text-base font-bold flex items-center gap-2">
+                  🤔 Não sabe qual exercício escolher?
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Sem problema! A gente já separou os exercícios mais fáceis pra quem está começando. Clique no botão abaixo que a gente monta pra você — depois é só ajustar se quiser.
+                </p>
+                <button
+                  onClick={() => {
+                    const next: Record<string, string[]> = {};
+                    for (const g of groups) next[g.key] = [...g.beginners];
+                    setSelections(next);
+                  }}
+                  className="mt-3 w-full rounded-full bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition"
+                >
+                  Sou iniciante — monte pra mim ✨
+                </button>
+              </Card>
+            )}
+
             {groups.map((g) => {
               const chosen = selections[g.key] ?? [];
               return (
@@ -239,14 +260,25 @@ function FunnelPage() {
                       {chosen.length}/5 {chosen.length > 0 && <Check className="inline h-3 w-3" />}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">Selecione seus exercícios favoritos</p>
+                  <p className="text-xs text-slate-600 mb-2">{g.description}</p>
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <p className="text-xs text-slate-400">Selecione até 5 exercícios (ou deixe a gente sugerir)</p>
+                    <button
+                      onClick={() => setSelections((prev) => ({ ...prev, [g.key]: [...g.beginners] }))}
+                      className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-full px-3 py-1 whitespace-nowrap"
+                    >
+                      Sugerir pra mim
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {g.exercises.slice(0, 12).map((ex) => {
                       const active = chosen.includes(ex);
+                      const beginner = g.beginners.includes(ex);
                       return (
                         <button
                           key={ex}
                           onClick={() => toggleExercise(g.key, ex)}
+                          title={beginner ? "Recomendado para iniciantes" : undefined}
                           className={`text-xs rounded-lg border px-3 py-2 text-left transition ${
                             active
                               ? "border-emerald-500 bg-emerald-500 text-white font-medium shadow-sm"
@@ -255,6 +287,9 @@ function FunnelPage() {
                         >
                           <span className="mr-1">{g.emoji}</span>
                           {ex}
+                          {beginner && !active && (
+                            <span className="ml-1 text-[10px] text-emerald-600 font-semibold">• fácil</span>
+                          )}
                           {active && <Check className="inline h-3 w-3 ml-1" />}
                         </button>
                       );
