@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import {
   DEFAULT_FUNNEL,
