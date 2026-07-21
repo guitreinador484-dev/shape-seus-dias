@@ -444,6 +444,218 @@ export function createExodusQuiz(): QuizConfig {
   return q;
 }
 
+/** Nutrition sales funnel (weight-loss style) — inspired by category leaders
+ * like Nutri Inteligente: capa forte, objetivo, sexo, faixa etária, barreiras,
+ * urgência, captura e resultado personalizado com CTA verde. */
+export function createNutriQuiz(): QuizConfig {
+  const id = uid();
+  const q: QuizConfig = {
+    id,
+    slug: `nutri-${id.slice(0, 6)}`,
+    title: "Plano Nutricional Personalizado",
+    description: "Funil de vendas estilo Nutri Inteligente (nutrição/emagrecimento).",
+    status: "rascunho",
+    accent: "#16a34a",
+    offer: "Plano Nutricional 90 dias",
+    steps: [
+      {
+        id: uid(),
+        name: "Capa",
+        blocks: [
+          {
+            id: uid(),
+            kind: "titulo",
+            text: "DESCUBRA SEU [c=green]PLANO ALIMENTAR[/c] IDEAL EM 2 MINUTOS",
+            align: "center",
+          },
+          {
+            id: uid(),
+            kind: "paragrafo",
+            text: "Responda algumas perguntas e receba um diagnóstico **personalizado** para acelerar seu emagrecimento.",
+            style: { color: "#334155", fontWeight: "500" },
+          },
+          { id: uid(), kind: "imagem", url: "", alt: "Capa" },
+          { id: uid(), kind: "beneficio", text: "Cardápio adaptado ao seu perfil", color: "green" },
+          { id: uid(), kind: "beneficio", text: "Sem dietas restritivas", color: "green" },
+          { id: uid(), kind: "beneficio", text: "Resultado em 90 dias garantido", color: "green" },
+          { id: uid(), kind: "espacador", height: 12 },
+          { id: uid(), kind: "botao", text: "COMEÇAR AGORA", action: "next" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Objetivo",
+        blocks: [
+          {
+            id: uid(),
+            kind: "escolha",
+            question: "Qual é o seu objetivo principal?",
+            autoAdvance: true,
+            options: [
+              { id: uid(), text: "🔥 Emagrecer com saúde", points: 10 },
+              { id: uid(), text: "💪 Ganhar massa magra", points: 9 },
+              { id: uid(), text: "⚖️ Manter meu peso atual", points: 6 },
+              { id: uid(), text: "❤️ Melhorar minha saúde", points: 8 },
+            ],
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Sexo",
+        blocks: [
+          {
+            id: uid(),
+            kind: "escolha",
+            question: "Qual é o seu sexo biológico?",
+            autoAdvance: true,
+            options: [
+              { id: uid(), text: "👩 Feminino", points: 5 },
+              { id: uid(), text: "👨 Masculino", points: 5 },
+            ],
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Idade",
+        blocks: [
+          {
+            id: uid(),
+            kind: "escolha",
+            question: "Qual é a sua faixa de idade?",
+            autoAdvance: true,
+            options: [
+              { id: uid(), text: "18 - 29 anos", points: 8 },
+              { id: uid(), text: "30 - 39 anos", points: 9 },
+              { id: uid(), text: "40 - 49 anos", points: 9 },
+              { id: uid(), text: "50+ anos", points: 8 },
+            ],
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Barreiras",
+        blocks: [
+          {
+            id: uid(),
+            kind: "multipla",
+            question: "O que mais te atrapalha hoje? (selecione tudo que se aplica)",
+            options: [
+              { id: uid(), text: "Falta de tempo pra cozinhar", points: 3 },
+              { id: uid(), text: "Compulsão por doces", points: 4 },
+              { id: uid(), text: "Ansiedade / comer emocional", points: 4 },
+              { id: uid(), text: "Não sei o que comer", points: 3 },
+              { id: uid(), text: "Efeito sanfona", points: 5 },
+            ],
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Urgência",
+        blocks: [
+          {
+            id: uid(),
+            kind: "escala",
+            question: "Em uma escala de 0 a 10, o quanto você quer mudar isso AGORA?",
+            min: 0,
+            max: 10,
+            minLabel: "Pouco",
+            maxLabel: "Muito",
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Loading",
+        blocks: [
+          {
+            id: uid(),
+            kind: "loading",
+            message: "Analisando suas respostas e montando seu plano...",
+            durationMs: 2500,
+          },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Prova social",
+        blocks: [
+          { id: uid(), kind: "titulo", text: "Veja quem já transformou a rotina", align: "center" },
+          {
+            id: uid(),
+            kind: "depoimento",
+            items: [
+              { id: uid(), name: "Marina R.", role: "-14kg em 4 meses", text: "Sem passar fome, sem loucura. Aprendi de verdade.", rating: 5 },
+              { id: uid(), name: "Paulo H.", role: "-9kg em 3 meses", text: "Cardápio simples que eu consegui seguir de verdade.", rating: 5 },
+            ],
+          },
+          { id: uid(), kind: "botao", text: "VER MEU DIAGNÓSTICO", action: "next" },
+        ],
+      },
+      {
+        id: uid(),
+        name: "Captura",
+        blocks: [
+          { id: uid(), kind: "titulo", text: "🎯 SEU PLANO ESTÁ PRONTO!", align: "center" },
+          {
+            id: uid(),
+            kind: "paragrafo",
+            text: "Preencha para receber seu plano personalizado no WhatsApp:",
+            style: { color: "#0f172a", fontWeight: "600" },
+          },
+          { id: uid(), kind: "entrada", field: "name", label: "Seu nome", required: true },
+          { id: uid(), kind: "entrada", field: "email", label: "Melhor e-mail", required: true },
+          { id: uid(), kind: "entrada", field: "whatsapp", label: "WhatsApp com DDD", required: true },
+          { id: uid(), kind: "beneficio", text: "Seus dados estão 100% seguros", color: "green" },
+          { id: uid(), kind: "botao", text: "RECEBER MEU PLANO", action: "submit" },
+        ],
+      },
+    ],
+    ranges: [
+      {
+        id: uid(),
+        min: 70,
+        max: 100,
+        profile: "Perfil premium",
+        message: "Você tem tudo pra transformar sua rotina em 90 dias com o plano completo.",
+        offer: "Plano Nutricional Premium",
+        ctaText: "Falar com nutricionista",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: uid(),
+        min: 40,
+        max: 69,
+        profile: "Perfil intermediário",
+        message: "Você já tem base — com o plano certo os resultados aparecem rápido.",
+        offer: "Plano Nutricional 90 dias",
+        ctaText: "Quero começar",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+      {
+        id: uid(),
+        min: 0,
+        max: 39,
+        profile: "Começando agora",
+        message: "Vamos começar pelo básico com o plano introdutório.",
+        offer: "Plano introdutório",
+        ctaText: "Receber material",
+        ctaUrl: "https://wa.me/5511999999999",
+      },
+    ],
+    showLogo: false,
+    showProgress: true,
+    allowBack: true,
+    responses: 0,
+    createdAt: new Date().toISOString(),
+    width: "medium",
+  };
+  return q;
+}
+
 // ============ Leads ============
 
 export function addLead(

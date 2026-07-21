@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import {
   useQuizzes, useLeads, deleteQuiz, duplicateQuiz, toggleQuizStatus,
-  createBlankQuiz, createExodusQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
+  createBlankQuiz, createExodusQuiz, createNutriQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
 } from "@/lib/quiz-store";
 import { publishQuizFn, unpublishQuizFn } from "@/lib/quiz.functions";
 import { toast } from "sonner";
@@ -69,6 +69,13 @@ function QuizVendasPage() {
     navigate({ to: "/admin/quiz-vendas/editor/$id", params: { id: q.id } });
   }
 
+  function newNutriQuiz() {
+    const q = createNutriQuiz();
+    upsertQuiz(q);
+    toast.success("Modelo Nutri criado! Funil de emagrecimento pronto para editar.");
+    navigate({ to: "/admin/quiz-vendas/editor/$id", params: { id: q.id } });
+  }
+
   return (
     <div className="quiz-vendas-scope -m-6 p-6 sm:p-8 min-h-[calc(100vh-3.5rem)] bg-[#f7f8fb] text-slate-900">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
@@ -81,7 +88,14 @@ function QuizVendasPage() {
             Crie quizzes interativos para qualificar e converter leads em alunos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={newNutriQuiz}
+            variant="outline"
+            className="rounded-full h-11 px-5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-semibold"
+          >
+            <Sparkles className="h-4 w-4 mr-2" /> Modelo Nutri
+          </Button>
           <Button
             onClick={newExodusQuiz}
             variant="outline"
