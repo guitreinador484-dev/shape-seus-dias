@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as FunilRouteImport } from './routes/funil'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +27,11 @@ import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
 import { Route as AuthenticatedAdminQuizVendasEditorIdRouteImport } from './routes/_authenticated/admin.quiz-vendas.editor.$id'
 
+const FunilRoute = FunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -116,6 +122,7 @@ const AuthenticatedAdminQuizVendasEditorIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/funil': typeof FunilRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/funil': typeof FunilRoute
   '/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
   '/quiz': typeof QuizIndexRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/funil': typeof FunilRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/plataforma': typeof AuthenticatedPlataformaRoute
   '/quiz/$slug': typeof QuizSlugRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/funil'
     | '/admin'
     | '/plataforma'
     | '/quiz/$slug'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/funil'
     | '/plataforma'
     | '/quiz/$slug'
     | '/quiz'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/funil'
     | '/_authenticated/admin'
     | '/_authenticated/plataforma'
     | '/quiz/$slug'
@@ -223,12 +235,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FunilRoute: typeof FunilRoute
   QuizSlugRoute: typeof QuizSlugRoute
   QuizIndexRoute: typeof QuizIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/funil': {
+      id: '/funil'
+      path: '/funil'
+      fullPath: '/funil'
+      preLoaderRoute: typeof FunilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  FunilRoute: FunilRoute,
   QuizSlugRoute: QuizSlugRoute,
   QuizIndexRoute: QuizIndexRoute,
 }
