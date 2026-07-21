@@ -23,7 +23,8 @@ export type BlockKind =
   | "multipla"
   | "faq"
   | "loading"
-  | "depoimento";
+  | "depoimento"
+  | "beneficio";
 
 export type Block =
   | { id: string; kind: "titulo"; text: string; align?: "left" | "center"; style?: TextStyle }
@@ -84,6 +85,12 @@ export type Block =
         avatarUrl?: string;
         rating?: number;
       }[];
+    }
+  | {
+      id: string;
+      kind: "beneficio";
+      text: string;
+      color?: "green" | "blue" | "red" | "amber" | "slate";
     };
 
 export type Step = {
