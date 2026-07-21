@@ -440,13 +440,13 @@ function RuntimeBlock({
           className={`text-3xl sm:text-4xl font-extrabold leading-tight text-slate-900 ${block.align === "center" ? "text-center" : ""}`}
           style={textStyle(block.style)}
         >
-          {block.text}
+          {renderRich(block.text)}
         </h1>
       );
     case "paragrafo":
       return (
         <p className="text-slate-600 leading-relaxed" style={textStyle(block.style)}>
-          {block.text}
+          {renderRich(block.text)}
         </p>
       );
     case "imagem":
@@ -701,6 +701,25 @@ function RuntimeBlock({
       );
     case "espacador":
       return <div style={{ height: block.height }} />;
+    case "beneficio": {
+      const bg: Record<string, string> = {
+        green: "#16a34a",
+        blue: "#2563eb",
+        red: "#ef4444",
+        amber: "#f59e0b",
+        slate: "#334155",
+      };
+      return (
+        <div className="flex justify-center">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-white font-bold text-sm sm:text-base"
+            style={{ backgroundColor: bg[block.color ?? "green"] }}
+          >
+            <Check className="h-4 w-4" strokeWidth={3} /> {block.text}
+          </span>
+        </div>
+      );
+    }
   }
 }
 
