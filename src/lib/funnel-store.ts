@@ -72,6 +72,66 @@ export type FunnelConfig = {
   urgencyText?: string;
 };
 
+export type BroadQuestion = { key: string; emoji: string; title: string; subtitle?: string; options: string[] };
+
+/** Perguntas amplas, para qualquer pessoa (sem exigir conhecimento de exercícios). */
+export const BROAD_QUESTIONS: BroadQuestion[] = [
+  {
+    key: "motivo",
+    emoji: "🎯",
+    title: "O que mais te motiva a começar agora?",
+    subtitle: "Escolha o que mais combina com você",
+    options: [
+      "Quero perder peso e me sentir leve",
+      "Quero ganhar massa e definição",
+      "Quero mais disposição no dia a dia",
+      "Quero cuidar da saúde e da postura",
+      "Quero me sentir bem com o espelho",
+    ],
+  },
+  {
+    key: "tempo",
+    emoji: "⏰",
+    title: "Quanto tempo você tem por dia para treinar?",
+    options: ["Até 20 minutos", "30 minutos", "45 minutos", "1 hora ou mais"],
+  },
+  {
+    key: "experiencia",
+    emoji: "🚦",
+    title: "Como está sua vida de treinos hoje?",
+    options: [
+      "Nunca treinei na vida",
+      "Já treinei, mas parei",
+      "Treino de vez em quando",
+      "Treino com frequência",
+    ],
+  },
+  {
+    key: "dificuldade",
+    emoji: "😩",
+    title: "O que mais te atrapalhou até hoje?",
+    options: [
+      "Falta de tempo",
+      "Não sei o que fazer no treino",
+      "Falta de motivação",
+      "Já tentei e não vi resultado",
+      "Vergonha de academia",
+    ],
+  },
+  {
+    key: "prazo",
+    emoji: "📅",
+    title: "Em quanto tempo você quer ver resultado?",
+    options: ["Nos próximos 30 dias", "Em 3 meses", "Em 6 meses", "Sem pressa, quero constância"],
+  },
+  {
+    key: "compromisso",
+    emoji: "🔥",
+    title: "Se eu montar um plano pronto pra você, você começa essa semana?",
+    options: ["Sim, começo hoje mesmo", "Sim, começo essa semana", "Quero entender melhor antes"],
+  },
+];
+
 export const DEFAULT_RESULT_IMAGES = [
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop",
   "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&h=400&fit=crop",
