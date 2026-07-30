@@ -104,6 +104,7 @@ function CourseSkeleton() {
 
 function CourseDetailPage() {
   const { slug } = useParams({ from: "/_authenticated/plataforma/cursos/$slug" });
+  const { aula } = useSearch({ from: "/_authenticated/plataforma/cursos/$slug" });
   const { user, role, loading: authLoading } = useAuth();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
   const [course, setCourse] = useState<CourseFull | null>(null);
@@ -129,7 +130,7 @@ function CourseDetailPage() {
       let rows: ProgressRow[] = [];
       if (lessonIds.length) {
         const { data } = await supabase
-          .from("lesson_progress").select("lesson_id, completed_at, updated_at")
+          .from("lesson_progress").select("lesson_id, completed_at, updated_at, watched_seconds")
           .eq("user_id", user.id).in("lesson_id", lessonIds);
         rows = (data ?? []) as ProgressRow[];
         setProgress(rows);
@@ -142,6 +143,7 @@ function CourseDetailPage() {
         .filter((r) => !r.completed_at)
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
       const resume =
+        (aula && all.find((l) => l.id === aula && isLessonUnlocked(l, enrolled))) ??
         (lastTouched && all.find((l) => l.id === lastTouched.lesson_id && isLessonUnlocked(l, enrolled))) ??
         all.find((l) => isLessonUnlocked(l, enrolled) && !doneIds.has(l.id)) ??
         all.find((l) => isLessonUnlocked(l, enrolled));
@@ -151,7 +153,7 @@ function CourseDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [slug, user, isAdmin]);
+  }, [slug, user, isAdmin, aula]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -215,6 +217,7 @@ function CourseDetailPage() {
                 lesson={activeLesson}
                 enrolledAt={enrolledAt}
                 userId={user!.id}
+                savedSeconds={progress.find((p) => p.lesson_id === activeLesson.id)?.watched_seconds ?? 0}
                 completed={progress.some((p) => p.lesson_id === activeLesson.id && p.completed_at)}
                 onProgress={reload}
               />
