@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { signedAsset, type Course } from "@/lib/courses-api";
@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BookOpen, PlayCircle, ArrowLeft } from "lucide-react";
+import { BookOpen, PlayCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
   component: MyCoursesPage,
@@ -26,6 +26,7 @@ function MyCoursesPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -75,19 +76,54 @@ function MyCoursesPage() {
     })();
   }, [authLoading, user, isAdmin]);
 
+  const firstName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
+    user?.email?.split("@")[0] ??
+    "";
+  const featured = rows[0] ?? null;
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button asChild size="sm" variant="ghost"><Link to="/plataforma"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Link></Button>
-      </div>
-      <div>
-        <h1 className="font-display text-3xl">Meus cursos</h1>
-        <p className="text-muted-foreground text-sm">Continue de onde parou.</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="dark relative isolate overflow-hidden bg-background text-foreground">
+        <div className="absolute inset-0">
+          {featured?.coverUrl ? (
+            <img src={featured.coverUrl} alt="" aria-hidden className="h-full w-full object-cover opacity-70" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-primary/30 via-background to-background" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-16 sm:pb-24">
+          <Button asChild size="sm" variant="ghost" className="-ml-2 mb-8 text-foreground/70 hover:text-foreground">
+            <Link to="/plataforma"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Link>
+          </Button>
+          <p className="text-xs uppercase tracking-[0.3em] text-primary mb-3">Área de membros</p>
+          <h1 className="font-display text-4xl sm:text-5xl italic leading-none">
+            Seja bem-vindo(a){firstName ? `, ${firstName}` : ""},
+          </h1>
+          <p className="mt-4 max-w-md text-sm sm:text-base text-foreground/75">
+            Aqui você encontra todo o conteúdo liberado para você. Assista aos módulos abaixo e
+            acompanhe seu progresso em cada curso.
+          </p>
+          <p className="mt-4 font-semibold text-primary">Assista aos módulos abaixo.</p>
+        </div>
+      </section>
+
+      {/* Carrossel de cursos */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+        <div className="flex items-center gap-3">
+          <span className="h-6 w-1 rounded-full bg-primary" />
+          <p className="text-sm sm:text-base font-medium">
+            Clique em um dos módulos abaixo para assistir as aulas.
+          </p>
+        </div>
 
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-56" />)}
+        <div className="flex gap-4 overflow-hidden">
+          {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-[330px] w-[220px] shrink-0 rounded-xl" />)}
         </div>
       ) : rows.length === 0 ? (
         <Card><CardContent className="py-16 text-center space-y-3">
@@ -107,42 +143,69 @@ function MyCoursesPage() {
           )}
         </CardContent></Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {rows.map((r) => {
-            const pct = r.totalLessons ? Math.round((r.completedLessons / r.totalLessons) * 100) : 0;
-            return (
-              <button
-                key={r.course.id}
-                onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug } })}
-                className="text-left group"
-              >
-                <Card className="overflow-hidden transition hover:shadow-lg hover:-translate-y-0.5">
-                  <div className="relative aspect-video bg-muted">
+        <div className="relative group/rail">
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={() => railRef.current?.scrollBy({ left: -480, behavior: "smooth" })}
+            className="absolute -left-3 top-1/2 z-10 hidden -translate-y-1/2 h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-md sm:grid"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Próximo"
+            onClick={() => railRef.current?.scrollBy({ left: 480, behavior: "smooth" })}
+            className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 h-9 w-9 place-items-center rounded-full border border-border bg-card shadow-md sm:grid"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+
+          <div ref={railRef} className="flex gap-4 overflow-x-auto pb-4 snap-x scrollbar-none">
+            {rows.map((r) => {
+              const pct = r.totalLessons ? Math.round((r.completedLessons / r.totalLessons) * 100) : 0;
+              return (
+                <button
+                  key={r.course.id}
+                  onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug } })}
+                  className="group w-[200px] sm:w-[220px] shrink-0 snap-start text-left"
+                >
+                  <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-border bg-muted transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-2 group-hover:ring-primary/60">
                     {r.coverUrl ? (
-                      <img src={r.coverUrl} alt={r.course.title} className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={r.coverUrl} alt={r.course.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                     ) : (
                       <div className="absolute inset-0 grid place-items-center text-muted-foreground/40"><BookOpen className="h-10 w-10" /></div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <p className="font-display text-lg leading-tight line-clamp-2">{r.course.title}</p>
-                      {r.course.category && <p className="text-[11px] uppercase tracking-widest opacity-80">{r.course.category}</p>}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/30" />
+
+                    <span className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-white">
+                      {r.totalLessons} {r.totalLessons === 1 ? "aula" : "aulas"}
+                    </span>
+
+                    <div className="absolute inset-x-3 bottom-3 text-center text-white">
+                      {r.course.category && (
+                        <p className="text-[10px] uppercase tracking-[0.2em] opacity-80">{r.course.category}</p>
+                      )}
+                      <p className="font-display text-xl leading-tight line-clamp-2 uppercase">{r.course.title}</p>
+                      <div className="mt-2">
+                        <Progress value={pct} className="h-1 bg-white/25" />
+                        <p className="mt-1 text-[10px] opacity-80">{r.completedLessons}/{r.totalLessons} · {pct}%</p>
+                      </div>
                     </div>
-                    <div className="absolute top-3 right-3 grid place-items-center h-10 w-10 rounded-full bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition"><PlayCircle className="h-5 w-5" /></div>
+
+                    <div className="absolute inset-0 grid place-items-center opacity-0 transition group-hover:opacity-100">
+                      <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg">
+                        <PlayCircle className="h-6 w-6" />
+                      </span>
+                    </div>
                   </div>
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{r.completedLessons}/{r.totalLessons} aulas</span>
-                      <span>{pct}%</span>
-                    </div>
-                    <Progress value={pct} />
-                  </CardContent>
-                </Card>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
+      </section>
     </div>
   );
 }
