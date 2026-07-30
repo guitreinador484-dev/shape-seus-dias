@@ -150,7 +150,11 @@ function MyCoursesPage() {
               <Button
                 size="lg"
                 className="rounded-full px-7"
-                onClick={() => featured && navigate({ to: "/plataforma/cursos/$slug", params: { slug: featured.course.slug } })}
+                onClick={() => {
+                  const c = continueItems[0];
+                  if (c) navigate({ to: "/plataforma/cursos/$slug", params: { slug: c.courseSlug }, search: { aula: c.lessonId } as never });
+                  else if (featured) navigate({ to: "/plataforma/cursos/$slug", params: { slug: featured.course.slug } });
+                }}
               >
                 <Play className="mr-2 h-4 w-4 fill-current" /> Continuar assistindo
               </Button>
@@ -163,8 +167,15 @@ function MyCoursesPage() {
         </div>
       </section>
 
+      {/* Continuar assistindo */}
+      {!loading && !error && (
+        <div className="mx-auto max-w-6xl space-y-10 px-4 pb-10 sm:px-6">
+          <ContinueWatchingRail items={continueItems} loading={railsLoading} />
+        </div>
+      )}
+
       {/* Carrossel de cursos */}
-      <section className="mx-auto max-w-6xl space-y-6 px-4 pb-20 sm:px-6">
+      <section className="mx-auto max-w-6xl space-y-6 px-4 pb-12 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl sm:text-3xl">Seus módulos</h2>
