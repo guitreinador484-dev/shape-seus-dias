@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
@@ -21,19 +21,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
-  AlertTriangle, BookOpen, RotateCcw, Clock,
+  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    aula: typeof search.aula === "string" ? search.aula : undefined,
+  }),
   component: CourseDetailPage,
 });
 
-type ProgressRow = { lesson_id: string; completed_at: string | null; updated_at: string };
+type ProgressRow = { lesson_id: string; completed_at: string | null; updated_at: string; watched_seconds: number };
 
 function formatDuration(seconds?: number | null) {
   if (!seconds) return null;
   const m = Math.round(seconds / 60);
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+}
+
+/* status "baixado" por material (local ao dispositivo) */
+const DL_KEY = "material-baixado";
+function readDownloaded(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(DL_KEY) ?? "{}"); } catch { return {}; }
+}
+function markDownloaded(id: string) {
+  const all = readDownloaded();
+  all[id] = new Date().toISOString();
+  localStorage.setItem(DL_KEY, JSON.stringify(all));
+  return all;
 }
 
 /* ---------------- states ---------------- */
