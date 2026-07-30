@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { VideoPlayer } from "@/components/platform/video-player";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
@@ -367,7 +368,7 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
   const [downloaded, setDownloaded] = useState<Record<string, string>>({});
   const [position, setPosition] = useState(savedSeconds);
   const lastSavedRef = useRef(savedSeconds);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const posRef = useRef(savedSeconds);
   const unlocked = isLessonUnlocked(lesson, enrolledAt);
 
   useEffect(() => { setDownloaded(readDownloaded()); }, []);
@@ -402,23 +403,17 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
 
   // salva ao sair da aula / fechar a aba
   useEffect(() => {
-    const flush = () => { const el = videoRef.current; if (el && el.currentTime > 0) savePosition(el.currentTime, true); };
+    const flush = () => { if (posRef.current > 0) savePosition(posRef.current, true); };
     window.addEventListener("pagehide", flush);
     return () => { window.removeEventListener("pagehide", flush); flush(); };
   }, [savePosition]);
-
-  function handleLoadedMetadata() {
-    const el = videoRef.current;
-    if (!el) return;
-    if (!completed && position > 5 && position < el.duration - 15) el.currentTime = position;
-  }
 
   async function markComplete() {
     const { error } = await supabase.from("lesson_progress").upsert({
       user_id: userId,
       lesson_id: lesson.id,
       completed_at: new Date().toISOString(),
-      watched_seconds: Math.floor(videoRef.current?.currentTime ?? lesson.duration_seconds ?? 0),
+      watched_seconds: Math.floor(posRef.current || lesson.duration_seconds || 0),
     });
     if (error) return toast.error(error.message);
     toast.success("Aula concluída");
@@ -463,25 +458,20 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
 
   return (
     <div className="space-y-4">
-      <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black">
+      <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black shadow-2xl shadow-black/40">
         {loadingVideo ? (
           <Skeleton className="h-full w-full rounded-none" />
         ) : videoUrl ? (
-          <video
+          <VideoPlayer
             key={lesson.id}
-            ref={videoRef}
             src={videoUrl}
             poster={thumbUrl ?? undefined}
-            controls
-            controlsList="nodownload"
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={(e) => {
-              const t = e.currentTarget.currentTime;
-              setPosition(t);
-              savePosition(t);
-            }}
-            onPause={(e) => savePosition(e.currentTarget.currentTime, true)}
-            onEnded={() => { if (!completed) markComplete(); }}
+            title={lesson.title}
+            subtitle="Aula"
+            autoPlay={false}
+            startAt={completed ? 0 : savedSeconds}
+            onTime={(t) => { posRef.current = t; setPosition(t); savePosition(t); }}
+            onEnded={() => { savePosition(posRef.current, true); if (!completed) markComplete(); }}
             className="h-full w-full"
           />
         ) : (

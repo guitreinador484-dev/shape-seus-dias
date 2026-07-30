@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Volume2, VolumeX, Maximize2, BookOpen } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen } from "lucide-react";
+import { ImmersiveVideoOverlay } from "@/components/platform/video-player";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -38,57 +39,45 @@ function readConfig(value: Json | null): PlatformConfig {
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const WEEKDAYS_SHORT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 
-function ImmersivePlayer({ title, url, poster, onClose }: { title: string; url: string; poster?: string; onClose: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [showChrome, setShowChrome] = useState(true);
-  const hideTimer = useRef<number | null>(null);
-
+function EmbedOverlay({ title, url, onClose }: { title: string; url: string; onClose: () => void }) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === " ") { e.preventDefault(); const v = videoRef.current; if (v) { v.paused ? v.play() : v.pause(); } }
-      if (e.key === "f" || e.key === "F") { videoRef.current?.requestFullscreen?.(); }
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onClose]);
-
-  const bumpChrome = () => {
-    setShowChrome(true);
-    if (hideTimer.current) window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setShowChrome(false), 2600);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center animate-fade-in" onMouseMove={bumpChrome}>
-      {poster && (
-        <img src={poster} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-40 blur-3xl scale-110" />
-      )}
-      <div className="absolute inset-0 bg-black/70" />
+    <div className="fixed inset-0 z-50 animate-fade-in bg-black/95 p-0 sm:p-6">
       <button
-        type="button"
-        onClick={onClose}
-        aria-label="Fechar"
-        className={`absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-black/60 hover:bg-black/80 text-white grid place-items-center backdrop-blur ring-1 ring-white/20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}
-      >
-        <X className="h-5 w-5" />
-      </button>
-      <div className={`absolute top-4 left-4 right-20 z-20 transition-opacity ${showChrome ? "opacity-100" : "opacity-0"}`}>
-        <p className="text-white/60 text-xs uppercase tracking-widest">Assistindo</p>
-        <h3 className="text-white font-display text-xl sm:text-2xl truncate drop-shadow">{title}</h3>
-      </div>
-      <video
-        ref={videoRef}
+        type="button" onClick={onClose} aria-label="Fechar"
+        className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/20"
+      ><X className="h-5 w-5" /></button>
+      <iframe
         src={url}
-        poster={poster}
-        controls
-        autoPlay
-        controlsList="nodownload"
-        className="relative z-10 w-full h-full max-h-screen bg-black object-contain"
+        title={title}
+        allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowFullScreen
+        className="h-full w-full rounded-none border-0 bg-black sm:rounded-2xl"
       />
     </div>
   );
+}
+
+/** Converts YouTube/Vimeo links into embeddable URLs; returns null when not embeddable. */
+function toEmbedUrl(raw: string): string | null {
+  try {
+    const u = new URL(raw);
+    const h = u.hostname.replace("www.", "");
+    if (h === "youtube.com" || h === "m.youtube.com") {
+      const id = u.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
+      if (u.pathname.startsWith("/embed/")) return raw;
+    }
+    if (h === "youtu.be") return `https://www.youtube.com/embed/${u.pathname.slice(1)}?autoplay=1&rel=0&modestbranding=1`;
+    if (h === "vimeo.com") return `https://player.vimeo.com/video/${u.pathname.split("/").filter(Boolean)[0]}?autoplay=1`;
+    if (h === "player.vimeo.com") return raw;
+    return null;
+  } catch { return null; }
 }
 
 function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
@@ -274,6 +263,7 @@ function PlataformaPage() {
   const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
   const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
   const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string } | null>(null);
+  const [embedVideo, setEmbedVideo] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -387,8 +377,23 @@ function PlataformaPage() {
 
   function playWorkout(w: Workout) {
     const url = signedUrls[w.id]?.video;
-    if (url) setActiveVideo({ id: w.id, url, title: w.title });
-    else if (w.video_url) window.open(w.video_url, "_blank");
+    if (url) { setActiveVideo({ id: w.id, url, title: w.title }); return; }
+    if (w.video_url) {
+      const embed = toEmbedUrl(w.video_url);
+      if (embed) setEmbedVideo({ url: embed, title: w.title });
+      else setActiveVideo({ id: w.id, url: w.video_url, title: w.title });
+    }
+  }
+
+  /** Next playable workout in the same category, for the "next up" prompt. */
+  function nextPlayable(currentId: string): Workout | null {
+    const cat = workouts.find((w) => w.id === currentId)?.category;
+    const list = workouts.filter((w) => (w.category || "Geral") === (cat || "Geral"));
+    const idx = list.findIndex((w) => w.id === currentId);
+    for (let i = idx + 1; i < list.length; i++) {
+      if (signedUrls[list[i].id]?.video) return list[i];
+    }
+    return null;
   }
 
   return (
@@ -524,13 +529,24 @@ function PlataformaPage() {
           </main>
         </div>
       </Tabs>
-      {activeVideo && (
-        <ImmersivePlayer
-          title={activeVideo.title}
-          url={activeVideo.url}
-          poster={signedUrls[activeVideo.id]?.thumb || workouts.find((w) => w.id === activeVideo.id)?.thumbnail_url || undefined}
-          onClose={() => setActiveVideo(null)}
-        />
+      {activeVideo && (() => {
+        const w = workouts.find((x) => x.id === activeVideo.id);
+        const next = nextPlayable(activeVideo.id);
+        return (
+          <ImmersiveVideoOverlay
+            title={activeVideo.title}
+            subtitle={w?.category || "Assistindo"}
+            src={activeVideo.url}
+            poster={signedUrls[activeVideo.id]?.thumb || w?.thumbnail_url || undefined}
+            onNext={next ? () => playWorkout(next) : undefined}
+            nextLabel="Próxima aula"
+            onEnded={next ? () => playWorkout(next) : undefined}
+            onClose={() => setActiveVideo(null)}
+          />
+        );
+      })()}
+      {embedVideo && (
+        <EmbedOverlay title={embedVideo.title} url={embedVideo.url} onClose={() => setEmbedVideo(null)} />
       )}
     </div>
   );
