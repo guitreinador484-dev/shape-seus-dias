@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Play, ArrowLeft, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { BookOpen, Play, ArrowLeft, ChevronLeft, ChevronRight, Sparkles, AlertTriangle, RotateCcw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
   component: MyCoursesPage,
@@ -26,6 +26,8 @@ function MyCoursesPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,19 +35,23 @@ function MyCoursesPage() {
     if (!user) { setLoading(false); return; }
     (async () => {
       setLoading(true);
+      setError(null);
+      try {
       let courses: Course[] = [];
       if (isAdmin) {
-        const { data } = await supabase
+        const { data, error: e } = await supabase
           .from("courses")
           .select("*")
           .eq("is_published", true)
           .order("order_index");
+        if (e) throw e;
         courses = (data ?? []) as Course[];
       } else {
-        const { data: enrolls } = await supabase
+        const { data: enrolls, error: e } = await supabase
           .from("course_enrollments")
           .select("course_id, courses(*)")
           .eq("user_id", user.id);
+        if (e) throw e;
         courses = (enrolls ?? [])
           .map((e) => (e as any).courses as Course)
           .filter((c): c is Course => !!c && c.is_published);
@@ -72,9 +78,13 @@ function MyCoursesPage() {
         })
       );
       setRows(built);
-      setLoading(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Não foi possível carregar seus cursos.");
+      } finally {
+        setLoading(false);
+      }
     })();
-  }, [authLoading, user, isAdmin]);
+  }, [authLoading, user, isAdmin, reloadKey]);
 
   const firstName =
     (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
@@ -145,9 +155,25 @@ function MyCoursesPage() {
         </div>
 
       {loading ? (
-        <div className="flex gap-4 overflow-hidden">
-          {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-[330px] w-[220px] shrink-0 rounded-xl" />)}
+        <div className="flex gap-5 overflow-hidden">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="w-[210px] shrink-0 space-y-2 sm:w-[235px]">
+              <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ))}
         </div>
+      ) : error ? (
+        <Card className="border-destructive/40 bg-card/40 backdrop-blur"><CardContent className="space-y-3 py-16 text-center">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-7 w-7" />
+          </div>
+          <p className="font-display text-2xl">Erro ao carregar seus cursos</p>
+          <p className="text-sm text-foreground/60">{error}</p>
+          <Button className="mt-2 rounded-full" onClick={() => setReloadKey((k) => k + 1)}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Tentar novamente
+          </Button>
+        </CardContent></Card>
       ) : rows.length === 0 ? (
         <Card className="border-border/50 bg-card/40 backdrop-blur"><CardContent className="py-20 text-center space-y-3">
           <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
