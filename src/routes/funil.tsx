@@ -260,80 +260,44 @@ function FunnelPage() {
               </div>
             </Card>
 
-            {/* Grupos musculares */}
-            {groups.length > 0 && (
-              <Card>
-                <h3 className="text-base font-bold flex items-center gap-2">
-                  🤔 Não sabe qual exercício escolher?
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Sem problema! A gente já separou os exercícios mais fáceis pra quem está começando. Clique no botão abaixo que a gente monta pra você — depois é só ajustar se quiser.
-                </p>
-                <button
-                  onClick={() => {
-                    const next: Record<string, string[]> = {};
-                    for (const g of groups) next[g.key] = [...g.beginners];
-                    setSelections(next);
-                  }}
-                  className="mt-3 w-full rounded-full bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition"
-                >
-                  Sou iniciante — monte pra mim ✨
-                </button>
-              </Card>
-            )}
-
-            {groups.map((g) => {
-              const chosen = selections[g.key] ?? [];
-              return (
-                <Card key={g.key}>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-base font-bold flex items-center gap-2">
-                      {g.name} <span>{g.emoji}</span>
+            {/* Perguntas amplas */}
+            <Card>
+              <CardHeader
+                title="Sobre você"
+                subtitle="Perguntas rápidas para entender seu momento — sem termos técnicos"
+                icon={<Sparkles className="h-4 w-4 text-blue-700" />}
+                progress={Math.round((broadFilled / BROAD_QUESTIONS.length) * 100)}
+              />
+              <div className="space-y-5">
+                {BROAD_QUESTIONS.map((q) => (
+                  <div key={q.key}>
+                    <h3 className="text-sm font-bold flex items-center gap-2">
+                      <span>{q.emoji}</span> {q.title}
                     </h3>
-                    <span
-                      className={`text-xs font-medium ${chosen.length ? "text-blue-700" : "text-slate-400"}`}
-                    >
-                      {chosen.length}/5 {chosen.length > 0 && <Check className="inline h-3 w-3" />}
-                    </span>
+                    {q.subtitle && <p className="text-xs text-slate-500 mt-0.5">{q.subtitle}</p>}
+                    <div className="grid gap-2 mt-2">
+                      {q.options.map((opt) => {
+                        const active = broad[q.key] === opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => setBroad((prev) => ({ ...prev, [q.key]: opt }))}
+                            className={`text-sm rounded-xl border px-4 py-3 text-left transition ${
+                              active
+                                ? "border-blue-600 bg-blue-600 text-white font-medium shadow-sm"
+                                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
+                            }`}
+                          >
+                            {opt}
+                            {active && <Check className="inline h-3.5 w-3.5 ml-1.5" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 mb-2">{g.description}</p>
-                  <div className="flex items-center justify-between mb-3 gap-2">
-                    <p className="text-xs text-slate-400">Selecione até 5 exercícios (ou deixe a gente sugerir)</p>
-                    <button
-                      onClick={() => setSelections((prev) => ({ ...prev, [g.key]: [...g.beginners] }))}
-                      className="text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-full px-3 py-1 whitespace-nowrap"
-                    >
-                      Sugerir pra mim
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {g.exercises.slice(0, 12).map((ex) => {
-                      const active = chosen.includes(ex);
-                      const beginner = g.beginners.includes(ex);
-                      return (
-                        <button
-                          key={ex}
-                          onClick={() => toggleExercise(g.key, ex)}
-                          title={beginner ? "Recomendado para iniciantes" : undefined}
-                          className={`text-xs rounded-lg border px-3 py-2 text-left transition ${
-                            active
-                              ? "border-blue-600 bg-blue-600 text-white font-medium shadow-sm"
-                              : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
-                          }`}
-                        >
-                          <span className="mr-1">{g.emoji}</span>
-                          {ex}
-                          {beginner && !active && (
-                            <span className="ml-1 text-[10px] text-blue-700 font-semibold">• fácil</span>
-                          )}
-                          {active && <Check className="inline h-3 w-3 ml-1" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Card>
-              );
-            })}
+                ))}
+              </div>
+            </Card>
 
             {/* Rotina */}
             <Card>
