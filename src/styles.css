@@ -203,6 +203,10 @@
 }
 
 @utility font-display { font-family: var(--font-display); letter-spacing: 0.01em; }
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
 @utility btn-cta {
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
