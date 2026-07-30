@@ -54,8 +54,6 @@ export function VideoPlayer({
   const [menu, setMenu] = useState(false);
   const [scrubHover, setScrubHover] = useState<number | null>(null);
 
-  seededRef.current = seededRef.current && true;
-
   const bump = useCallback(() => {
     setChrome(true);
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
