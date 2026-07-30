@@ -2,7 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { signedAsset, type Course } from "@/lib/courses-api";
+import {
+  signedAsset, listContinueWatching, listRecommendedModules,
+  type Course, type ContinueItem, type RecommendedModule,
+} from "@/lib/courses-api";
+import { ContinueWatchingRail, RecommendedRail } from "@/components/platform/course-rails";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +32,9 @@ function MyCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [continueItems, setContinueItems] = useState<ContinueItem[]>([]);
+  const [recommended, setRecommended] = useState<RecommendedModule[]>([]);
+  const [railsLoading, setRailsLoading] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +85,17 @@ function MyCoursesPage() {
         })
       );
       setRows(built);
+      setRailsLoading(true);
+      try {
+        const [cont, recs] = await Promise.all([
+          listContinueWatching(user.id),
+          listRecommendedModules(user.id, courses.map((c) => c.id)),
+        ]);
+        setContinueItems(cont);
+        setRecommended(recs);
+      } finally {
+        setRailsLoading(false);
+      }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Não foi possível carregar seus cursos.");
       } finally {
@@ -132,7 +150,11 @@ function MyCoursesPage() {
               <Button
                 size="lg"
                 className="rounded-full px-7"
-                onClick={() => featured && navigate({ to: "/plataforma/cursos/$slug", params: { slug: featured.course.slug } })}
+                onClick={() => {
+                  const c = continueItems[0];
+                  if (c) navigate({ to: "/plataforma/cursos/$slug", params: { slug: c.courseSlug }, search: { aula: c.lessonId } as never });
+                  else if (featured) navigate({ to: "/plataforma/cursos/$slug", params: { slug: featured.course.slug } });
+                }}
               >
                 <Play className="mr-2 h-4 w-4 fill-current" /> Continuar assistindo
               </Button>
@@ -145,8 +167,15 @@ function MyCoursesPage() {
         </div>
       </section>
 
+      {/* Continuar assistindo */}
+      {!loading && !error && (
+        <div className="mx-auto max-w-6xl space-y-10 px-4 pb-10 sm:px-6">
+          <ContinueWatchingRail items={continueItems} loading={railsLoading} />
+        </div>
+      )}
+
       {/* Carrossel de cursos */}
-      <section className="mx-auto max-w-6xl space-y-6 px-4 pb-20 sm:px-6">
+      <section className="mx-auto max-w-6xl space-y-6 px-4 pb-12 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-2xl sm:text-3xl">Seus módulos</h2>
@@ -257,6 +286,12 @@ function MyCoursesPage() {
         </div>
       )}
       </section>
+
+      {!loading && !error && (
+        <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+          <RecommendedRail items={recommended} loading={railsLoading} />
+        </div>
+      )}
     </div>
   );
 }

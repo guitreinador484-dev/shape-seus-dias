@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useParams, useSearch } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
@@ -21,19 +21,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
-  AlertTriangle, BookOpen, RotateCcw, Clock,
+  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    aula: typeof search.aula === "string" ? search.aula : undefined,
+  }),
   component: CourseDetailPage,
 });
 
-type ProgressRow = { lesson_id: string; completed_at: string | null; updated_at: string };
+type ProgressRow = { lesson_id: string; completed_at: string | null; updated_at: string; watched_seconds: number };
 
 function formatDuration(seconds?: number | null) {
   if (!seconds) return null;
   const m = Math.round(seconds / 60);
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}`;
+}
+
+/* status "baixado" por material (local ao dispositivo) */
+const DL_KEY = "material-baixado";
+function readDownloaded(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(DL_KEY) ?? "{}"); } catch { return {}; }
+}
+function markDownloaded(id: string) {
+  const all = readDownloaded();
+  all[id] = new Date().toISOString();
+  localStorage.setItem(DL_KEY, JSON.stringify(all));
+  return all;
 }
 
 /* ---------------- states ---------------- */
@@ -88,6 +104,7 @@ function CourseSkeleton() {
 
 function CourseDetailPage() {
   const { slug } = useParams({ from: "/_authenticated/plataforma/cursos/$slug" });
+  const { aula } = useSearch({ from: "/_authenticated/plataforma/cursos/$slug" });
   const { user, role, loading: authLoading } = useAuth();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
   const [course, setCourse] = useState<CourseFull | null>(null);
@@ -113,7 +130,7 @@ function CourseDetailPage() {
       let rows: ProgressRow[] = [];
       if (lessonIds.length) {
         const { data } = await supabase
-          .from("lesson_progress").select("lesson_id, completed_at, updated_at")
+          .from("lesson_progress").select("lesson_id, completed_at, updated_at, watched_seconds")
           .eq("user_id", user.id).in("lesson_id", lessonIds);
         rows = (data ?? []) as ProgressRow[];
         setProgress(rows);
@@ -126,6 +143,7 @@ function CourseDetailPage() {
         .filter((r) => !r.completed_at)
         .sort((a, b) => +new Date(b.updated_at) - +new Date(a.updated_at))[0];
       const resume =
+        (aula && all.find((l) => l.id === aula && isLessonUnlocked(l, enrolled))) ??
         (lastTouched && all.find((l) => l.id === lastTouched.lesson_id && isLessonUnlocked(l, enrolled))) ??
         all.find((l) => isLessonUnlocked(l, enrolled) && !doneIds.has(l.id)) ??
         all.find((l) => isLessonUnlocked(l, enrolled));
@@ -135,7 +153,7 @@ function CourseDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [slug, user, isAdmin]);
+  }, [slug, user, isAdmin, aula]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -199,6 +217,7 @@ function CourseDetailPage() {
                 lesson={activeLesson}
                 enrolledAt={enrolledAt}
                 userId={user!.id}
+                savedSeconds={progress.find((p) => p.lesson_id === activeLesson.id)?.watched_seconds ?? 0}
                 completed={progress.some((p) => p.lesson_id === activeLesson.id && p.completed_at)}
                 onProgress={reload}
               />
@@ -263,11 +282,17 @@ function CourseDetailPage() {
                 <Accordion type="multiple" defaultValue={course.modules.map((m) => m.id)} className="space-y-2">
                   {course.modules.map((m) => {
                     const doneInModule = m.lessons.filter((l) => progress.some((p) => p.lesson_id === l.id && p.completed_at)).length;
+                    const modPct = m.lessons.length ? Math.round((doneInModule / m.lessons.length) * 100) : 0;
                     return (
                       <AccordionItem key={m.id} value={m.id} className="rounded-xl border border-border/50 bg-card/40 px-3">
                         <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-                          <span className="flex-1 truncate text-left">{m.title}</span>
-                          <span className="ml-2 shrink-0 text-xs text-foreground/50">{doneInModule}/{m.lessons.length}</span>
+                          <span className="min-w-0 flex-1 text-left">
+                            <span className="block truncate">{m.title}</span>
+                            <span className="mt-1.5 flex items-center gap-2">
+                              <Progress value={modPct} className="h-1 flex-1" />
+                              <span className="shrink-0 text-[10px] font-normal text-foreground/50">{doneInModule}/{m.lessons.length}</span>
+                            </span>
+                          </span>
                         </AccordionTrigger>
                         <AccordionContent className="pb-2">
                           {m.lessons.length === 0 ? (
@@ -279,23 +304,35 @@ function CourseDetailPage() {
                                 const done = progress.some((p) => p.lesson_id === l.id && p.completed_at);
                                 const active = l.id === activeLessonId;
                                 const dur = formatDuration(l.duration_seconds);
+                                const row = progress.find((p) => p.lesson_id === l.id);
+                                const watchedPct = !done && l.duration_seconds && row?.watched_seconds
+                                  ? Math.min(99, Math.round((row.watched_seconds / l.duration_seconds) * 100))
+                                  : 0;
                                 return (
                                   <button
                                     key={l.id}
                                     disabled={!unlocked}
                                     onClick={() => setActiveLessonId(l.id)}
-                                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition ${
+                                    className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition ${
                                       active ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-accent hover:text-foreground"
                                     } ${!unlocked ? "cursor-not-allowed opacity-50" : ""}`}
                                   >
-                                    {done ? <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                                      : unlocked ? <Play className="h-4 w-4 shrink-0" />
-                                      : <Lock className="h-4 w-4 shrink-0" />}
-                                    <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                                    {done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                      : unlocked ? <Play className="mt-0.5 h-4 w-4 shrink-0" />
+                                      : <Lock className="mt-0.5 h-4 w-4 shrink-0" />}
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block truncate">{l.title}</span>
+                                      {watchedPct > 0 && (
+                                        <span className="mt-1 flex items-center gap-2">
+                                          <Progress value={watchedPct} className="h-0.5 flex-1" />
+                                          <span className="text-[10px] text-primary">{watchedPct}%</span>
+                                        </span>
+                                      )}
+                                    </span>
                                     {!unlocked ? (
-                                      <span className="shrink-0 text-[10px] text-foreground/50">{daysUntilUnlock(l, enrolledAt)}d</span>
+                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/50">{daysUntilUnlock(l, enrolledAt)}d</span>
                                     ) : dur ? (
-                                      <span className="shrink-0 text-[10px] text-foreground/45">{dur}</span>
+                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/45">{dur}</span>
                                     ) : null}
                                   </button>
                                 );
@@ -318,33 +355,62 @@ function CourseDetailPage() {
 
 /* ---------------- player ---------------- */
 
-function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
-  lesson: CourseLesson; enrolledAt: string; userId: string; completed: boolean; onProgress: () => void;
+function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onProgress }: {
+  lesson: CourseLesson; enrolledAt: string; userId: string; completed: boolean;
+  savedSeconds: number; onProgress: () => void;
 }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
   const [materials, setMaterials] = useState<LessonMaterial[]>([]);
   const [loadingVideo, setLoadingVideo] = useState(true);
+  const [loadingMaterials, setLoadingMaterials] = useState(true);
+  const [downloaded, setDownloaded] = useState<Record<string, string>>({});
+  const [position, setPosition] = useState(savedSeconds);
+  const lastSavedRef = useRef(savedSeconds);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const unlocked = isLessonUnlocked(lesson, enrolledAt);
+
+  useEffect(() => { setDownloaded(readDownloaded()); }, []);
+  useEffect(() => { setPosition(savedSeconds); lastSavedRef.current = savedSeconds; }, [lesson.id, savedSeconds]);
 
   useEffect(() => {
     let alive = true;
-    setVideoUrl(null); setThumbUrl(null); setLoadingVideo(true);
-    if (!unlocked) { setLoadingVideo(false); return; }
+    setVideoUrl(null); setThumbUrl(null); setLoadingVideo(true); setLoadingMaterials(true);
+    if (!unlocked) { setLoadingVideo(false); setLoadingMaterials(false); return; }
     (async () => {
       const [v, t] = await Promise.all([signedAsset(lesson.video_path), signedAsset(lesson.thumbnail_path)]);
       if (!alive) return;
       setVideoUrl(v); setThumbUrl(t); setLoadingVideo(false);
       const { data } = await supabase.from("lesson_materials").select("*").eq("lesson_id", lesson.id).order("order_index");
-      if (alive) setMaterials(data ?? []);
+      if (alive) { setMaterials(data ?? []); setLoadingMaterials(false); }
     })();
     return () => { alive = false; };
   }, [lesson.id, unlocked]);
 
-  async function touchProgress() {
+  /** Salva o timestamp atual do player no Supabase (retomada em qualquer dispositivo). */
+  const savePosition = useCallback(async (seconds: number, force = false) => {
+    const s = Math.floor(seconds);
+    if (!force && Math.abs(s - lastSavedRef.current) < 10) return;
+    lastSavedRef.current = s;
     await supabase.from("lesson_progress").upsert({
-      user_id: userId, lesson_id: lesson.id, completed_at: null, updated_at: new Date().toISOString(),
+      user_id: userId,
+      lesson_id: lesson.id,
+      watched_seconds: s,
+      updated_at: new Date().toISOString(),
     });
+  }, [userId, lesson.id]);
+
+  // salva ao sair da aula / fechar a aba
+  useEffect(() => {
+    const flush = () => { const el = videoRef.current; if (el && el.currentTime > 0) savePosition(el.currentTime, true); };
+    window.addEventListener("pagehide", flush);
+    return () => { window.removeEventListener("pagehide", flush); flush(); };
+  }, [savePosition]);
+
+  function handleLoadedMetadata() {
+    const el = videoRef.current;
+    if (!el) return;
+    if (!completed && position > 5 && position < el.duration - 15) el.currentTime = position;
   }
 
   async function markComplete() {
@@ -352,7 +418,7 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
       user_id: userId,
       lesson_id: lesson.id,
       completed_at: new Date().toISOString(),
-      watched_seconds: lesson.duration_seconds ?? 0,
+      watched_seconds: Math.floor(videoRef.current?.currentTime ?? lesson.duration_seconds ?? 0),
     });
     if (error) return toast.error(error.message);
     toast.success("Aula concluída");
@@ -360,10 +426,12 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
   }
   async function unmark() {
     await supabase.from("lesson_progress").upsert({ user_id: userId, lesson_id: lesson.id, completed_at: null, watched_seconds: 0 });
+    lastSavedRef.current = 0;
     onProgress();
   }
 
   async function openMaterial(m: LessonMaterial) {
+    setDownloaded(markDownloaded(m.id));
     if (m.external_url) { window.open(m.external_url, "_blank", "noopener"); return; }
     if (m.file_path) {
       const url = await signedAsset(m.file_path);
@@ -389,6 +457,9 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
   }
 
   const dur = formatDuration(lesson.duration_seconds);
+  const watchedPct = lesson.duration_seconds
+    ? Math.min(100, Math.round((position / lesson.duration_seconds) * 100))
+    : 0;
 
   return (
     <div className="space-y-4">
@@ -398,11 +469,19 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
         ) : videoUrl ? (
           <video
             key={lesson.id}
+            ref={videoRef}
             src={videoUrl}
             poster={thumbUrl ?? undefined}
             controls
             controlsList="nodownload"
-            onPlay={touchProgress}
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={(e) => {
+              const t = e.currentTarget.currentTime;
+              setPosition(t);
+              savePosition(t);
+            }}
+            onPause={(e) => savePosition(e.currentTarget.currentTime, true)}
+            onEnded={() => { if (!completed) markComplete(); }}
             className="h-full w-full"
           />
         ) : (
@@ -418,14 +497,15 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-2xl leading-none">{lesson.title}</h2>
-          {dur && (
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-foreground/50">
-              <Clock className="h-3.5 w-3.5" /> {dur}
-            </p>
-          )}
+          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-foreground/50">
+            {dur && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {dur}</span>}
+            {!completed && watchedPct > 0 && <span className="text-primary">{watchedPct}% assistido</span>}
+            {completed && <span className="flex items-center gap-1.5 text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> Concluída</span>}
+          </div>
           {lesson.description && (
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/65">{lesson.description}</p>
           )}
+          {!completed && watchedPct > 0 && <Progress value={watchedPct} className="mt-3 h-1 max-w-sm" />}
         </div>
         {completed ? (
           <Button variant="secondary" className="rounded-full" onClick={unmark}>
@@ -438,23 +518,47 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, onProgress }: {
         )}
       </div>
 
-      {materials.length > 0 && (
-        <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-foreground/50">Materiais</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {materials.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => openMaterial(m)}
-                className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/40 p-3 text-left text-sm transition hover:border-primary/40 hover:bg-accent"
-              >
-                {m.kind === "link" ? <Link2 className="h-4 w-4 text-primary" /> : <FileText className="h-4 w-4 text-primary" />}
-                <span className="flex-1 truncate">{m.title}</span>
-              </button>
-            ))}
+      {/* Recursos da aula */}
+      <Card className="border-border/50 bg-card/40">
+        <CardContent className="space-y-3 p-5">
+          <div className="flex items-center gap-2">
+            <Paperclip className="h-4 w-4 text-primary" />
+            <p className="text-sm font-medium">Recursos {!loadingMaterials && `(${materials.length})`}</p>
           </div>
-        </div>
-      )}
+          {loadingMaterials ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Skeleton className="h-14 w-full rounded-xl" />
+              <Skeleton className="h-14 w-full rounded-xl" />
+            </div>
+          ) : materials.length === 0 ? (
+            <p className="py-3 text-center text-xs text-foreground/50">Nenhum material anexado a esta aula.</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {materials.map((m) => {
+                const isDone = !!downloaded[m.id];
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => openMaterial(m)}
+                    className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left text-sm transition hover:border-primary/40 hover:bg-accent"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      {m.kind === "link" ? <Link2 className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{m.title}</span>
+                      <span className={`text-[11px] ${isDone ? "text-primary" : "text-foreground/45"}`}>
+                        {isDone ? "Baixado" : m.kind === "link" ? "Abrir link" : "Baixar arquivo"}
+                      </span>
+                    </span>
+                    {isDone ? <Check className="h-4 w-4 shrink-0 text-primary" /> : <Download className="h-4 w-4 shrink-0 text-foreground/40" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

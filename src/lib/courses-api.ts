@@ -110,3 +110,133 @@ export function daysUntilUnlock(lesson: CourseLesson, enrolledAt: string | null)
   const days = Math.floor((now - enroll) / (1000 * 60 * 60 * 24));
   return Math.max(0, lesson.release_days - days);
 }
+
+/* ---------------- Continuar assistindo / recomendações ---------------- */
+
+export type ContinueItem = {
+  lessonId: string;
+  lessonTitle: string;
+  moduleTitle: string;
+  courseTitle: string;
+  courseSlug: string;
+  coverPath: string | null;
+  thumbnailPath: string | null;
+  watchedSeconds: number;
+  durationSeconds: number | null;
+  updatedAt: string;
+  pct: number;
+};
+
+/** Aulas iniciadas e ainda não concluídas, mais recentes primeiro. */
+export async function listContinueWatching(userId: string, limit = 8): Promise<ContinueItem[]> {
+  const { data: rows } = await supabase
+    .from("lesson_progress")
+    .select("lesson_id, watched_seconds, updated_at, completed_at")
+    .eq("user_id", userId)
+    .is("completed_at", null)
+    .gt("watched_seconds", 0)
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  const list = rows ?? [];
+  if (!list.length) return [];
+
+  const { data: lessons } = await supabase
+    .from("course_lessons")
+    .select("id, title, duration_seconds, thumbnail_path, module_id")
+    .in("id", list.map((r) => r.lesson_id));
+  const lessonMap = new Map((lessons ?? []).map((l) => [l.id, l]));
+
+  const moduleIds = [...new Set((lessons ?? []).map((l) => l.module_id))];
+  const { data: modules } = moduleIds.length
+    ? await supabase.from("course_modules").select("id, title, course_id").in("id", moduleIds)
+    : { data: [] as { id: string; title: string; course_id: string }[] };
+  const moduleMap = new Map((modules ?? []).map((m) => [m.id, m]));
+
+  const courseIds = [...new Set((modules ?? []).map((m) => m.course_id))];
+  const { data: courses } = courseIds.length
+    ? await supabase.from("courses").select("id, title, slug, cover_path").in("id", courseIds)
+    : { data: [] as { id: string; title: string; slug: string; cover_path: string | null }[] };
+  const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
+
+  const items: ContinueItem[] = [];
+  for (const r of list) {
+    const lesson = lessonMap.get(r.lesson_id);
+    if (!lesson) continue;
+    const mod = moduleMap.get(lesson.module_id);
+    const course = mod ? courseMap.get(mod.course_id) : undefined;
+    if (!mod || !course) continue;
+    const dur = lesson.duration_seconds ?? null;
+    items.push({
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      moduleTitle: mod.title,
+      courseTitle: course.title,
+      courseSlug: course.slug,
+      coverPath: course.cover_path,
+      thumbnailPath: lesson.thumbnail_path,
+      watchedSeconds: r.watched_seconds ?? 0,
+      durationSeconds: dur,
+      updatedAt: r.updated_at,
+      pct: dur ? Math.min(99, Math.round(((r.watched_seconds ?? 0) / dur) * 100)) : 5,
+    });
+  }
+  return items;
+}
+
+export type RecommendedModule = {
+  moduleId: string;
+  moduleTitle: string;
+  courseTitle: string;
+  courseSlug: string;
+  coverPath: string | null;
+  totalLessons: number;
+  completedLessons: number;
+};
+
+/**
+ * Próximos módulos sugeridos: módulos ainda não finalizados dos cursos do aluno,
+ * priorizando os que já foram iniciados (parcialmente concluídos).
+ */
+export async function listRecommendedModules(userId: string, courseIds: string[], limit = 8): Promise<RecommendedModule[]> {
+  if (!courseIds.length) return [];
+  const { data: courses } = await supabase
+    .from("courses").select("id, title, slug, cover_path, order_index").in("id", courseIds).order("order_index");
+  const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
+
+  const { data: modules } = await supabase
+    .from("course_modules").select("id, title, course_id, order_index").in("course_id", courseIds).order("order_index");
+  const mods = modules ?? [];
+  if (!mods.length) return [];
+
+  const { data: lessons } = await supabase
+    .from("course_lessons").select("id, module_id").in("module_id", mods.map((m) => m.id));
+  const lessonList = lessons ?? [];
+
+  const { data: progress } = lessonList.length
+    ? await supabase.from("lesson_progress").select("lesson_id, completed_at")
+        .eq("user_id", userId).in("lesson_id", lessonList.map((l) => l.id))
+    : { data: [] as { lesson_id: string; completed_at: string | null }[] };
+  const doneIds = new Set((progress ?? []).filter((p) => p.completed_at).map((p) => p.lesson_id));
+
+  const result: RecommendedModule[] = [];
+  for (const m of mods) {
+    const ls = lessonList.filter((l) => l.module_id === m.id);
+    if (!ls.length) continue;
+    const done = ls.filter((l) => doneIds.has(l.id)).length;
+    if (done === ls.length) continue; // já concluído
+    const course = courseMap.get(m.course_id);
+    if (!course) continue;
+    result.push({
+      moduleId: m.id,
+      moduleTitle: m.title,
+      courseTitle: course.title,
+      courseSlug: course.slug,
+      coverPath: course.cover_path,
+      totalLessons: ls.length,
+      completedLessons: done,
+    });
+  }
+  // iniciados primeiro, depois os intocados
+  result.sort((a, b) => (b.completedLessons > 0 ? 1 : 0) - (a.completedLessons > 0 ? 1 : 0));
+  return result.slice(0, limit);
+}
