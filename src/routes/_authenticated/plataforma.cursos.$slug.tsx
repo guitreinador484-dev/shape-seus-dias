@@ -457,25 +457,20 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
 
   return (
     <div className="space-y-4">
-      <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black">
+      <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black shadow-2xl shadow-black/40">
         {loadingVideo ? (
           <Skeleton className="h-full w-full rounded-none" />
         ) : videoUrl ? (
-          <video
+          <VideoPlayer
             key={lesson.id}
-            ref={videoRef}
             src={videoUrl}
             poster={thumbUrl ?? undefined}
-            controls
-            controlsList="nodownload"
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={(e) => {
-              const t = e.currentTarget.currentTime;
-              setPosition(t);
-              savePosition(t);
-            }}
-            onPause={(e) => savePosition(e.currentTarget.currentTime, true)}
-            onEnded={() => { if (!completed) markComplete(); }}
+            title={lesson.title}
+            subtitle="Aula"
+            autoPlay={false}
+            startAt={completed ? 0 : savedSeconds}
+            onTime={(t) => { posRef.current = t; setPosition(t); savePosition(t); }}
+            onEnded={() => { savePosition(posRef.current, true); if (!completed) markComplete(); }}
             className="h-full w-full"
           />
         ) : (
