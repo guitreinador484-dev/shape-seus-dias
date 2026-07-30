@@ -2,7 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { signedAsset, type Course } from "@/lib/courses-api";
+import {
+  signedAsset, listContinueWatching, listRecommendedModules,
+  type Course, type ContinueItem, type RecommendedModule,
+} from "@/lib/courses-api";
+import { ContinueWatchingRail, RecommendedRail } from "@/components/platform/course-rails";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +32,9 @@ function MyCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [continueItems, setContinueItems] = useState<ContinueItem[]>([]);
+  const [recommended, setRecommended] = useState<RecommendedModule[]>([]);
+  const [railsLoading, setRailsLoading] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,6 +85,17 @@ function MyCoursesPage() {
         })
       );
       setRows(built);
+      setRailsLoading(true);
+      try {
+        const [cont, recs] = await Promise.all([
+          listContinueWatching(user.id),
+          listRecommendedModules(user.id, courses.map((c) => c.id)),
+        ]);
+        setContinueItems(cont);
+        setRecommended(recs);
+      } finally {
+        setRailsLoading(false);
+      }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Não foi possível carregar seus cursos.");
       } finally {
