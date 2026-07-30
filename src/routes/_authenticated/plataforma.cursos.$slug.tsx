@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { VideoPlayer } from "@/components/platform/video-player";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
