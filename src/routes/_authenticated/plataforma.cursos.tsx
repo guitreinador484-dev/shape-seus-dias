@@ -26,6 +26,7 @@ function MyCoursesPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authLoading) return;
