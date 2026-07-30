@@ -72,10 +72,6 @@ export type FunnelConfig = {
   urgencyText?: string;
 };
 
-export const DEFAULT_RESULT_IMAGES = [
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop",
-];
-
 export type BroadQuestion = { key: string; emoji: string; title: string; subtitle?: string; options: string[] };
 
 /** Perguntas amplas, para qualquer pessoa (sem exigir conhecimento de exercícios). */
@@ -136,7 +132,7 @@ export const BROAD_QUESTIONS: BroadQuestion[] = [
   },
 ];
 
-const _UNUSED_RESULTS = [
+export const DEFAULT_RESULT_IMAGES = [
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop",
   "https://images.unsplash.com/photo-1594381898411-846e7d193883?w=400&h=400&fit=crop",
   "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
