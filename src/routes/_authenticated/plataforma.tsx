@@ -263,6 +263,7 @@ function PlataformaPage() {
   const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
   const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
   const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string } | null>(null);
+  const [embedVideo, setEmbedVideo] = useState<{ url: string; title: string } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -376,8 +377,23 @@ function PlataformaPage() {
 
   function playWorkout(w: Workout) {
     const url = signedUrls[w.id]?.video;
-    if (url) setActiveVideo({ id: w.id, url, title: w.title });
-    else if (w.video_url) window.open(w.video_url, "_blank");
+    if (url) { setActiveVideo({ id: w.id, url, title: w.title }); return; }
+    if (w.video_url) {
+      const embed = toEmbedUrl(w.video_url);
+      if (embed) setEmbedVideo({ url: embed, title: w.title });
+      else setActiveVideo({ id: w.id, url: w.video_url, title: w.title });
+    }
+  }
+
+  /** Next playable workout in the same category, for the "next up" prompt. */
+  function nextPlayable(currentId: string): Workout | null {
+    const cat = workouts.find((w) => w.id === currentId)?.category;
+    const list = workouts.filter((w) => (w.category || "Geral") === (cat || "Geral"));
+    const idx = list.findIndex((w) => w.id === currentId);
+    for (let i = idx + 1; i < list.length; i++) {
+      if (signedUrls[list[i].id]?.video) return list[i];
+    }
+    return null;
   }
 
   return (
@@ -513,13 +529,24 @@ function PlataformaPage() {
           </main>
         </div>
       </Tabs>
-      {activeVideo && (
-        <ImmersivePlayer
-          title={activeVideo.title}
-          url={activeVideo.url}
-          poster={signedUrls[activeVideo.id]?.thumb || workouts.find((w) => w.id === activeVideo.id)?.thumbnail_url || undefined}
-          onClose={() => setActiveVideo(null)}
-        />
+      {activeVideo && (() => {
+        const w = workouts.find((x) => x.id === activeVideo.id);
+        const next = nextPlayable(activeVideo.id);
+        return (
+          <ImmersiveVideoOverlay
+            title={activeVideo.title}
+            subtitle={w?.category || "Assistindo"}
+            src={activeVideo.url}
+            poster={signedUrls[activeVideo.id]?.thumb || w?.thumbnail_url || undefined}
+            onNext={next ? () => playWorkout(next) : undefined}
+            nextLabel="Próxima aula"
+            onEnded={next ? () => playWorkout(next) : undefined}
+            onClose={() => setActiveVideo(null)}
+          />
+        );
+      })()}
+      {embedVideo && (
+        <EmbedOverlay title={embedVideo.title} url={embedVideo.url} onClose={() => setEmbedVideo(null)} />
       )}
     </div>
   );
