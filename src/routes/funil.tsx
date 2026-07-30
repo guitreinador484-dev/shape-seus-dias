@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
-import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import {
+  BROAD_QUESTIONS,
   DEFAULT_FUNNEL,
   type FunnelConfig,
   type FunnelPlan,
@@ -71,37 +71,25 @@ function FunnelPage() {
     dias: "",
     sexo: "",
   });
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
+  const [broad, setBroad] = useState<Record<string, string>>({});
   const [routine, setRoutine] = useState<Record<string, string>>({});
   const [selectedPlan, setSelectedPlan] = useState<FunnelPlan | null>(null);
   const [method, setMethod] = useState<"pix" | "card">("pix");
   const [contact, setContact] = useState({ name: "", email: "", whatsapp: "" });
   const [submitting, setSubmitting] = useState(false);
 
-  const groups = useMemo(
-    () => EXERCISE_GROUPS.filter((g) => cfg.groupKeys.includes(g.key)),
-    [cfg.groupKeys]
-  );
-
   const measurementProgress = useMemo(() => {
     const v = Object.values(measurements).filter(Boolean).length;
     return Math.round((v / MEASUREMENT_FIELDS_REQUIRED) * 100);
   }, [measurements]);
 
-  const totalRequired = groups.length;
-  const totalGroupsFilled = groups.filter((g) => (selections[g.key]?.length ?? 0) > 0).length;
+  const broadFilled = BROAD_QUESTIONS.filter((q) => broad[q.key]).length;
   const routineFilled = cfg.routine.filter((r) => routine[r.label]).length;
 
   const canSubmit =
-    measurementProgress === 100 && totalGroupsFilled === totalRequired && routineFilled === cfg.routine.length;
-
-  const toggleExercise = (groupKey: string, ex: string) => {
-    setSelections((prev) => {
-      const cur = prev[groupKey] ?? [];
-      const next = cur.includes(ex) ? cur.filter((x) => x !== ex) : [...cur, ex].slice(0, 5);
-      return { ...prev, [groupKey]: next };
-    });
-  };
+    measurementProgress === 100 &&
+    broadFilled === BROAD_QUESTIONS.length &&
+    routineFilled === cfg.routine.length;
 
   const handleGoPlans = () => {
     if (!canSubmit) {
@@ -124,7 +112,7 @@ function FunnelPage() {
     saveFunnelLead({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      answers: { measurements, selections, routine },
+      answers: { measurements, broad, routine },
       planId: selectedPlan.id,
       contact,
     });
