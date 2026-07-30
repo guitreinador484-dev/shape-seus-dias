@@ -286,6 +286,12 @@ function MyCoursesPage() {
         </div>
       )}
       </section>
+
+      {!loading && !error && (
+        <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+          <RecommendedRail items={recommended} loading={railsLoading} />
+        </div>
+      )}
     </div>
   );
 }
