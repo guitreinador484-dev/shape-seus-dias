@@ -282,11 +282,17 @@ function CourseDetailPage() {
                 <Accordion type="multiple" defaultValue={course.modules.map((m) => m.id)} className="space-y-2">
                   {course.modules.map((m) => {
                     const doneInModule = m.lessons.filter((l) => progress.some((p) => p.lesson_id === l.id && p.completed_at)).length;
+                    const modPct = m.lessons.length ? Math.round((doneInModule / m.lessons.length) * 100) : 0;
                     return (
                       <AccordionItem key={m.id} value={m.id} className="rounded-xl border border-border/50 bg-card/40 px-3">
                         <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-                          <span className="flex-1 truncate text-left">{m.title}</span>
-                          <span className="ml-2 shrink-0 text-xs text-foreground/50">{doneInModule}/{m.lessons.length}</span>
+                          <span className="min-w-0 flex-1 text-left">
+                            <span className="block truncate">{m.title}</span>
+                            <span className="mt-1.5 flex items-center gap-2">
+                              <Progress value={modPct} className="h-1 flex-1" />
+                              <span className="shrink-0 text-[10px] font-normal text-foreground/50">{doneInModule}/{m.lessons.length}</span>
+                            </span>
+                          </span>
                         </AccordionTrigger>
                         <AccordionContent className="pb-2">
                           {m.lessons.length === 0 ? (
@@ -298,23 +304,35 @@ function CourseDetailPage() {
                                 const done = progress.some((p) => p.lesson_id === l.id && p.completed_at);
                                 const active = l.id === activeLessonId;
                                 const dur = formatDuration(l.duration_seconds);
+                                const row = progress.find((p) => p.lesson_id === l.id);
+                                const watchedPct = !done && l.duration_seconds && row?.watched_seconds
+                                  ? Math.min(99, Math.round((row.watched_seconds / l.duration_seconds) * 100))
+                                  : 0;
                                 return (
                                   <button
                                     key={l.id}
                                     disabled={!unlocked}
                                     onClick={() => setActiveLessonId(l.id)}
-                                    className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition ${
+                                    className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition ${
                                       active ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-accent hover:text-foreground"
                                     } ${!unlocked ? "cursor-not-allowed opacity-50" : ""}`}
                                   >
-                                    {done ? <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                                      : unlocked ? <Play className="h-4 w-4 shrink-0" />
-                                      : <Lock className="h-4 w-4 shrink-0" />}
-                                    <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                                    {done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                      : unlocked ? <Play className="mt-0.5 h-4 w-4 shrink-0" />
+                                      : <Lock className="mt-0.5 h-4 w-4 shrink-0" />}
+                                    <span className="min-w-0 flex-1">
+                                      <span className="block truncate">{l.title}</span>
+                                      {watchedPct > 0 && (
+                                        <span className="mt-1 flex items-center gap-2">
+                                          <Progress value={watchedPct} className="h-0.5 flex-1" />
+                                          <span className="text-[10px] text-primary">{watchedPct}%</span>
+                                        </span>
+                                      )}
+                                    </span>
                                     {!unlocked ? (
-                                      <span className="shrink-0 text-[10px] text-foreground/50">{daysUntilUnlock(l, enrolledAt)}d</span>
+                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/50">{daysUntilUnlock(l, enrolledAt)}d</span>
                                     ) : dur ? (
-                                      <span className="shrink-0 text-[10px] text-foreground/45">{dur}</span>
+                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/45">{dur}</span>
                                     ) : null}
                                   </button>
                                 );
