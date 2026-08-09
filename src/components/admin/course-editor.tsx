@@ -91,7 +91,7 @@ function CourseSettings({ course, onChange }: { course: CourseFull; onChange: ()
   }
 
   async function changeCover(file: File) {
-    const path = await uploadCourseAsset(file, "covers");
+    const path = await uploadCourseAsset(file, "covers", course.id);
     await deleteCourseAsset(course.cover_path);
     await supabase.from("courses").update({ cover_path: path }).eq("id", course.id);
     toast.success("Capa atualizada");
@@ -261,6 +261,7 @@ function LessonsEditor({ module, onChange }: { module: CourseModule & { lessons:
 function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => void }) {
   const [lesson, setLesson] = useState<CourseLesson | null>(null);
   const [materials, setMaterials] = useState<LessonMaterial[]>([]);
+  const [courseId, setCourseId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [releaseDays, setReleaseDays] = useState(0);
@@ -282,6 +283,8 @@ function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => 
       setDurationSeconds(l.duration_seconds); setVideoPath(l.video_path); setThumbPath(l.thumbnail_path);
       setVideoUrl(await signedAsset(l.video_path));
       setThumbUrl(await signedAsset(l.thumbnail_path));
+      const { data: mod } = await supabase.from("course_modules").select("course_id").eq("id", l.module_id).single();
+      setCourseId(mod?.course_id ?? null);
       const { data: mats } = await supabase.from("lesson_materials").select("*").eq("lesson_id", lessonId).order("order_index");
       setMaterials(mats ?? []);
     })();
@@ -290,8 +293,9 @@ function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => 
   async function uploadVideo(file: File) {
     setUploadingVideo(true);
     try {
+      if (!courseId) throw new Error("Curso não identificado");
       if (videoPath) await deleteCourseAsset(videoPath);
-      const path = await uploadCourseAsset(file, "videos");
+      const path = await uploadCourseAsset(file, "videos", courseId);
       setVideoPath(path);
       setVideoUrl(await signedAsset(path));
       toast.success("Vídeo enviado");
@@ -301,8 +305,9 @@ function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => 
   async function uploadThumb(file: File) {
     setUploadingThumb(true);
     try {
+      if (!courseId) throw new Error("Curso não identificado");
       if (thumbPath) await deleteCourseAsset(thumbPath);
-      const path = await uploadCourseAsset(file, "thumbs");
+      const path = await uploadCourseAsset(file, "thumbs", courseId);
       setThumbPath(path);
       setThumbUrl(await signedAsset(path));
     } catch (e) { toast.error(e instanceof Error ? e.message : "Erro"); }
@@ -339,7 +344,8 @@ function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => 
       input.onchange = async () => {
         const file = input.files?.[0]; if (!file) return;
         try {
-          const path = await uploadCourseAsset(file, "materials");
+          if (!courseId) throw new Error("Curso não identificado");
+          const path = await uploadCourseAsset(file, "materials", courseId);
           await supabase.from("lesson_materials").insert({ lesson_id: lessonId, title: file.name, file_path: path, kind: "file", order_index: materials.length });
           const { data: mats } = await supabase.from("lesson_materials").select("*").eq("lesson_id", lessonId).order("order_index");
           setMaterials(mats ?? []);

@@ -140,18 +140,19 @@ function NewCourseDialog({ onCreated }: { onCreated: () => void }) {
     if (!title.trim()) return toast.error("Título obrigatório");
     setSaving(true);
     try {
-      let cover_path: string | null = null;
-      if (coverFile) cover_path = await uploadCourseAsset(coverFile, "covers");
       const slug = slugify(title) + "-" + crypto.randomUUID().slice(0, 6);
-      const { error } = await supabase.from("courses").insert({
+      const { data, error } = await supabase.from("courses").insert({
         title: title.trim(),
         slug,
         description: description.trim() || null,
         category: category.trim() || null,
-        cover_path,
         is_published: published,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (coverFile) {
+        const cover_path = await uploadCourseAsset(coverFile, "covers", data.id);
+        await supabase.from("courses").update({ cover_path }).eq("id", data.id);
+      }
       toast.success("Curso criado");
       setTitle(""); setDescription(""); setCategory(""); setCoverFile(null); setPublished(false);
       onCreated();

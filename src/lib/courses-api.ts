@@ -55,9 +55,9 @@ export async function loadCourseBySlug(slug: string): Promise<CourseFull | null>
   return loadCourseFull(course.id);
 }
 
-export async function uploadCourseAsset(file: File, subfolder: string): Promise<string> {
+export async function uploadCourseAsset(file: File, subfolder: string, courseId: string): Promise<string> {
   const ext = file.name.split(".").pop() ?? "bin";
-  const path = `${subfolder}/${crypto.randomUUID()}.${ext}`;
+  const path = `${courseId}/${subfolder}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from("course-assets").upload(path, file, { upsert: false });
   if (error) throw error;
   return path;
