@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
 import {
@@ -10,6 +11,7 @@ import {
   saveFunnelLead,
 } from "@/lib/funnel-store";
 import { fetchPublicFunnel } from "@/lib/funnel.functions";
+import { submitLeadFn } from "@/lib/leads.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -42,6 +44,7 @@ const MEASUREMENT_FIELDS_REQUIRED = 7;
 function FunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [loading, setLoading] = useState(true);
+  const submitLead = useServerFn(submitLeadFn);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +119,17 @@ function FunnelPage() {
       planId: selectedPlan.id,
       contact,
     });
+    // Persist no servidor para o admin ver leads reais (fire-and-forget com fallback)
+    submitLead({
+      data: {
+        source: "funil",
+        name: contact.name,
+        email: contact.email,
+        whatsapp: contact.whatsapp,
+        planId: selectedPlan.id,
+        answers: { measurements, broad, routine, plan: selectedPlan },
+      },
+    }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
     setTimeout(() => {
       setSubmitting(false);
       setStage("done");

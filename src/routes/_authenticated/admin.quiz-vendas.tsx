@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ import {
   createBlankQuiz, createExodusQuiz, createNutriQuiz, upsertQuiz, type QuizConfig, type LeadRecord,
 } from "@/lib/quiz-store";
 import { publishQuizFn, unpublishQuizFn } from "@/lib/quiz.functions";
+import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/quiz-vendas")({
@@ -44,8 +46,47 @@ const STATUS_LEAD: Record<LeadRecord["status"], { label: string; cls: string }> 
 
 function QuizVendasPage() {
   const quizzes = useQuizzes();
-  const leads = useLeads();
+  const localLeads = useLeads();
+  const listLeads = useServerFn(listLeadsFn);
   const navigate = useNavigate();
+  const [serverLeads, setServerLeads] = useState<LeadRow[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listLeads({ data: undefined })
+      .then((res) => {
+        if (!cancelled) setServerLeads(res.leads);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [listLeads]);
+
+  const leads = useMemo(() => {
+    const server: LeadRecord[] = serverLeads.map((r) => {
+      const known = quizzes.find((q) => q.slug === r.quiz_slug);
+      return {
+        id: r.id,
+        quizId: known ? known.id : (r.quiz_slug ?? ""),
+        name: r.name ?? "",
+        email: r.email ?? "",
+        whatsapp: r.whatsapp ?? "",
+        score: r.score ?? 0,
+        profile: r.profile ?? "Lead",
+        status: r.status as LeadRecord["status"],
+        date: r.created_at,
+        answers: (r.answers ?? {}) as Record<string, string>,
+      };
+    });
+    const seen = new Set<string>();
+    return [...server, ...localLeads].filter((l) => {
+      const key = `${(l.email ?? "").toLowerCase()}|${(l.name ?? "").toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [serverLeads, localLeads, quizzes]);
 
   const metrics = useMemo(() => {
     const active = quizzes.filter((q) => q.status === "ativo").length;

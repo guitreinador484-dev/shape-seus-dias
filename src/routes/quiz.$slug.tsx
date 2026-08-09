@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { addLead, getQuizBySlug, type Block, type QuizConfig, type Range, type TextStyle } from "@/lib/quiz-store";
 import { fetchPublicQuizBySlug } from "@/lib/quiz.functions";
+import { submitLeadFn } from "@/lib/leads.functions";
 import { Loader2, HelpCircle, Star, ChevronDown } from "lucide-react";
 import { Check } from "lucide-react";
 
@@ -78,6 +80,7 @@ function PublicQuiz() {
   const [answers, setAnswers] = useState<Record<string, { value: string; points: number }>>({});
   const [form, setForm] = useState<FormState>({ name: "", email: "", whatsapp: "" });
   const [finished, setFinished] = useState(false);
+  const submitLead = useServerFn(submitLeadFn);
 
   useEffect(() => {
     let cancelled = false;
@@ -188,18 +191,22 @@ function PublicQuiz() {
     if (stepIdx > 0) setStepIdx((i) => i - 1);
   }
 
-  function finalize() {
+  async function finalize() {
     if (!quiz) return;
     const profile = matchedRange?.profile ?? "Lead";
     const ans: Record<string, string> = {};
-    // Map answers to readable {question: answer} dict
+    // Map answers to readable {question: answer} dict (all answerable block kinds)
     for (const s of quiz.steps) {
       for (const b of s.blocks) {
-        if ((b.kind === "escolha" || b.kind === "sim-nao") && answers[b.id]) {
-          ans[b.kind === "escolha" ? b.question : b.question] = answers[b.id].value;
+        if (
+          (b.kind === "escolha" || b.kind === "sim-nao" || b.kind === "multipla" || b.kind === "escala") &&
+          answers[b.id]
+        ) {
+          ans[b.question] = answers[b.id].value;
         }
       }
     }
+    const status = score >= 50 ? "qualificado" : "nao-qualificado";
     addLead({
       quizId: quiz.id,
       name: form.name || "(sem nome)",
@@ -209,6 +216,25 @@ function PublicQuiz() {
       profile,
       answers: ans,
     });
+    // Persist no servidor para o admin ver leads reais (fire-and-forget com fallback)
+    try {
+      await submitLead({
+        data: {
+          source: "quiz",
+          quizSlug: quiz.slug,
+          quizTitle: quiz.title,
+          name: form.name,
+          email: form.email,
+          whatsapp: form.whatsapp,
+          score,
+          profile,
+          status,
+          answers: ans,
+        },
+      });
+    } catch (e) {
+      console.error("[quiz] falha ao salvar lead no servidor", e);
+    }
     setFinished(true);
   }
 

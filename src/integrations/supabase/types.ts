@@ -383,6 +383,54 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          answers: Json
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          plan_id: string | null
+          profile: string | null
+          quiz_slug: string | null
+          quiz_title: string | null
+          score: number | null
+          source: string
+          status: string
+          whatsapp: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          plan_id?: string | null
+          profile?: string | null
+          quiz_slug?: string | null
+          quiz_title?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          plan_id?: string | null
+          profile?: string | null
+          quiz_slug?: string | null
+          quiz_title?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       purchases: {
         Row: {
           amount: number

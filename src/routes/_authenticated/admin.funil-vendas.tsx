@@ -19,6 +19,7 @@ import {
   type FunnelLead,
 } from "@/lib/funnel-store";
 import { publishFunnelFn, fetchPublicFunnel } from "@/lib/funnel.functions";
+import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
@@ -30,14 +31,43 @@ function AdminFunnelPage() {
   const [saving, setSaving] = useState(false);
   const [leads, setLeads] = useState<FunnelLead[]>([]);
   const publish = useServerFn(publishFunnelFn);
+  const listLeads = useServerFn(listLeadsFn);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const remote = await fetchPublicFunnel();
+      const local = loadFunnelLeads();
+      let server: LeadRow[] = [];
+      try {
+        const res = await listLeads({ data: undefined });
+        server = res.leads;
+      } catch {}
+      if (cancelled) return;
       setCfg(remote ?? loadFunnelLocal());
-      setLeads(loadFunnelLeads());
+      const serverLeads: FunnelLead[] = server.map((r) => ({
+        id: r.id,
+        createdAt: r.created_at,
+        answers: (r.answers ?? {}) as Record<string, unknown>,
+        planId: r.plan_id ?? undefined,
+        contact: { name: r.name ?? "", email: r.email ?? "", whatsapp: r.whatsapp ?? "" },
+      }));
+      const seen = new Set<string>();
+      setLeads(
+        [...serverLeads, ...local].filter((l) => {
+          const email = (l.contact?.email ?? "").toLowerCase();
+          const name = (l.contact?.name ?? "").toLowerCase();
+          const key = `${email}|${name}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }),
+      );
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [listLeads]);
 
   const update = <K extends keyof FunnelConfig>(key: K, value: FunnelConfig[K]) =>
     setCfg((c) => ({ ...c, [key]: value }));
