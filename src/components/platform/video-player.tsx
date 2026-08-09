@@ -206,7 +206,7 @@ export function VideoPlayer({
       {seekFeedback && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center z-20 animate-fade-in">
           <div className="flex items-center gap-2 rounded-full bg-black/80 border border-white/20 px-5 py-2.5 text-base font-bold text-white shadow-2xl backdrop-blur-md">
-            {seekFeedback === "-10s" ? <Rewind className="h-5 w-5 text-primary" /> : <FastForward className="h-5 w-5 text-primary" />}
+            {seekFeedback === "-10s" ? <Rewind className="h-5 w-5 text-[#E63946]" /> : <FastForward className="h-5 w-5 text-[#E63946]" />}
             <span>{seekFeedback}</span>
           </div>
         </div>
@@ -215,7 +215,7 @@ export function VideoPlayer({
       {/* Buffering Indicator */}
       {waiting && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <Loader2 className="h-12 w-12 animate-spin text-[#E63946]" />
         </div>
       )}
 
@@ -227,8 +227,8 @@ export function VideoPlayer({
           aria-label="Reproduzir"
           className="absolute inset-0 grid place-items-center z-10"
         >
-          <span className="grid h-20 w-20 place-items-center rounded-full bg-primary shadow-2xl shadow-primary/50 ring-4 ring-white/20 backdrop-blur transition duration-300 hover:scale-110">
-            <Play className="ml-1 h-8 w-8 fill-current text-primary-foreground" />
+          <span className="grid h-20 w-20 place-items-center rounded-full bg-[#E63946] shadow-2xl shadow-[#E63946]/50 ring-4 ring-white/20 backdrop-blur transition duration-300 hover:scale-110">
+            <Play className="ml-1 h-8 w-8 fill-current text-white" />
           </span>
         </button>
       )}
@@ -253,7 +253,7 @@ export function VideoPlayer({
       {onNext && nearEnd && (
         <button
           type="button" onClick={onNext}
-          className="absolute bottom-24 right-4 z-20 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-2xl shadow-primary/40 transition hover:scale-105"
+          className="absolute bottom-24 right-4 z-20 inline-flex items-center gap-2 rounded-full bg-[#E63946] px-5 py-2.5 text-sm font-semibold text-white shadow-2xl shadow-[#E63946]/40 transition hover:scale-105"
         >
           <SkipForward className="h-4 w-4 fill-current" /> {nextLabel}
         </button>
@@ -265,7 +265,7 @@ export function VideoPlayer({
           <div className="max-w-xs w-full bg-card border border-border/60 rounded-2xl p-5 text-card-foreground shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-display text-lg flex items-center gap-2">
-                <HelpCircle className="h-4 w-4 text-primary" /> Atalhos de Teclado
+                <HelpCircle className="h-4 w-4 text-[#E63946]" /> Atalhos de Teclado
               </h4>
               <button onClick={() => setShowHelp(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
@@ -320,10 +320,10 @@ export function VideoPlayer({
         >
           <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20 transition-all group-hover/bar:h-2">
             <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${bufPct}%` }} />
-            <div className="absolute inset-y-0 left-0 bg-primary" style={{ width: `${pct}%` }} />
+            <div className="absolute inset-y-0 left-0 bg-[#E63946]" style={{ width: `${pct}%` }} />
           </div>
           <div
-            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary opacity-0 shadow-lg ring-2 ring-white/80 transition-opacity group-hover/bar:opacity-100"
+            className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#E63946] opacity-0 shadow-lg ring-2 ring-white/80 transition-opacity group-hover/bar:opacity-100"
             style={{ left: `${pct}%` }}
           />
           {scrubHover !== null && (
@@ -357,7 +357,7 @@ export function VideoPlayer({
               onClick={() => seekBy(-10)}
               aria-label="Voltar 10s"
               title="Voltar 10s"
-              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/15 hover:text-white"
+              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#141414]/90 text-white/90 transition hover:bg-[#141414] hover:text-white"
             >
               <RotateCcw className="h-4 w-4" />
               <span className="absolute text-[8px] font-bold top-[13px]">10</span>
@@ -369,7 +369,7 @@ export function VideoPlayer({
               onClick={() => seekBy(10)}
               aria-label="Avançar 10s"
               title="Avançar 10s"
-              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/15 hover:text-white"
+              className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#141414]/90 text-white/90 transition hover:bg-[#141414] hover:text-white"
             >
               <RotateCw className="h-4 w-4" />
               <span className="absolute text-[8px] font-bold top-[13px]">10</span>
@@ -398,7 +398,7 @@ export function VideoPlayer({
                   setVolume(n); setMuted(n === 0);
                   if (videoRef.current) { videoRef.current.volume = n; videoRef.current.muted = n === 0; }
                 }}
-                className="h-1 w-0 cursor-pointer appearance-none rounded-full bg-white/30 opacity-0 transition-all duration-300 accent-primary group-hover/vol:w-20 group-hover/vol:opacity-100 sm:group-hover/vol:w-24"
+                className="h-1 w-0 cursor-pointer appearance-none rounded-full bg-white/30 opacity-0 transition-all duration-300 accent-[#E63946] group-hover/vol:w-20 group-hover/vol:opacity-100 sm:group-hover/vol:w-24"
               />
             </div>
 
@@ -416,9 +416,9 @@ export function VideoPlayer({
                 type="button"
                 onClick={() => setMenu((m) => !m)}
                 aria-label="Velocidade de reprodução"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 bg-white/10 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 bg-[#141414]/90 text-xs font-semibold text-white backdrop-blur transition hover:bg-[#141414]"
               >
-                <Gauge className="h-3.5 w-3.5 text-primary" />
+                <Gauge className="h-3.5 w-3.5 text-[#E63946]" />
                 <span className="tabular-nums">{rate === 1 ? "1.0x" : `${rate}x`}</span>
               </button>
 
@@ -434,7 +434,7 @@ export function VideoPlayer({
                         setMenu(false);
                       }}
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left font-medium transition ${
-                        rate === s ? "bg-primary text-primary-foreground" : "text-white/85 hover:bg-white/10"
+                        rate === s ? "bg-[#E63946] text-white" : "text-white/85 hover:bg-white/10"
                       }`}
                     >
                       <span className="tabular-nums">{s === 1 ? "1.0x (Normal)" : `${s}x`}</span>
@@ -477,7 +477,7 @@ function Ctl({ children, onClick, label, className = "" }: { children: React.Rea
   return (
     <button
       type="button" onClick={onClick} aria-label={label} title={label}
-      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/15 hover:text-white ${className}`}
+      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#141414]/90 text-white/90 transition hover:bg-[#141414] hover:text-white ${className}`}
     >{children}</button>
   );
 }
@@ -494,8 +494,18 @@ export function ImmersiveVideoOverlay(props: VideoPlayerProps & { onClose: () =>
         <img src={props.poster} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-30 blur-3xl" />
       )}
       <div className="absolute inset-0 bg-black/80" />
-      <div className="relative flex h-full w-full items-center justify-center p-0 sm:p-6">
-        <VideoPlayer {...props} className="h-full max-h-full w-full rounded-none sm:rounded-2xl sm:shadow-2xl" />
+      <div className="relative flex h-full w-full flex-col p-0 sm:p-6">
+        {props.title && (
+          <div className="mb-3 flex shrink-0 items-center justify-between gap-4 px-4 sm:px-1">
+            <div className="min-w-0">
+              {props.subtitle && (
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/50 font-medium">{props.subtitle}</p>
+              )}
+              <h2 className="truncate font-display text-2xl leading-none text-white drop-shadow sm:text-3xl">{props.title}</h2>
+            </div>
+          </div>
+        )}
+        <VideoPlayer {...props} title={undefined} className="min-h-0 w-full flex-1 rounded-none sm:rounded-2xl sm:shadow-2xl" />
       </div>
     </div>
   );

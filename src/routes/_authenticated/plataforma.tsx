@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone } from "lucide-react";
-import { ImmersiveVideoOverlay } from "@/components/platform/video-player";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo } from "lucide-react";
+import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 
 type StudentPlan = Tables<"student_plans">;
@@ -418,6 +418,11 @@ function PlataformaPage() {
     return null;
   }
 
+  const activeWorkout = activeVideo ? workouts.find((w) => w.id === activeVideo.id) ?? null : null;
+  const moduleVideos = activeWorkout
+    ? workouts.filter((w) => (w.category || "Geral") === (activeWorkout.category || "Geral"))
+    : [];
+
   return (
     <div className={`min-h-screen bg-background text-foreground ${config.theme === "light" ? "platform-light" : ""}`}>
       <Tabs defaultValue="treino" className="flex flex-col min-h-screen w-full">
@@ -481,6 +486,94 @@ function PlataformaPage() {
                 <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
                 <div className="space-y-10 pb-12 -mt-2 bg-background text-foreground">
+                  {activeVideo && activeWorkout && (
+                    <div className="px-4 sm:px-12 max-w-7xl mx-auto pt-2">
+                      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+                        {/* Player + título da aula */}
+                        <div className="min-w-0 space-y-3">
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                              {activeWorkout.category || "Assistindo"}
+                            </p>
+                            <h2 className="mt-1 font-display text-3xl leading-none sm:text-4xl">{activeWorkout.title}</h2>
+                            {activeWorkout.duration_minutes ? (
+                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Timer className="h-3.5 w-3.5" /> {activeWorkout.duration_minutes} min
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black shadow-2xl shadow-black/40">
+                            <VideoPlayer
+                              key={activeVideo.id}
+                              src={activeVideo.url}
+                              poster={signedUrls[activeVideo.id]?.thumb || activeWorkout.thumbnail_url || undefined}
+                              subtitle={activeWorkout.category || "Assistindo"}
+                              autoPlay={false}
+                              startAt={0}
+                              onEnded={nextPlayable(activeVideo.id) ? () => playWorkout(nextPlayable(activeVideo.id)!) : undefined}
+                              onNext={nextPlayable(activeVideo.id) ? () => playWorkout(nextPlayable(activeVideo.id)!) : undefined}
+                              nextLabel="Próxima aula"
+                              onClose={() => setActiveVideo(null)}
+                              className="h-full w-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Lista lateral: próximos vídeos */}
+                        <aside className="min-w-0 space-y-3 lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-1">
+                          <div className="flex items-center gap-2">
+                            <ListVideo className="h-4 w-4 text-primary" />
+                            <p className="text-sm font-medium">Próximos vídeos</p>
+                          </div>
+                          <div className="space-y-1">
+                            {moduleVideos.map((w) => {
+                              const isActive = w.id === activeVideo.id;
+                              const thumb = signedUrls[w.id]?.thumb || w.thumbnail_url;
+                              return (
+                                <button
+                                  key={w.id}
+                                  onClick={() => playWorkout(w)}
+                                  className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left transition ${
+                                    isActive
+                                      ? "border-primary/40 bg-primary/10"
+                                      : "border-transparent hover:border-border/60 hover:bg-accent/50"
+                                  }`}
+                                >
+                                  <span className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-lg bg-muted">
+                                    {thumb ? (
+                                      <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                                    ) : (
+                                      <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-foreground/40">
+                                        <Video className="h-5 w-5" />
+                                      </span>
+                                    )}
+                                    {isActive && (
+                                      <span className="absolute inset-0 grid place-items-center bg-black/40">
+                                        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-white/30">
+                                          <Play className="ml-0.5 h-4 w-4 fill-current" />
+                                        </span>
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className={`block truncate text-sm font-medium ${isActive ? "text-primary" : "text-foreground/85"}`}>
+                                      {w.title}
+                                    </span>
+                                    {w.description && (
+                                      <span className="mt-0.5 line-clamp-2 block text-[11px] leading-snug text-foreground/50">
+                                        {w.description}
+                                      </span>
+                                    )}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </aside>
+                      </div>
+                    </div>
+                  )}
+
                   {heroWorkout && (
                     <div className="relative h-[72vh] min-h-[460px] w-full overflow-hidden">
                       {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
@@ -563,22 +656,6 @@ function PlataformaPage() {
           </main>
         </div>
       </Tabs>
-      {activeVideo && (() => {
-        const w = workouts.find((x) => x.id === activeVideo.id);
-        const next = nextPlayable(activeVideo.id);
-        return (
-          <ImmersiveVideoOverlay
-            title={activeVideo.title}
-            subtitle={w?.category || "Assistindo"}
-            src={activeVideo.url}
-            poster={signedUrls[activeVideo.id]?.thumb || w?.thumbnail_url || undefined}
-            onNext={next ? () => playWorkout(next) : undefined}
-            nextLabel="Próxima aula"
-            onEnded={next ? () => playWorkout(next) : undefined}
-            onClose={() => setActiveVideo(null)}
-          />
-        );
-      })()}
       {embedVideo && (
         <EmbedOverlay title={embedVideo.title} url={embedVideo.url} onClose={() => setEmbedVideo(null)} />
       )}
