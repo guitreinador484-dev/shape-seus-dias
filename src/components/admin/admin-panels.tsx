@@ -1576,8 +1576,8 @@ export function AdminPlatformPanel() {
 
           {/* TAB 1: Banner & Destaque */}
           <TabsContent value="banner" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
-              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+            <Card className="glass-block rounded-3xl overflow-hidden shadow-2xl">
+              <CardHeader className="border-b border-white/10 bg-white/[0.03]">
                 <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <Film className="h-5 w-5 text-primary" /> Banner Principal de Destaque
                 </CardTitle>

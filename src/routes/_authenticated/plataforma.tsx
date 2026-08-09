@@ -174,40 +174,40 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
       </div>
 
       {/* Day hero / stats glass block */}
-      <div className={`relative overflow-hidden rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl transition-all duration-300 ${
-        light ? "bg-card border-border" : "border-white/10 bg-[#131316]/80 shadow-black/50"
+      <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 transition-all duration-300 ${
+        light ? "bg-card border border-border" : "glass-block shadow-2xl"
       }`}>
-        {!light && <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-primary/20 blur-3xl pointer-events-none" />}
+        {!light && <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-primary/25 blur-3xl pointer-events-none" />}
         {light && <div className="absolute left-0 top-0 h-full w-1.5 bg-primary" />}
         <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
-            <h3 className="font-display text-3xl sm:text-5xl mt-1 tracking-tight text-white">
+            <h3 className="font-display text-3xl sm:text-5xl mt-1 tracking-tight text-white drop-shadow">
               {dayPlans.map((p) => p.plan_name).join(" + ") || "Descanso"}
             </h3>
           </div>
-          <div className="flex gap-6 sm:gap-8 text-sm">
-            <div className="rounded-2xl border border-white/8 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
+          <div className="flex gap-4 sm:gap-6 text-sm">
+            <div className="glass-pill rounded-2xl px-4.5 py-3 text-center min-w-[85px]">
               <p className="text-2xl font-display leading-none text-white">{totalEx}</p>
-              <p className="text-xs text-muted-foreground mt-1">exercícios</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-medium">exercícios</p>
             </div>
-            <div className="rounded-2xl border border-white/8 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
+            <div className="glass-pill rounded-2xl px-4.5 py-3 text-center min-w-[85px]">
               <p className="text-2xl font-display leading-none text-white">{totalSets}</p>
-              <p className="text-xs text-muted-foreground mt-1">séries</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-medium">séries</p>
             </div>
-            <div className="rounded-2xl border border-primary/20 bg-primary/10 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
+            <div className="rounded-2xl border border-primary/30 bg-primary/15 backdrop-blur-xl px-4.5 py-3 text-center min-w-[85px] shadow-lg shadow-primary/20">
               <p className="text-2xl font-display leading-none text-primary">{progress}%</p>
-              <p className="text-xs text-muted-foreground mt-1">concluído</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-medium">concluído</p>
             </div>
           </div>
         </div>
-        <div className="relative mt-6 h-2 w-full rounded-full bg-white/8 overflow-hidden">
+        <div className="relative mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden shadow-inner">
           <div
             className="h-full transition-all duration-500 ease-out"
             style={{
               width: `${progress}%`,
               background: "linear-gradient(90deg, #7C5CFF 0%, #5B8CFF 100%)",
-              boxShadow: progress > 0 ? "0 0 12px rgba(124,92,255,0.5)" : undefined,
+              boxShadow: progress > 0 ? "0 0 16px rgba(124,92,255,0.7)" : undefined,
             }}
           />
         </div>
@@ -215,16 +215,16 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
 
       {/* Plans + exercises glass blocks */}
       {dayPlans.length === 0 ? (
-        <Card className="border-dashed border-white/10 bg-white/[0.02]">
+        <Card className="border-dashed border-white/14 bg-white/[0.02] backdrop-blur-md">
           <CardContent className="py-12 text-center text-muted-foreground">
             Nenhum treino programado para {WEEKDAYS[selectedDay].toLowerCase()}. Aproveite para descansar.
           </CardContent>
         </Card>
       ) : dayPlans.map((plan) => (
-        <div key={plan.id} className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/8 bg-white/[0.02]">
+        <div key={plan.id} className="glass-block rounded-3xl overflow-hidden shadow-2xl">
+          <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/10 bg-white/[0.03]">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/15 border border-primary/20 text-primary grid place-items-center shadow-md shadow-primary/10">
+              <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/20 border border-primary/30 text-primary grid place-items-center shadow-lg shadow-primary/20">
                 <Flame className="h-5 w-5" />
               </div>
               <div className="min-w-0">
@@ -433,24 +433,31 @@ function PlataformaPage() {
     : [];
 
   return (
-    <div className={`min-h-screen bg-background text-foreground ${config.theme === "light" ? "platform-light" : ""}`}>
-      <Tabs defaultValue="treino" className="flex flex-col min-h-screen w-full">
-        <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0A0A0B]/80 backdrop-blur-xl">
+    <div className={`relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
+      {/* Background ambient light orbs for real glass refraction */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px]" />
+        <div className="absolute top-1/3 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
+        <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
+      </div>
+
+      <Tabs defaultValue="treino" className="relative z-10 flex flex-col min-h-screen w-full">
+        <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
-            <TabsList className="h-11 bg-white/5 border border-white/10 p-1 rounded-full backdrop-blur-md">
-              <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+            <TabsList className="h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
+              <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
               {showVideos && (
-                <TabsTrigger value="aulas" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+                <TabsTrigger value="aulas" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                   <Video className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Aulas em vídeo</span>
                 </TabsTrigger>
               )}
             </TabsList>
             <Link
               to="/plataforma/cursos"
-              className="inline-flex items-center gap-2 rounded-full px-4 h-10 text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition backdrop-blur-md shrink-0 shadow-sm"
+              className="inline-flex items-center gap-2 rounded-full px-4 h-10 text-xs font-semibold border border-white/14 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white transition backdrop-blur-xl shrink-0 shadow-sm"
             >
               <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Cursos</span>
             </Link>
@@ -481,8 +488,8 @@ function PlataformaPage() {
         <div className="flex-1 min-w-0 w-full flex flex-col">
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
             <div>
-              <h2 className="font-display text-3xl">Olá!</h2>
-              <p className="text-muted-foreground text-sm">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
+              <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
+              <p className="text-muted-foreground text-sm mt-1">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
             </div>
 
           <TabsContent value="treino" className="mt-0">
