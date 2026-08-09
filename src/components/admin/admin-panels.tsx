@@ -20,6 +20,19 @@ import {
   Users,
   Video,
   Upload,
+  ArrowUp,
+  ArrowDown,
+  Megaphone,
+  Sparkles,
+  SlidersHorizontal,
+  LayoutGrid,
+  Palette,
+  Film,
+  Check,
+  AlertCircle,
+  Info,
+  Image as ImageIcon,
+  Layers,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -65,6 +78,12 @@ type AdminSettings = {
   platform_hero_image_path: string;
   platform_row_order: string;
   platform_theme: "dark" | "light";
+  platform_announcement_enabled: boolean;
+  platform_announcement_text: string;
+  platform_announcement_type: "info" | "success" | "warning" | "purple";
+  platform_show_continue_watching: boolean;
+  platform_show_recommended: boolean;
+  platform_show_search: boolean;
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -79,6 +98,12 @@ const defaultAdminSettings: AdminSettings = {
   platform_hero_image_path: "",
   platform_row_order: "",
   platform_theme: "dark",
+  platform_announcement_enabled: false,
+  platform_announcement_text: "",
+  platform_announcement_type: "info",
+  platform_show_continue_watching: true,
+  platform_show_recommended: true,
+  platform_show_search: true,
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -110,6 +135,11 @@ function asJsonObject(value: Json | null): Record<string, unknown> {
 
 function readAdminSettings(value: Json | null): AdminSettings {
   const data = asJsonObject(value);
+  const validAnnounceTypes = ["info", "success", "warning", "purple"];
+  const annType = typeof data.platform_announcement_type === "string" && validAnnounceTypes.includes(data.platform_announcement_type)
+    ? (data.platform_announcement_type as "info" | "success" | "warning" | "purple")
+    : "info";
+
   return {
     personal_name: typeof data.personal_name === "string" ? data.personal_name : defaultAdminSettings.personal_name,
     brand_title: typeof data.brand_title === "string" ? data.brand_title : defaultAdminSettings.brand_title,
@@ -122,6 +152,12 @@ function readAdminSettings(value: Json | null): AdminSettings {
     platform_hero_image_path: typeof data.platform_hero_image_path === "string" ? data.platform_hero_image_path : "",
     platform_row_order: typeof data.platform_row_order === "string" ? data.platform_row_order : "",
     platform_theme: data.platform_theme === "light" ? "light" : "dark",
+    platform_announcement_enabled: typeof data.platform_announcement_enabled === "boolean" ? data.platform_announcement_enabled : false,
+    platform_announcement_text: typeof data.platform_announcement_text === "string" ? data.platform_announcement_text : "",
+    platform_announcement_type: annType,
+    platform_show_continue_watching: typeof data.platform_show_continue_watching === "boolean" ? data.platform_show_continue_watching : true,
+    platform_show_recommended: typeof data.platform_show_recommended === "boolean" ? data.platform_show_recommended : true,
+    platform_show_search: typeof data.platform_show_search === "boolean" ? data.platform_show_search : true,
   };
 }
 
@@ -1371,6 +1407,7 @@ export function AdminPlatformPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -1379,9 +1416,17 @@ export function AdminPlatformPanel() {
       supabase.from("workouts").select("*").order("display_order", { ascending: true }),
     ]);
     setRowId(cfg.data?.id ?? null);
-    setSettings(readAdminSettings(cfg.data?.content ?? null));
+    const loadedSettings = readAdminSettings(cfg.data?.content ?? null);
+    setSettings(loadedSettings);
     setWorkouts(wks.data ?? []);
     setLoading(false);
+
+    if (loadedSettings.platform_hero_image_path) {
+      const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(loadedSettings.platform_hero_image_path, 3600);
+      setBannerPreviewUrl(data?.signedUrl ?? null);
+    } else {
+      setBannerPreviewUrl(null);
+    }
   }
 
   useEffect(() => {
@@ -1396,7 +1441,7 @@ export function AdminPlatformPanel() {
       : await supabase.from("quiz_config").insert({ section: "configuracoes", content });
     setSaving(false);
     if (result.error) { toast.error("Erro ao salvar", { description: result.error.message }); return; }
-    toast.success("Plataforma atualizada");
+    toast.success("Plataforma atualizada com sucesso!");
     await load();
   }
 
@@ -1408,7 +1453,9 @@ export function AdminPlatformPanel() {
       const { error } = await supabase.storage.from("workout-thumbnails").upload(key, file, { contentType: file.type });
       if (error) throw error;
       setSettings((s) => ({ ...s, platform_hero_image_path: key }));
-      toast.success("Banner enviado");
+      const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(key, 3600);
+      setBannerPreviewUrl(data?.signedUrl ?? null);
+      toast.success("Banner enviado com sucesso");
     } catch (error) {
       toast.error("Erro ao enviar banner", { description: error instanceof Error ? error.message : "Tente novamente." });
     } finally {
@@ -1423,102 +1470,475 @@ export function AdminPlatformPanel() {
       const { error } = await supabase.storage.from("workout-thumbnails").remove([key]);
       if (error) throw error;
       setSettings((s) => ({ ...s, platform_hero_image_path: "" }));
+      setBannerPreviewUrl(null);
       toast.success("Banner removido");
     } catch (error) {
       toast.error("Erro ao remover banner", { description: error instanceof Error ? error.message : "Tente novamente." });
     }
   }
 
-  const categories = Array.from(new Set(workouts.map((w) => w.category).filter(Boolean)));
+  // Categories extraction & ordering helper
+  const allCategories = Array.from(new Set(workouts.map((w) => w.category).filter(Boolean))) as string[];
+  const configuredOrder = settings.platform_row_order
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const currentCategoryOrder = [
+    ...configuredOrder.filter((c) => allCategories.includes(c)),
+    ...allCategories.filter((c) => !configuredOrder.includes(c)),
+  ];
+
+  function moveCategory(index: number, direction: "up" | "down") {
+    const newOrder = [...currentCategoryOrder];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+    const temp = newOrder[index];
+    newOrder[index] = newOrder[targetIndex];
+    newOrder[targetIndex] = temp;
+    setSettings((s) => ({ ...s, platform_row_order: newOrder.join(", ") }));
+  }
+
+  const selectedWorkout = workouts.find((w) => w.id === settings.platform_hero_workout_id);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <PageHeader title="Plataforma do aluno" description="Configure o banner em destaque e a ordem das prateleiras da experiência estilo Netflix." />
-        <Button asChild variant="outline" className="mt-1">
-          <a href="/plataforma?preview=1" target="_blank" rel="noreferrer" className="inline-flex items-center"><ExternalLink className="h-4 w-4 mr-2" />Ver como o aluno</a>
-        </Button>
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Header with Title and Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border/60 rounded-2xl p-6 shadow-sm">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <Sparkles className="h-3 w-3" /> Gestão da Área de Membros
+            </span>
+          </div>
+          <h2 className="font-display text-3xl">Plataforma do Aluno</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Personalize banners, comunicados, temas e a ordem de exibição dos treinos.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button asChild variant="outline" size="sm" className="rounded-full">
+            <a href="/plataforma?preview=1" target="_blank" rel="noreferrer" className="inline-flex items-center">
+              <ExternalLink className="h-4 w-4 mr-1.5" /> Ver como aluno
+            </a>
+          </Button>
+          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-5 shadow-lg shadow-primary/20">
+            {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            Salvar alterações
+          </Button>
+        </div>
       </div>
-      {loading ? <Skeleton className="h-96" /> : (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle>Banner de destaque</CardTitle></CardHeader>
-            <CardContent className="grid gap-4">
-              <Field label="Aula em destaque (CTA do banner)">
-                <Select value={settings.platform_hero_workout_id || "none"} onValueChange={(v) => setSettings({ ...settings, platform_hero_workout_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhuma</SelectItem>
-                    {workouts.map((w) => <SelectItem key={w.id} value={w.id}>{w.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="Título do banner (opcional)"><Input value={settings.platform_hero_title} onChange={(e) => setSettings({ ...settings, platform_hero_title: e.target.value })} placeholder="Ex: Treine como nunca" /></Field>
-              <Field label="Subtítulo / descrição"><Textarea value={settings.platform_hero_subtitle} onChange={(e) => setSettings({ ...settings, platform_hero_subtitle: e.target.value })} placeholder="Frase de impacto" /></Field>
-              <Field label="Imagem do banner">
-                <div className="space-y-2">
-                  {settings.platform_hero_image_path ? (
-                    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-                      <Eye className="h-4 w-4 text-primary shrink-0" />
-                      <span className="text-xs truncate flex-1" title={settings.platform_hero_image_path}>{settings.platform_hero_image_path}</span>
-                      <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteBanner}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <label className="inline-flex">
-                      <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadBanner(f); e.target.value = ""; }} />
-                      <span className={`inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
-                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploading ? "Enviando..." : "Enviar banner"}
-                      </span>
-                    </label>
-                  )}
-                </div>
-              </Field>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>Aparência da plataforma</CardTitle></CardHeader>
-            <CardContent className="grid gap-3">
-              <p className="text-sm text-muted-foreground">Escolha o tema que seus alunos verão ao acessar a plataforma.</p>
-              <div className="grid grid-cols-2 gap-3 max-w-md">
-                {(["dark", "light"] as const).map((t) => {
-                  const active = settings.platform_theme === t;
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setSettings({ ...settings, platform_theme: t })}
-                      className={`relative rounded-xl border-2 p-4 text-left transition-all ${active ? "border-primary shadow-lg shadow-primary/20" : "border-border hover:border-primary/40"}`}
-                    >
-                      <div className={`h-20 rounded-md mb-3 border ${t === "dark" ? "bg-[#0a0a0a] border-[#2a2a2a]" : "bg-[#fafaf7] border-[#e5e5e0]"}`}>
-                        <div className="flex gap-1 p-2">
-                          <div className={`h-2 w-10 rounded ${t === "dark" ? "bg-[#2a2a2a]" : "bg-[#e0e0d8]"}`} />
-                          <div className="h-2 w-6 rounded bg-primary" />
+
+      {/* Metrics Summary Badges */}
+      {!loading && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas em Vídeo</p>
+            <p className="font-display text-2xl mt-1 text-primary">{workouts.length}</p>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Categorias</p>
+            <p className="font-display text-2xl mt-1">{allCategories.length}</p>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Tema Ativo</p>
+            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5">
+              <Palette className="h-4 w-4 text-primary" /> {settings.platform_theme === "dark" ? "Escuro" : "Claro"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Comunicado</p>
+            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-green-500" : "text-muted-foreground"}`}>
+              <Megaphone className="h-4 w-4" /> {settings.platform_announcement_enabled ? "Ativo" : "Desativado"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {loading ? <Skeleton className="h-96 rounded-2xl" /> : (
+        <Tabs defaultValue="banner" className="space-y-6">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-card border border-border/60 rounded-2xl gap-1">
+            <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Film className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Banner
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Layers className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Prateleiras
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Palette className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Tema & Marca
+            </TabsTrigger>
+            <TabsTrigger value="announcement" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Megaphone className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Aviso
+            </TabsTrigger>
+            <TabsTrigger value="visibility" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground col-span-2 sm:col-span-1">
+              <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Seções
+            </TabsTrigger>
+          </TabsList>
+
+          {/* TAB 1: Banner & Destaque */}
+          <TabsContent value="banner" className="space-y-6 mt-0">
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Film className="h-5 w-5 text-primary" /> Banner Principal de Destaque
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Configure o hero banner exibido no topo da página de aulas da área de membros.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-5">
+                <Field label="Aula em destaque (Botão Assistir)">
+                  <Select
+                    value={settings.platform_hero_workout_id || "none"}
+                    onValueChange={(v) => setSettings({ ...settings, platform_hero_workout_id: v === "none" ? "" : v })}
+                  >
+                    <SelectTrigger className="rounded-xl"><SelectValue placeholder="Selecione um treino/aula..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum treino específico (Usar padrão)</SelectItem>
+                      {workouts.map((w) => (
+                        <SelectItem key={w.id} value={w.id}>
+                          {w.title} {w.category ? `(${w.category})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <Field label="Título principal do banner">
+                  <Input
+                    className="rounded-xl"
+                    value={settings.platform_hero_title}
+                    onChange={(e) => setSettings({ ...settings, platform_hero_title: e.target.value })}
+                    placeholder={selectedWorkout ? selectedWorkout.title : "Ex: Mentoria Exclusiva de Alta Performance"}
+                  />
+                </Field>
+
+                <Field label="Subtítulo / Descrição da Hero">
+                  <Textarea
+                    className="rounded-xl"
+                    rows={3}
+                    value={settings.platform_hero_subtitle}
+                    onChange={(e) => setSettings({ ...settings, platform_hero_subtitle: e.target.value })}
+                    placeholder={selectedWorkout ? (selectedWorkout.description || "Descrição do treino...") : "Acompanhe seus treinos e evolução com o método exclusivo."}
+                  />
+                </Field>
+
+                <Field label="Imagem do Banner (Background)">
+                  <div className="space-y-3">
+                    {bannerPreviewUrl ? (
+                      <div className="relative rounded-2xl overflow-hidden border border-border aspect-video max-h-56 w-full bg-black group">
+                        <img src={bannerPreviewUrl} alt="Preview do banner" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4 justify-between">
+                          <span className="text-xs text-white/80 font-mono truncate max-w-xs">{settings.platform_hero_image_path}</span>
+                          <Button type="button" size="sm" variant="destructive" className="rounded-full text-xs" onClick={deleteBanner}>
+                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover imagem
+                          </Button>
                         </div>
-                        <div className={`mx-2 h-3 w-16 rounded ${t === "dark" ? "bg-[#1a1a1a]" : "bg-[#ececea]"}`} />
                       </div>
-                      <p className="font-semibold text-sm">{t === "dark" ? "Escuro" : "Claro"}</p>
-                      <p className="text-xs text-muted-foreground">{t === "dark" ? "Cinema-style, foco total" : "Limpo, alto contraste"}</p>
-                      {active && <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-primary" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>Ordem das prateleiras</CardTitle></CardHeader>
-            <CardContent className="grid gap-3">
-              <p className="text-sm text-muted-foreground">Liste as categorias na ordem que devem aparecer, separadas por vírgula. Categorias não listadas aparecem depois.</p>
-              <Input value={settings.platform_row_order} onChange={(e) => setSettings({ ...settings, platform_row_order: e.target.value })} placeholder={categories.join(", ")} />
-              {categories.length > 0 && (
-                <p className="text-xs text-muted-foreground">Categorias detectadas: {categories.join(" · ")}</p>
-              )}
-            </CardContent>
-          </Card>
-          <Button onClick={save} disabled={saving || uploading}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar plataforma</Button>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/70 rounded-2xl cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition text-center">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploading}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) void uploadBanner(f);
+                            e.target.value = "";
+                          }}
+                        />
+                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mb-3">
+                          {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
+                        </div>
+                        <p className="font-semibold text-sm">{uploading ? "Enviando imagem..." : "Clique para fazer upload da imagem do banner"}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Recomendado: 1920x1080px em JPG ou PNG</p>
+                      </label>
+                    )}
+                  </div>
+                </Field>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 2: Prateleiras & Ordem */}
+          <TabsContent value="categories" className="space-y-6 mt-0">
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-primary" /> Organizador Visual de Prateleiras
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Altere a ordem em que as categorias de treinos/aulas aparecem na tela do aluno.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {currentCategoryOrder.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed rounded-2xl">
+                    Nenhuma categoria encontrada nos treinos cadastrados.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {currentCategoryOrder.map((cat, idx) => (
+                      <div
+                        key={cat}
+                        className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card/60 hover:bg-muted/30 transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary font-display text-sm font-bold">
+                            #{idx + 1}
+                          </span>
+                          <span className="font-semibold text-sm">{cat}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-lg"
+                            disabled={idx === 0}
+                            onClick={() => moveCategory(idx, "up")}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 rounded-lg"
+                            disabled={idx === currentCategoryOrder.length - 1}
+                            onClick={() => moveCategory(idx, "down")}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Field label="Edição manual (código de ordem)">
+                  <Input
+                    className="rounded-xl font-mono text-xs"
+                    value={settings.platform_row_order}
+                    onChange={(e) => setSettings({ ...settings, platform_row_order: e.target.value })}
+                    placeholder="Ex: Superior, Inferior, Cardio"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Ordem atual salva: {settings.platform_row_order || "Padrão (todas as categorias)"}
+                  </p>
+                </Field>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 3: Tema & Marca */}
+          <TabsContent value="appearance" className="space-y-6 mt-0">
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Palette className="h-5 w-5 text-primary" /> Aparência e Tema da Plataforma
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Escolha o estilo visual e mensagens padrão exibidas aos seus alunos.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-6">
+                <div>
+                  <Label className="text-sm font-semibold mb-3 block">Tema da Área de Membros</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+                    {(["dark", "light"] as const).map((t) => {
+                      const active = settings.platform_theme === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setSettings({ ...settings, platform_theme: t })}
+                          className={`relative rounded-2xl border-2 p-4 text-left transition-all ${
+                            active
+                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                              : "border-border hover:border-primary/40 bg-card"
+                          }`}
+                        >
+                          <div className={`h-24 rounded-xl mb-3 border p-3 flex flex-col justify-between ${
+                            t === "dark" ? "bg-[#09090b] border-[#27272a]" : "bg-[#ffffff] border-[#e4e4e7]"
+                          }`}>
+                            <div className="flex items-center justify-between">
+                              <div className={`h-2 w-12 rounded ${t === "dark" ? "bg-zinc-700" : "bg-zinc-300"}`} />
+                              <div className="h-2 w-4 rounded bg-primary" />
+                            </div>
+                            <div className={`h-8 rounded-lg ${t === "dark" ? "bg-zinc-900 border border-zinc-800" : "bg-zinc-100 border border-zinc-200"}`} />
+                          </div>
+                          <p className="font-semibold text-sm">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t === "dark" ? "Estilo streaming de alta resolução" : "Alto contraste e fundo limpo"}
+                          </p>
+                          {active && <CheckCircle2 className="absolute top-3 right-3 h-5 w-5 text-primary" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Field label="Nome da Marca (Logotipo no topo)">
+                  <Input
+                    className="rounded-xl"
+                    value={settings.brand_title}
+                    onChange={(e) => setSettings({ ...settings, brand_title: e.target.value })}
+                    placeholder="Ex: PERSONAL VIP"
+                  />
+                </Field>
+
+                <Field label="Nome do Personal / Treinador">
+                  <Input
+                    className="rounded-xl"
+                    value={settings.personal_name}
+                    onChange={(e) => setSettings({ ...settings, personal_name: e.target.value })}
+                    placeholder="Ex: Lucas Soares"
+                  />
+                </Field>
+
+                <Field label="Mensagem de Boas-Vindas">
+                  <Textarea
+                    className="rounded-xl"
+                    rows={2}
+                    value={settings.welcome_message}
+                    onChange={(e) => setSettings({ ...settings, welcome_message: e.target.value })}
+                    placeholder="Mensagem exibida aos alunos ao logar..."
+                  />
+                </Field>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 4: Comunicado / Aviso */}
+          <TabsContent value="announcement" className="space-y-6 mt-0">
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Megaphone className="h-5 w-5 text-primary" /> Barra de Comunicados / Avisos
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Exiba um banner de aviso importante no topo da plataforma de todos os alunos.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-5">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                  <div>
+                    <p className="font-semibold text-sm">Ativar Barra de Comunicado</p>
+                    <p className="text-xs text-muted-foreground">Exibe a mensagem no topo para todos os alunos</p>
+                  </div>
+                  <Switch
+                    checked={settings.platform_announcement_enabled}
+                    onCheckedChange={(checked) => setSettings({ ...settings, platform_announcement_enabled: checked })}
+                  />
+                </div>
+
+                {settings.platform_announcement_enabled && (
+                  <>
+                    <Field label="Texto da Mensagem de Aviso">
+                      <Input
+                        className="rounded-xl"
+                        value={settings.platform_announcement_text}
+                        onChange={(e) => setSettings({ ...settings, platform_announcement_text: e.target.value })}
+                        placeholder="Ex: 🔥 Novo módulo de treinos liberado nesta segunda-feira!"
+                      />
+                    </Field>
+
+                    <Field label="Estilo / Cor do Aviso">
+                      <Select
+                        value={settings.platform_announcement_type}
+                        onValueChange={(v: any) => setSettings({ ...settings, platform_announcement_type: v })}
+                      >
+                        <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="info">🔹 Azul Informativo</SelectItem>
+                          <SelectItem value="success">🟢 Verde Sucesso / Novidade</SelectItem>
+                          <SelectItem value="warning">⚡ Laranja Alerta / Atenção</SelectItem>
+                          <SelectItem value="purple">✨ Roxo Destaque VIP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+
+                    {/* Preview Box */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Pré-visualização do Aviso:</Label>
+                      <div className={`p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+                        settings.platform_announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                        : settings.platform_announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                        : settings.platform_announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/30 text-purple-400"
+                        : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                      }`}>
+                        <Megaphone className="h-4 w-4 shrink-0" />
+                        <span>{settings.platform_announcement_text || "Sua mensagem de comunicado aparecerá aqui..."}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 5: Seções & Visibilidade */}
+          <TabsContent value="visibility" className="space-y-6 mt-0">
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <SlidersHorizontal className="h-5 w-5 text-primary" /> Recursos & Seções Visíveis
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Ligue ou desligue seções específicas da área de membros dos alunos.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                  <div>
+                    <p className="font-semibold text-sm">Barra de Pesquisa de Cursos</p>
+                    <p className="text-xs text-muted-foreground">Permite ao aluno pesquisar cursos por título</p>
+                  </div>
+                  <Switch
+                    checked={settings.platform_show_search}
+                    onCheckedChange={(checked) => setSettings({ ...settings, platform_show_search: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                  <div>
+                    <p className="font-semibold text-sm">Trilho "Continuar Assistindo"</p>
+                    <p className="text-xs text-muted-foreground">Mostra a aula em andamento do aluno</p>
+                  </div>
+                  <Switch
+                    checked={settings.platform_show_continue_watching}
+                    onCheckedChange={(checked) => setSettings({ ...settings, platform_show_continue_watching: checked })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                  <div>
+                    <p className="font-semibold text-sm">Trilho "Próximos Módulos / Recomendados"</p>
+                    <p className="text-xs text-muted-foreground">Sugere novos módulos baseados no histórico</p>
+                  </div>
+                  <Switch
+                    checked={settings.platform_show_recommended}
+                    onCheckedChange={(checked) => setSettings({ ...settings, platform_show_recommended: checked })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {/* Floating / Bottom Save Bar */}
+      {!loading && (
+        <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl shadow-lg">
+          <p className="text-xs text-muted-foreground">
+            Lembre-se de clicar em salvar após fazer alterações nas configurações.
+          </p>
+          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-6">
+            {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            Salvar Plataforma
+          </Button>
         </div>
       )}
     </div>

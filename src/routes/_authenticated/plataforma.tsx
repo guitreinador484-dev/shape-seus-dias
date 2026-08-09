@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone } from "lucide-react";
 import { ImmersiveVideoOverlay } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 
@@ -23,10 +23,28 @@ type PlatformConfig = {
   hero_image_path: string;
   row_order: string;
   theme: "dark" | "light";
+  announcement_enabled: boolean;
+  announcement_text: string;
+  announcement_type: "info" | "success" | "warning" | "purple";
 };
-const defaultConfig: PlatformConfig = { hero_workout_id: "", hero_title: "", hero_subtitle: "", hero_image_path: "", row_order: "", theme: "dark" };
+const defaultConfig: PlatformConfig = {
+  hero_workout_id: "",
+  hero_title: "",
+  hero_subtitle: "",
+  hero_image_path: "",
+  row_order: "",
+  theme: "dark",
+  announcement_enabled: false,
+  announcement_text: "",
+  announcement_type: "info",
+};
 function readConfig(value: Json | null): PlatformConfig {
   const d = (value && typeof value === "object" && !Array.isArray(value)) ? (value as Record<string, unknown>) : {};
+  const validAnnounceTypes = ["info", "success", "warning", "purple"];
+  const annType = typeof d.platform_announcement_type === "string" && validAnnounceTypes.includes(d.platform_announcement_type)
+    ? (d.platform_announcement_type as "info" | "success" | "warning" | "purple")
+    : "info";
+
   return {
     hero_workout_id: typeof d.platform_hero_workout_id === "string" ? d.platform_hero_workout_id : "",
     hero_title: typeof d.platform_hero_title === "string" ? d.platform_hero_title : "",
@@ -34,6 +52,9 @@ function readConfig(value: Json | null): PlatformConfig {
     hero_image_path: typeof d.platform_hero_image_path === "string" ? d.platform_hero_image_path : "",
     row_order: typeof d.platform_row_order === "string" ? d.platform_row_order : "",
     theme: d.platform_theme === "light" ? "light" : "dark",
+    announcement_enabled: typeof d.platform_announcement_enabled === "boolean" ? d.platform_announcement_enabled : false,
+    announcement_text: typeof d.platform_announcement_text === "string" ? d.platform_announcement_text : "",
+    announcement_type: annType,
   };
 }
 
@@ -430,6 +451,18 @@ function PlataformaPage() {
             </Button>
           </div>
         </header>
+
+        {config.announcement_enabled && config.announcement_text && (
+          <div className={`w-full py-2.5 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b ${
+            config.announcement_type === "success" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+            : config.announcement_type === "warning" ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+            : config.announcement_type === "purple" ? "bg-purple-500/15 border-purple-500/30 text-purple-300"
+            : "bg-blue-500/15 border-blue-500/30 text-blue-300"
+          }`}>
+            <Megaphone className="h-4 w-4 shrink-0" />
+            <span>{config.announcement_text}</span>
+          </div>
+        )}
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
