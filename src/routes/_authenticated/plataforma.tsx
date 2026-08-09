@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock } from "lucide-react";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 
@@ -487,6 +487,22 @@ function PlataformaPage() {
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+            {!hasClassAccess && !dataLoading ? (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="py-12 text-center space-y-3">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <Lock className="h-6 w-6" />
+                  </div>
+                  <h2 className="font-display text-3xl text-white tracking-tight">Acesso pendente</h2>
+                  <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed">
+                    Sua conta foi criada, mas o acesso à plataforma ainda não foi liberado.
+                    Assim que o pagamento for confirmado, seu personal libera o seu acesso.
+                  </p>
+                  <p className="text-xs text-white/40 pt-1">{user?.email}</p>
+                </CardContent>
+              </Card>
+            ) : (
+            <>
             <div>
               <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
               <p className="text-muted-foreground text-sm mt-1">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
@@ -669,6 +685,8 @@ function PlataformaPage() {
               )}
             </TabsContent>
           )}
+            </>
+            )}
           </main>
         </div>
       </Tabs>

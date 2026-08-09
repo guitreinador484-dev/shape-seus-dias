@@ -141,7 +141,7 @@ function SignupForm() {
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName, whatsapp, role: "online" },
+        data: { full_name: fullName, whatsapp },
       },
     });
     setBusy(false);
@@ -149,7 +149,9 @@ function SignupForm() {
       toast.error("Erro ao criar conta", { description: error.message });
       return;
     }
-    toast.success("Conta criada com sucesso!");
+    toast.success("Conta criada!", {
+      description: "O acesso à plataforma será liberado pelo seu personal após o pagamento.",
+    });
   }
 
   return (
