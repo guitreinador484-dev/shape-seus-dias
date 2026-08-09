@@ -316,6 +316,8 @@ function PlataformaPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(true);
+  const [accessExpiresAt, setAccessExpiresAt] = useState<string | null>(null);
+  const isExpired = accessExpiresAt !== null && new Date(accessExpiresAt).getTime() <= Date.now();
   const [signedUrls, setSignedUrls] = useState<Record<string, { video?: string; thumb?: string }>>({});
   const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
   const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
@@ -343,14 +345,17 @@ function PlataformaPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("has_class_access, is_active")
+          .select("has_class_access, is_active, access_expires_at")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
         if (profileError) throw profileError;
         setHasClassAccess(Boolean(profile?.has_class_access));
         setIsActive(profile?.is_active ?? true);
-        const hasAccess = Boolean(profile?.has_class_access) && (profile?.is_active ?? true);
+        setAccessExpiresAt(profile?.access_expires_at ?? null);
+        const expiresAt = profile?.access_expires_at ? new Date(profile.access_expires_at).getTime() : null;
+        const expired = expiresAt !== null && expiresAt <= Date.now();
+        const hasAccess = Boolean(profile?.has_class_access) && (profile?.is_active ?? true) && !expired;
         if (!hasAccess) {
           setPlans([]);
           setWorkouts([]);
@@ -605,6 +610,19 @@ function PlataformaPage() {
                   <p className="text-xs text-white/40 pt-1">{user?.email}</p>
                 </CardContent>
               </Card>
+            ) : isExpired && !dataLoading ? (
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="py-12 text-center space-y-3">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-500/10 text-amber-400">
+                    <Timer className="h-6 w-6" />
+                  </div>
+                  <h2 className="font-display text-3xl text-white tracking-tight">Acesso expirado</h2>
+                  <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed">
+                    Seu período de acesso chegou ao fim. Fale com seu personal trainer para renovar e continuar treinando.
+                  </p>
+                  <p className="text-xs text-white/40 pt-1">{user?.email}</p>
+                </CardContent>
+              </Card>
             ) : !hasClassAccess && !dataLoading ? (
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="py-12 text-center space-y-3">
@@ -622,7 +640,15 @@ function PlataformaPage() {
             ) : (
             <>
             <div>
-              <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
+                {accessExpiresAt && !isExpired && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
+                    <Timer className="h-3 w-3 text-primary" />
+                    Acesso até {new Date(accessExpiresAt).toLocaleDateString("pt-BR")}
+                  </span>
+                )}
+              </div>
               <p className="text-muted-foreground text-sm mt-1">Acompanhe seu treino e {showVideos ? "aulas em vídeo" : "acesse seu plano"}.</p>
             </div>
 

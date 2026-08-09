@@ -363,6 +363,7 @@ export function AdminStudentsPanel() {
         whatsapp: patch.whatsapp ?? undefined,
         has_class_access: patch.has_class_access,
         is_active: patch.is_active,
+        access_expires_at: patch.access_expires_at ?? undefined,
         role: nextRole && nextRole !== student.role ? nextRole : undefined,
       },
     });
@@ -396,6 +397,7 @@ export function AdminStudentsPanel() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Aulas</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Validade</TableHead>
                   <TableHead>Cadastro</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -586,12 +588,16 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
   const [role, setRole] = useState<AppRole>(student.role ?? "online");
   const [hasClassAccess, setHasClassAccess] = useState(student.has_class_access);
   const [isActive, setIsActive] = useState(student.is_active);
+  const [accessExpiresAt, setAccessExpiresAt] = useState(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     try {
-      await onSave(student, { full_name: name || null, whatsapp: whatsapp || null, has_class_access: hasClassAccess, is_active: isActive }, role);
+      const expiresAt = accessExpiresAt
+        ? new Date(`${accessExpiresAt}T23:59:59`).toISOString()
+        : null;
+      await onSave(student, { full_name: name || null, whatsapp: whatsapp || null, has_class_access: hasClassAccess, is_active: isActive, access_expires_at: expiresAt }, role);
     } catch (error) {
       toast.error("Erro ao salvar aluno", { description: error instanceof Error ? error.message : "Tente novamente." });
     } finally {
@@ -623,6 +629,17 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
       </TableCell>
       <TableCell>
         <Switch checked={isActive} onCheckedChange={setIsActive} />
+      </TableCell>
+      <TableCell className="min-w-40">
+        <Input
+          type="date"
+          value={accessExpiresAt}
+          onChange={(event) => setAccessExpiresAt(event.target.value)}
+          aria-label="Validade do acesso"
+        />
+        <p className="text-[11px] text-muted-foreground mt-1">
+          {accessExpiresAt ? "Validade" : "Sem validade"}
+        </p>
       </TableCell>
       <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(student.created_at)}</TableCell>
       <TableCell className="text-right">

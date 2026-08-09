@@ -352,6 +352,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_expires_at: string | null
           created_at: string
           email: string
           full_name: string | null
@@ -362,6 +363,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          access_expires_at?: string | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -372,6 +374,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          access_expires_at?: string | null
           created_at?: string
           email?: string
           full_name?: string | null

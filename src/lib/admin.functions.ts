@@ -96,6 +96,7 @@ type UpdateStudentStatusInput = {
   whatsapp?: string | null;
   has_class_access?: boolean;
   is_active?: boolean;
+  access_expires_at?: string | null;
   role?: AppRole;
 };
 
@@ -131,6 +132,7 @@ export const updateStudentStatus = createServerFn({ method: "POST" })
     if (data.whatsapp !== undefined) profilePatch.whatsapp = data.whatsapp;
     if (data.has_class_access !== undefined) profilePatch.has_class_access = data.has_class_access;
     if (data.is_active !== undefined) profilePatch.is_active = data.is_active;
+    if (data.access_expires_at !== undefined) profilePatch.access_expires_at = data.access_expires_at;
     if (Object.keys(profilePatch).length > 0) {
       const { error } = await supabaseAdmin.from("profiles").update(profilePatch).eq("id", data.userId);
       if (error) throw new Error(error.message);
