@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
@@ -322,6 +322,7 @@ function PlataformaPage() {
   const [embedVideo, setEmbedVideo] = useState<{ url: string; title: string } | null>(null);
   const [workoutProgress, setWorkoutProgress] = useState<Record<string, { watched_seconds: number; completed_at: string | null }>>({});
   const lastSavedRef = useRef<Record<string, number>>({});
+  const [dataError, setDataError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -337,23 +338,29 @@ function PlataformaPage() {
     let cancelled = false;
     (async () => {
       setDataLoading(true);
-      const [plansRes, exRes, workoutsRes, profileRes, cfgRes, progRes] = await Promise.all([
-        supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
-        supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
-        supabase.from("workouts").select("*").order("display_order", { ascending: true }),
-        supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
-        supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
-      ]);
-      if (cancelled) return;
-      const allPlans = plansRes.data ?? [];
-      const allEx = exRes.data ?? [];
-      setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
-      setWorkouts(workoutsRes.data ?? []);
-      setHasClassAccess(Boolean(profileRes.data?.has_class_access));
-      setConfig(readConfig(cfgRes.data?.content ?? null));
-      setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
-      setDataLoading(false);
+      setDataError(null);
+      try {
+        const [plansRes, exRes, workoutsRes, profileRes, cfgRes, progRes] = await Promise.all([
+          supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
+          supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
+          supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+          supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
+          supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+          supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
+        ]);
+        if (cancelled) return;
+        const allPlans = plansRes.data ?? [];
+        const allEx = exRes.data ?? [];
+        setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
+        setWorkouts(workoutsRes.data ?? []);
+        setHasClassAccess(Boolean(profileRes.data?.has_class_access));
+        setConfig(readConfig(cfgRes.data?.content ?? null));
+        setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
+      } catch (e) {
+        if (!cancelled) setDataError(e instanceof Error ? e.message : "Erro ao carregar a plataforma");
+      } finally {
+        if (!cancelled) setDataLoading(false);
+      }
     })();
     return () => { cancelled = true; };
   }, [loading, user, role]);
@@ -555,7 +562,20 @@ function PlataformaPage() {
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
-            {!hasClassAccess && !dataLoading ? (
+            {dataError ? (
+              <Card className="border-red-500/30 bg-red-500/5">
+                <CardContent className="py-12 text-center space-y-3">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-500/10 text-red-500">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <h2 className="font-display text-2xl text-white tracking-tight">Não foi possível carregar a plataforma</h2>
+                  <p className="text-sm text-white/60 max-w-md mx-auto">{dataError}</p>
+                  <Button variant="outline" className="rounded-full" onClick={() => window.location.reload()}>
+                    <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : !hasClassAccess && !dataLoading ? (
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="py-12 text-center space-y-3">
                   <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">

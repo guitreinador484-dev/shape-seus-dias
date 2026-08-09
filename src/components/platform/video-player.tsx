@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, X, Loader2,
   RotateCcw, RotateCw, PictureInPicture2, SkipForward, SkipBack, Check,
-  HelpCircle, Gauge, FastForward, Rewind,
+  HelpCircle, Gauge, FastForward, Rewind, AlertTriangle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -58,6 +59,7 @@ export function VideoPlayer({
   const [showHelp, setShowHelp] = useState(false);
   const [seekFeedback, setSeekFeedback] = useState<"-10s" | "+10s" | null>(null);
   const [scrubHover, setScrubHover] = useState<number | null>(null);
+  const [error, setError] = useState(false);
 
   const bump = useCallback(() => {
     setChrome(true);
@@ -137,7 +139,16 @@ export function VideoPlayer({
   }, [togglePlay, seekBy, toggleFullscreen, onClose, bump, showHelp]);
 
   // reset per source
-  useEffect(() => { seededRef.current = false; setWaiting(true); setCurrent(0); setDuration(0); }, [src]);
+  useEffect(() => { seededRef.current = false; setWaiting(true); setCurrent(0); setDuration(0); setError(false); }, [src]);
+
+  function retry() {
+    const v = videoRef.current;
+    if (!v) return;
+    setError(false);
+    setWaiting(true);
+    v.load();
+    void v.play().catch(() => {});
+  }
 
   function onLoaded() {
     const v = videoRef.current;
@@ -199,8 +210,29 @@ export function VideoPlayer({
         onPlay={() => { setPlaying(true); bump(); }}
         onPause={() => { setPlaying(false); setChrome(true); }}
         onEnded={() => { setPlaying(false); setChrome(true); onEnded?.(); }}
+        onError={() => { setWaiting(false); setPlaying(false); setError(true); }}
         className="h-full w-full bg-black object-contain"
       />
+
+      {/* Error Overlay */}
+      {error && (
+        <div className="absolute inset-0 z-30 grid place-items-center bg-black/90 p-4">
+          <div className="max-w-sm w-full rounded-2xl border border-white/15 bg-[#141414] p-6 text-center shadow-2xl space-y-4 animate-fade-in">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#E63946]/15 text-[#E63946]">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-display text-lg text-white">Não foi possível carregar o vídeo</h4>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                O link pode ter expirado ou houve um problema de conexão. Tente novamente ou recarregue a página.
+              </p>
+            </div>
+            <Button onClick={retry} className="rounded-full bg-[#E63946] hover:bg-[#c22f3f] text-white">
+              <RotateCcw className="h-4 w-4 mr-2" /> Tentar novamente
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Seek Feedback Overlay */}
       {seekFeedback && (
