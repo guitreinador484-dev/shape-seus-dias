@@ -1202,17 +1202,28 @@ export function AdminSalesPanel() {
       toast.error("Erro ao criar venda", { description: error.message });
       return;
     }
-    toast.success("Venda registrada");
+    if (["approved", "paid"].includes(form.status) && form.user_id !== "none") {
+      toast.success("Venda registrada — acesso liberado para o aluno");
+    } else {
+      toast.success("Venda registrada");
+    }
     await load();
   }
 
   async function updateStatus(id: string, status: string) {
+    const purchase = purchases.find((item) => item.id === id);
     const { error } = await supabase.from("purchases").update({ status }).eq("id", id);
     if (error) {
       toast.error("Erro ao atualizar venda", { description: error.message });
       return;
     }
-    toast.success("Venda atualizada");
+    if (["approved", "paid"].includes(status)) {
+      toast.success("Venda aprovada — acesso liberado para o aluno");
+    } else if (purchase && ["approved", "paid"].includes(purchase.status)) {
+      toast.success("Venda atualizada — acesso revogado");
+    } else {
+      toast.success("Venda atualizada");
+    }
     await load();
   }
 
