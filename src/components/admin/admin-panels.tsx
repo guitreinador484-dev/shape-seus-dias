@@ -592,6 +592,7 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
   const [accessExpiresAt, setAccessExpiresAt] = useState(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
   const [saving, setSaving] = useState(false);
   const [evolutionOpen, setEvolutionOpen] = useState(false);
+  const [anamneseOpen, setAnamneseOpen] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -648,11 +649,13 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
           <Button size="sm" variant="outline" onClick={() => setEvolutionOpen(true)}>Evolução</Button>
+          <Button size="sm" variant="outline" onClick={() => setAnamneseOpen(true)}>Ficha</Button>
           <Button size="sm" onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
         </div>
       </TableCell>
     </TableRow>
     <EvolutionDialog student={student} open={evolutionOpen} onOpenChange={setEvolutionOpen} />
+    <AnamneseDialog student={student} open={anamneseOpen} onOpenChange={setAnamneseOpen} />
     </>
   );
 }
@@ -736,6 +739,84 @@ function EvolutionDialog({ student, open, onOpenChange }: { student: Student; op
                     </figure>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AnamneseDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [row, setRow] = useState<Tables<"anamnese"> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !student) return;
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data } = await supabase.from("anamnese").select("*").eq("user_id", student.id).maybeSingle();
+      if (cancelled) return;
+      setRow(data ?? null);
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [open, student]);
+
+  function Item({ label, value }: { label: string; value: string | null | undefined }) {
+    if (!value) return null;
+    return (
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
+        <p className="text-sm font-medium">{value}</p>
+      </div>
+    );
+  }
+
+  const quiz = row?.quiz_answers as Record<string, unknown> | null | undefined;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Ficha de anamnese — {student.full_name || student.email}</DialogTitle>
+          <DialogDescription>Informações preenchidas pelo aluno para montagem do programa.</DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <Skeleton className="h-48" />
+        ) : row === null ? (
+          <p className="text-sm text-muted-foreground">Este aluno ainda não preencheu a ficha de anamnese.</p>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Item label="Objetivo" value={row.objetivo} />
+              <Item label="Frequência" value={row.frequencia} />
+              <Item label="Experiência" value={row.experiencia} />
+              <Item label="Local de treino" value={row.local_treino} />
+              {row.limitacao && (
+                <div className="sm:col-span-2">
+                  <Item label="Limitação" value={row.limitacao} />
+                </div>
+              )}
+              {row.limitacao_descricao && (
+                <div className="sm:col-span-2">
+                  <Item label="Detalhes da limitação" value={row.limitacao_descricao} />
+                </div>
+              )}
+            </div>
+            {quiz && Object.keys(quiz).length > 0 && (
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2">Respostas do quiz de vendas</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {Object.entries(quiz).map(([key, value]) => (
+                    <div key={key} className="rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">{key}</p>
+                      <p className="text-sm font-medium">{Array.isArray(value) ? value.join(", ") : String(value)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
