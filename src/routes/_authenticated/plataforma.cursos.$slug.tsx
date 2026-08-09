@@ -168,6 +168,10 @@ function CourseDetailPage() {
   const completedCount = progress.filter((p) => p.completed_at).length;
   const pct = totalLessons ? Math.round((completedCount / totalLessons) * 100) : 0;
   const activeLesson = allLessons.find((l) => l.id === activeLessonId) ?? null;
+  const activeIndex = allLessons.findIndex((l) => l.id === activeLessonId);
+  const prevLesson = activeIndex > 0 ? allLessons[activeIndex - 1] : null;
+  const nextLessonSequential = activeIndex >= 0 && activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
+
   const nextLesson = useMemo(() => {
     const doneIds = new Set(progress.filter((p) => p.completed_at).map((p) => p.lesson_id));
     return allLessons.find((l) => isLessonUnlocked(l, enrolledAt) && !doneIds.has(l.id)) ?? null;
@@ -221,6 +225,8 @@ function CourseDetailPage() {
                 savedSeconds={progress.find((p) => p.lesson_id === activeLesson.id)?.watched_seconds ?? 0}
                 completed={progress.some((p) => p.lesson_id === activeLesson.id && p.completed_at)}
                 onProgress={reload}
+                onPrev={prevLesson && isLessonUnlocked(prevLesson, enrolledAt) ? () => setActiveLessonId(prevLesson.id) : undefined}
+                onNext={nextLessonSequential && isLessonUnlocked(nextLessonSequential, enrolledAt) ? () => setActiveLessonId(nextLessonSequential.id) : undefined}
               />
             ) : (
               <Card className="border-border/50 bg-card/40">
@@ -356,9 +362,10 @@ function CourseDetailPage() {
 
 /* ---------------- player ---------------- */
 
-function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onProgress }: {
+function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onProgress, onPrev, onNext }: {
   lesson: CourseLesson; enrolledAt: string; userId: string; completed: boolean;
   savedSeconds: number; onProgress: () => void;
+  onPrev?: () => void; onNext?: () => void;
 }) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
@@ -472,6 +479,8 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
             startAt={completed ? 0 : savedSeconds}
             onTime={(t) => { posRef.current = t; setPosition(t); savePosition(t); }}
             onEnded={() => { savePosition(posRef.current, true); if (!completed) markComplete(); }}
+            onPrev={onPrev}
+            onNext={onNext}
             className="h-full w-full"
           />
         ) : (
