@@ -123,7 +123,7 @@ export function RecommendedRail({ items, loading }: { items: RecommendedModule[]
         return (
           <button
             key={m.moduleId}
-            onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: m.courseSlug } })}
+            onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: m.courseSlug }, search: { aula: undefined } })}
             className="group w-[280px] shrink-0 snap-start rounded-2xl border border-border/50 bg-card/50 p-4 text-left transition hover:-translate-y-1 hover:border-primary/50 hover:bg-card"
           >
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-primary">

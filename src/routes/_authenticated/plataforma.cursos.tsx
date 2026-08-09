@@ -449,7 +449,7 @@ function MyCoursesPage() {
                     <CourseCard
                       key={r.course.id}
                       r={r}
-                      onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug } })}
+                      onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug }, search: { aula: undefined } })}
                     />
                   ))}
                 </div>
