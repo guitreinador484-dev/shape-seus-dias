@@ -77,7 +77,7 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
       className="group relative flex flex-col w-[200px] sm:w-[220px] shrink-0 snap-start text-left"
     >
       {/* Cover */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-border/40 bg-muted shadow-md transition duration-300 group-hover:-translate-y-2 group-hover:border-primary/50 group-hover:shadow-xl group-hover:shadow-primary/15">
+      <div className="glass-card relative aspect-[3/4] overflow-hidden rounded-3xl border border-white/12 shadow-2xl transition duration-300 group-hover:-translate-y-2 group-hover:border-primary/50 group-hover:shadow-primary/25">
         {r.coverUrl ? (
           <img
             src={r.coverUrl}
@@ -85,42 +85,42 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-primary/40">
+          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-[#131316] to-[#0A0A0B] text-primary/40">
             <BookOpen className="h-10 w-10" />
           </div>
         )}
 
         {/* gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B]/95 via-black/40 to-transparent" />
 
         {/* lesson badge */}
-        <span className="absolute right-2.5 top-2.5 rounded-full border border-white/20 bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+        <span className="glass-pill absolute right-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-white">
           {r.totalLessons} {r.totalLessons === 1 ? "aula" : "aulas"}
         </span>
 
         {/* done badge */}
         {isDone && (
-          <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-green-500/90 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
+          <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md backdrop-blur-md">
             <Award className="h-3 w-3" /> Concluído
           </span>
         )}
 
         {/* play overlay */}
-        <div className="absolute inset-0 grid place-items-center opacity-0 transition duration-300 group-hover:opacity-100">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/50 ring-4 ring-white/20">
+        <div className="absolute inset-0 grid place-items-center opacity-0 transition duration-300 group-hover:opacity-100 scale-90 group-hover:scale-100">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/50 ring-4 ring-white/20">
             <Play className="h-5 w-5 fill-current ml-0.5" />
           </span>
         </div>
 
         {/* title + progress */}
-        <div className="absolute inset-x-3 bottom-3 space-y-2 text-white">
+        <div className="absolute inset-x-3.5 bottom-3.5 space-y-2 text-white">
           {r.course.category && (
-            <p className="text-[9px] uppercase tracking-[0.25em] text-white/50">{r.course.category}</p>
+            <p className="text-[9px] uppercase tracking-[0.25em] text-white/60 font-medium">{r.course.category}</p>
           )}
-          <p className="font-display text-xl leading-none line-clamp-2 uppercase">{r.course.title}</p>
+          <p className="font-display text-xl leading-none line-clamp-2 uppercase text-white drop-shadow">{r.course.title}</p>
           <div>
-            <Progress value={pct} className="h-[3px] bg-white/20" />
-            <p className="mt-1 text-[10px] text-white/60">
+            <Progress value={pct} className="h-1 bg-white/20" />
+            <p className="mt-1.5 text-[10px] text-white/70 font-medium">
               {r.completedLessons}/{r.totalLessons} concluídas · {pct}%
             </p>
           </div>
@@ -239,18 +239,24 @@ function MyCoursesPage() {
   const nextUp = continueItems[0] ?? null;
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground dark">
+    <div className="relative flex min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden">
+      {/* Background ambient light orbs for real glass refraction */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[130px]" />
+        <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
+      </div>
+
       {/* Left sidebar — desktop */}
       <LeftSidebar />
 
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
-            className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r border-border/30"
+            className="absolute left-0 top-0 bottom-0 w-64 bg-[#0E0E10] border-r border-white/10"
             onClick={(e) => e.stopPropagation()}
           >
             <LeftSidebar />
@@ -259,45 +265,45 @@ function MyCoursesPage() {
       )}
 
       {/* Main content */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="relative z-10 flex-1 min-w-0 flex flex-col">
         <MobileHeader onMenu={() => setMobileMenuOpen((o) => !o)} menuOpen={mobileMenuOpen} />
 
         <main className="flex-1">
           {/* ── Hero band ─────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden border-b border-border/20">
+          <div className="relative overflow-hidden border-b border-white/10">
             {/* background cover blur */}
             {featured?.coverUrl && (
               <img
                 src={featured.coverUrl}
                 alt=""
                 aria-hidden
-                className="absolute inset-0 h-full w-full object-cover opacity-20 blur-sm scale-105"
+                className="absolute inset-0 h-full w-full object-cover opacity-15 blur-md scale-105"
               />
             )}
             {/* color halos */}
             <div className="absolute -top-32 -left-20 h-[400px] w-[400px] rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-32 right-0 h-[300px] w-[300px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B]/60 via-[#0A0A0B]/80 to-[#0A0A0B] pointer-events-none" />
 
             <div className="relative px-5 py-10 sm:px-8 sm:py-14 max-w-5xl">
               {/* Back link */}
               <Link
                 to="/plataforma"
-                className="inline-flex items-center gap-1.5 text-xs text-foreground/50 hover:text-foreground transition mb-6"
+                className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition mb-6 font-medium"
               >
                 <ChevronLeft className="h-3.5 w-3.5" /> Voltar à plataforma
               </Link>
 
               {/* Badge */}
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-primary">
+              <div className="glass-pill mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/15 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary shadow-md shadow-primary/20">
                 <Sparkles className="h-3 w-3" /> Área de membros
               </div>
 
               {/* Greeting */}
-              <h1 className="font-display text-4xl sm:text-6xl leading-none mb-2">
+              <h1 className="font-display text-4xl sm:text-6xl leading-none mb-2 text-white drop-shadow">
                 {firstName ? `Olá, ${firstName}` : "Bem-vindo"}
               </h1>
-              <p className="text-sm text-foreground/55 max-w-md mb-6">
+              <p className="text-sm text-white/60 max-w-md mb-6 leading-relaxed">
                 Todo o conteúdo da sua mentoria em um só lugar. Continue de onde parou.
               </p>
 
@@ -331,15 +337,15 @@ function MyCoursesPage() {
           {!loading && !error && continueItems.length > 0 && (
             <div className="px-5 sm:px-8 pt-8 pb-2 max-w-5xl">
               {/* CTA to jump to next lesson */}
-              <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-2xl border border-primary/25 bg-primary/8 px-5 py-4">
+              <div className="glass-block mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-3xl border border-primary/30 bg-primary/10 px-6 py-5 shadow-2xl shadow-primary/10">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-0.5">Continuar de onde parou</p>
-                  <p className="font-medium text-sm truncate">{continueItems[0].lessonTitle}</p>
-                  <p className="text-[11px] text-foreground/50 truncate">{continueItems[0].courseTitle} · {continueItems[0].moduleTitle}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold mb-0.5">Continuar de onde parou</p>
+                  <p className="font-semibold text-base text-white truncate">{continueItems[0].lessonTitle}</p>
+                  <p className="text-xs text-white/50 truncate mt-0.5">{continueItems[0].courseTitle} · {continueItems[0].moduleTitle}</p>
                 </div>
                 <Button
                   size="sm"
-                  className="rounded-full shrink-0 px-5"
+                  className="rounded-full shrink-0 px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30"
                   onClick={() => {
                     const c = continueItems[0];
                     navigate({ to: "/plataforma/cursos/$slug", params: { slug: c.courseSlug }, search: { aula: c.lessonId } as never });
@@ -358,19 +364,19 @@ function MyCoursesPage() {
             {/* Section header + search */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
               <div className="flex-1">
-                <h2 className="font-display text-2xl sm:text-3xl">Meus cursos</h2>
-                <p className="text-sm text-foreground/50">Escolha um curso para continuar assistindo.</p>
+                <h2 className="font-display text-2xl sm:text-4xl text-white">Meus cursos</h2>
+                <p className="text-sm text-white/50 mt-0.5">Escolha um curso para continuar assistindo.</p>
               </div>
               {/* Inline search */}
               {rows.length > 0 && (
-                <div className="relative w-full sm:w-56">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground/35 pointer-events-none" />
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40 pointer-events-none" />
                   <input
                     type="search"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar curso..."
-                    className="w-full rounded-full border border-border/40 bg-card/40 py-2 pl-9 pr-3 text-sm focus:border-primary focus:outline-none placeholder:text-foreground/30"
+                    className="w-full rounded-full border border-white/14 bg-white/5 py-2 pl-9 pr-3 text-sm text-white backdrop-blur-xl focus:border-primary/60 focus:ring-2 focus:ring-primary/30 placeholder:text-white/30 transition-all"
                   />
                 </div>
               )}

@@ -55,7 +55,16 @@ function markDownloaded(id: string) {
 /* ---------------- states ---------------- */
 
 function PageShell({ children }: { children: React.ReactNode }) {
-  return <div className="dark min-h-screen bg-background text-foreground">{children}</div>;
+  return (
+    <div className="relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden">
+      {/* Background ambient light orbs for real glass refraction */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[130px]" />
+        <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
+      </div>
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
 }
 
 function StateCard({
@@ -251,17 +260,17 @@ function CourseDetailPage() {
 
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
             {/* Resumo de progresso */}
-            <Card className="border-border/50 bg-card/60 backdrop-blur">
-              <CardContent className="space-y-3 p-5">
+            <Card className="glass-block rounded-3xl border border-white/12 shadow-2xl overflow-hidden">
+              <CardContent className="space-y-4 p-6">
                 <div className="flex items-baseline justify-between">
-                  <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Seu progresso</p>
-                  <span className="font-display text-2xl text-primary">{pct}%</span>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/50 font-bold">Seu progresso</p>
+                  <span className="font-display text-3xl text-primary">{pct}%</span>
                 </div>
-                <Progress value={pct} className="h-1.5" />
-                <p className="text-xs text-foreground/60">{completedCount} de {totalLessons} aulas concluídas</p>
+                <Progress value={pct} className="h-2 bg-white/10" />
+                <p className="text-xs text-white/60 font-medium">{completedCount} de {totalLessons} aulas concluídas</p>
                 {nextLesson ? (
                   <Button
-                    className="mt-1 w-full rounded-full"
+                    className="mt-1 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30 h-11 text-sm font-semibold"
                     onClick={() => setActiveLessonId(nextLesson.id)}
                   >
                     <Play className="mr-2 h-4 w-4 fill-current" />
@@ -271,7 +280,7 @@ function CourseDetailPage() {
                   <CertificateButton course={course} userId={user!.id} />
                 ) : null}
                 {nextLesson && (
-                  <p className="truncate text-center text-[11px] text-foreground/50">Próxima: {nextLesson.title}</p>
+                  <p className="truncate text-center text-[11px] text-white/50">Próxima: {nextLesson.title}</p>
                 )}
               </CardContent>
             </Card>
