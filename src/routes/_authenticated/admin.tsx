@@ -15,6 +15,7 @@ import {
   Settings,
   BookOpen,
   Apple,
+  Flame,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +49,7 @@ const navItems: NavItem[] = [
   { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
   { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
+  { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
   { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },

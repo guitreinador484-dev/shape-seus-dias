@@ -869,6 +869,50 @@ export type Database = {
           }
         ]
       }
+      checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          diet_done: boolean
+          id: string
+          mood: number | null
+          notes: string | null
+          treino_done: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkin_date: string
+          created_at?: string
+          diet_done?: boolean
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          treino_done?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          diet_done?: boolean
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          treino_done?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

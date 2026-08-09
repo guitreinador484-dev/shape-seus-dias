@@ -14,6 +14,7 @@ import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 import { NutritionTab } from "@/components/platform/nutrition-tab";
 import { EvolutionTab } from "@/components/platform/evolution-tab";
+import { CheckinCard } from "@/components/platform/checkin-card";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -661,6 +662,7 @@ function PlataformaPage() {
             </div>
 
           <TabsContent value="treino" className="mt-0">
+            {user ? <CheckinCard userId={user.id} /> : null}
             <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
           </TabsContent>
 
