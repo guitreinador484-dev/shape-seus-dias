@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 import { NutritionTab } from "@/components/platform/nutrition-tab";
+import { EvolutionTab } from "@/components/platform/evolution-tab";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -555,6 +556,9 @@ function PlataformaPage() {
               <TabsTrigger value="dieta" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Apple className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Dieta</span>
               </TabsTrigger>
+              <TabsTrigger value="evolucao" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
+                <TrendingUp className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Evolução</span>
+              </TabsTrigger>
             </TabsList>
             <Link
               to="/plataforma/cursos"
@@ -662,6 +666,10 @@ function PlataformaPage() {
 
           <TabsContent value="dieta" className="mt-0">
             {user ? <NutritionTab userId={user.id} /> : null}
+          </TabsContent>
+
+          <TabsContent value="evolucao" className="mt-0">
+            {user ? <EvolutionTab userId={user.id} /> : null}
           </TabsContent>
 
           {showVideos && (

@@ -61,6 +61,7 @@ type Anamnese = Tables<"anamnese">;
 type Workout = Tables<"workouts">;
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
+type BodyMeasurement = Tables<"body_measurements">;
 type WorkoutInsert = Database["public"]["Tables"]["workouts"]["Insert"];
 type WorkoutUpdate = Database["public"]["Tables"]["workouts"]["Update"];
 
@@ -590,6 +591,7 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
   const [isActive, setIsActive] = useState(student.is_active);
   const [accessExpiresAt, setAccessExpiresAt] = useState(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
   const [saving, setSaving] = useState(false);
+  const [evolutionOpen, setEvolutionOpen] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -606,6 +608,7 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
   }
 
   return (
+    <>
     <TableRow>
       <TableCell>
         <div className="space-y-2">
@@ -643,9 +646,102 @@ function StudentRow({ student, onSave }: { student: Student; onSave: (student: S
       </TableCell>
       <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(student.created_at)}</TableCell>
       <TableCell className="text-right">
-        <Button size="sm" onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
+        <div className="flex items-center justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={() => setEvolutionOpen(true)}>Evolução</Button>
+          <Button size="sm" onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
+        </div>
       </TableCell>
     </TableRow>
+    <EvolutionDialog student={student} open={evolutionOpen} onOpenChange={setEvolutionOpen} />
+    </>
+  );
+}
+
+function EvolutionDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [rows, setRows] = useState<BodyMeasurement[]>([]);
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open || !student) return;
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const { data } = await supabase
+        .from("body_measurements")
+        .select("*")
+        .eq("user_id", student.id)
+        .order("measured_at", { ascending: true });
+      if (cancelled) return;
+      const list = data ?? [];
+      setRows(list);
+      const photoRows = list.filter((r) => r.photo_path);
+      if (photoRows.length) {
+        const entries = await Promise.all(photoRows.map(async (r) => {
+          const { data: url } = await supabase.storage.from("progress-photos").createSignedUrl(r.photo_path!, 3600);
+          return [r.id, url?.signedUrl ?? ""] as const;
+        }));
+        if (!cancelled) setPhotos(Object.fromEntries(entries));
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [open, student]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Evolução — {student.full_name || student.email}</DialogTitle>
+          <DialogDescription>Medidas e fotos de progresso registradas pelo aluno.</DialogDescription>
+        </DialogHeader>
+        {loading ? <Skeleton className="h-48" /> : rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma medição registrada ainda.</p>
+        ) : (
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Peso</TableHead>
+                  <TableHead>Cintura</TableHead>
+                  <TableHead>Peito</TableHead>
+                  <TableHead>Braço</TableHead>
+                  <TableHead>Quadril</TableHead>
+                  <TableHead>Coxa</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...rows].reverse().map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="whitespace-nowrap">{formatDate(r.measured_at)}</TableCell>
+                    <TableCell>{r.weight_kg ?? "—"}</TableCell>
+                    <TableCell>{r.waist_cm ?? "—"}</TableCell>
+                    <TableCell>{r.chest_cm ?? "—"}</TableCell>
+                    <TableCell>{r.arm_cm ?? "—"}</TableCell>
+                    <TableCell>{r.hip_cm ?? "—"}</TableCell>
+                    <TableCell>{r.thigh_cm ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {Object.keys(photos).length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.entries(photos).filter(([, url]) => url).map(([id, url]) => {
+                  const row = rows.find((r) => r.id === id);
+                  return (
+                    <figure key={id} className="rounded-xl overflow-hidden border border-border">
+                      <img src={url} alt="Progresso" className="h-40 w-full object-cover" />
+                      {row && <figcaption className="text-[11px] text-muted-foreground px-2 py-1">{formatDate(row.measured_at)}{row.weight_kg ? ` · ${row.weight_kg} kg` : ""}</figcaption>}
+                    </figure>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
