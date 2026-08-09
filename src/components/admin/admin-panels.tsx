@@ -57,7 +57,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 type Profile = Tables<"profiles">;
 type Purchase = Tables<"purchases">;
-type QuizConfig = Tables<"quiz_config">;
 type Anamnese = Tables<"anamnese">;
 type Workout = Tables<"workouts">;
 type StudentPlan = Tables<"student_plans">;
@@ -1316,7 +1315,6 @@ export const adminCards = [
   { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video, desc: "Banner, destaque e ordem das prateleiras Netflix." },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell, desc: "Monte planos por aluno e exercícios." },
   { title: "Vendas", url: "/admin/vendas", icon: BadgeDollarSign, desc: "Registre vendas e status de pagamento." },
-  { title: "Quiz de Vendas", url: "/admin/quiz-vendas", icon: ClipboardList, desc: "Crie quizzes para qualificar leads." },
   { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles, desc: "Configure páginas de venda e captura." },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings, desc: "Ajuste marca, contato e links." },
 ];

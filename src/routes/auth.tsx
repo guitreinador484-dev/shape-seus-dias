@@ -64,8 +64,8 @@ function AuthPage() {
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Quer conhecer o método?{" "}
-          <Link to="/quiz" className="text-primary hover:underline">
-            Faça o quiz
+          <Link to="/funil" className="text-primary hover:underline">
+            Conheça o plano
           </Link>
         </p>
       </div>

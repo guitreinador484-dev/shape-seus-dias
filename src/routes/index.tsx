@@ -43,9 +43,9 @@ function Landing() {
         </h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
           Plano 100% personalizado, treinos em vídeo e acompanhamento profissional.
-          Comece com 5 perguntas rápidas.
+          Comece respondendo algumas perguntas rápidas.
         </p>
-        <Link to="/quiz">
+        <Link to="/funil">
           <Button className="h-14 px-8 bg-primary hover:bg-[oklch(0.60_0.22_25)] uppercase tracking-wider font-semibold">
             Descobrir meu plano <ArrowRight className="ml-2 h-5 w-5" />
           </Button>

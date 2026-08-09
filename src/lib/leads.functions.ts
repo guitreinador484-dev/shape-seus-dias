@@ -5,9 +5,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 
 type SubmitLeadInput = {
-  source: "quiz" | "funil";
-  quizSlug?: string;
-  quizTitle?: string;
+  source: "funil";
   name?: string;
   email?: string;
   whatsapp?: string;
@@ -19,13 +17,13 @@ type SubmitLeadInput = {
 };
 
 /**
- * Public: salva um lead capturado no quiz/funil. Sem autenticação —
+ * Public: salva um lead capturado no funil. Sem autenticação —
  * chamado das páginas públicas de conversão. Escrita via service role.
  */
 export const submitLeadFn = createServerFn({ method: "POST" })
   .inputValidator((input: SubmitLeadInput) => {
     if (!input || typeof input !== "object") throw new Error("Dados inválidos");
-    if (input.source !== "quiz" && input.source !== "funil") throw new Error("Origem inválida");
+    if (input.source !== "funil") throw new Error("Origem inválida");
     return input;
   })
   .handler(async ({ data }) => {
@@ -33,8 +31,6 @@ export const submitLeadFn = createServerFn({ method: "POST" })
     const answers = (data.answers ?? {}) as Json;
     const { error } = await supabaseAdmin.from("leads").insert({
       source: data.source,
-      quiz_slug: data.quizSlug ?? null,
-      quiz_title: data.quizTitle ?? null,
       name: data.name ?? null,
       email: data.email ?? null,
       whatsapp: data.whatsapp ?? null,
