@@ -19,10 +19,9 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { VideoPlayer } from "@/components/platform/video-player";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
-  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip,
+  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip, ListVideo,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")({
@@ -83,17 +82,17 @@ function CourseSkeleton() {
     <PageShell>
       <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <Skeleton className="h-8 w-32 rounded-full" />
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div className="space-y-4">
+            <Skeleton className="h-10 w-2/3" />
             <Skeleton className="aspect-video w-full rounded-2xl" />
-            <Skeleton className="h-7 w-2/3" />
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
           <div className="space-y-3">
             <Skeleton className="h-32 w-full rounded-2xl" />
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-[76px] w-full rounded-xl" />)}
           </div>
         </div>
       </div>
@@ -215,8 +214,8 @@ function CourseDetailPage() {
           <Link to="/plataforma/cursos"><ArrowLeft className="mr-2 h-4 w-4" /> Meus cursos</Link>
         </Button>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-5">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
+          <div className="min-w-0 space-y-5">
             {activeLesson ? (
               <LessonPlayer
                 lesson={activeLesson}
@@ -241,7 +240,7 @@ function CourseDetailPage() {
             )}
 
             <div>
-              <h1 className="font-display text-3xl leading-none">{course.title}</h1>
+              <h2 className="font-display text-3xl leading-none">{course.title}</h2>
               {course.description && (
                 <p className="mt-2 text-sm leading-relaxed text-foreground/65">{course.description}</p>
               )}
@@ -277,86 +276,131 @@ function CourseDetailPage() {
               </CardContent>
             </Card>
 
-            <div>
-              <p className="mb-2 text-xs uppercase tracking-[0.2em] text-foreground/50">Conteúdo do curso</p>
-              {course.modules.length === 0 ? (
-                <Card className="border-border/50 bg-card/40">
-                  <CardContent className="py-8 text-center text-sm text-foreground/60">
-                    Nenhum módulo publicado ainda.
-                  </CardContent>
-                </Card>
-              ) : (
-                <Accordion type="multiple" defaultValue={course.modules.map((m) => m.id)} className="space-y-2">
-                  {course.modules.map((m) => {
-                    const doneInModule = m.lessons.filter((l) => progress.some((p) => p.lesson_id === l.id && p.completed_at)).length;
-                    const modPct = m.lessons.length ? Math.round((doneInModule / m.lessons.length) * 100) : 0;
-                    return (
-                      <AccordionItem key={m.id} value={m.id} className="rounded-xl border border-border/50 bg-card/40 px-3">
-                        <AccordionTrigger className="py-3 text-sm font-medium hover:no-underline">
-                          <span className="min-w-0 flex-1 text-left">
-                            <span className="block truncate">{m.title}</span>
-                            <span className="mt-1.5 flex items-center gap-2">
-                              <Progress value={modPct} className="h-1 flex-1" />
-                              <span className="shrink-0 text-[10px] font-normal text-foreground/50">{doneInModule}/{m.lessons.length}</span>
-                            </span>
-                          </span>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-2">
-                          {m.lessons.length === 0 ? (
-                            <p className="px-2 py-3 text-xs text-foreground/50">Nenhuma aula neste módulo.</p>
-                          ) : (
-                            <div className="space-y-1">
-                              {m.lessons.map((l) => {
-                                const unlocked = isLessonUnlocked(l, enrolledAt);
-                                const done = progress.some((p) => p.lesson_id === l.id && p.completed_at);
-                                const active = l.id === activeLessonId;
-                                const dur = formatDuration(l.duration_seconds);
-                                const row = progress.find((p) => p.lesson_id === l.id);
-                                const watchedPct = !done && l.duration_seconds && row?.watched_seconds
-                                  ? Math.min(99, Math.round((row.watched_seconds / l.duration_seconds) * 100))
-                                  : 0;
-                                return (
-                                  <button
-                                    key={l.id}
-                                    disabled={!unlocked}
-                                    onClick={() => setActiveLessonId(l.id)}
-                                    className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition ${
-                                      active ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-accent hover:text-foreground"
-                                    } ${!unlocked ? "cursor-not-allowed opacity-50" : ""}`}
-                                  >
-                                    {done ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                      : unlocked ? <Play className="mt-0.5 h-4 w-4 shrink-0" />
-                                      : <Lock className="mt-0.5 h-4 w-4 shrink-0" />}
-                                    <span className="min-w-0 flex-1">
-                                      <span className="block truncate">{l.title}</span>
-                                      {watchedPct > 0 && (
-                                        <span className="mt-1 flex items-center gap-2">
-                                          <Progress value={watchedPct} className="h-0.5 flex-1" />
-                                          <span className="text-[10px] text-primary">{watchedPct}%</span>
-                                        </span>
-                                      )}
-                                    </span>
-                                    {!unlocked ? (
-                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/50">{daysUntilUnlock(l, enrolledAt)}d</span>
-                                    ) : dur ? (
-                                      <span className="mt-0.5 shrink-0 text-[10px] text-foreground/45">{dur}</span>
-                                    ) : null}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
-              )}
-            </div>
+            {/* Lista de próximos vídeos */}
+            <NextUpPlaylist
+              modules={course.modules}
+              progress={progress}
+              activeLessonId={activeLessonId}
+              enrolledAt={enrolledAt}
+              onSelect={(id) => setActiveLessonId(id)}
+            />
           </aside>
         </div>
       </div>
     </PageShell>
+  );
+}
+
+/* ---------------- próximos vídeos ---------------- */
+
+function NextUpPlaylist({
+  modules, progress, activeLessonId, enrolledAt, onSelect,
+}: {
+  modules: CourseFull["modules"];
+  progress: ProgressRow[];
+  activeLessonId: string | null;
+  enrolledAt: string;
+  onSelect: (lessonId: string) => void;
+}) {
+  const [thumbs, setThumbs] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const lessons = modules.flatMap((m) => m.lessons);
+      const entries = await Promise.all(
+        lessons.map(async (l) => [l.id, l.thumbnail_path ? await signedAsset(l.thumbnail_path) : null] as const),
+      );
+      if (alive) setThumbs(Object.fromEntries(entries));
+    })();
+    return () => { alive = false; };
+  }, [modules]);
+
+  const doneIds = useMemo(() => new Set(progress.filter((p) => p.completed_at).map((p) => p.lesson_id)), [progress]);
+
+  if (modules.length === 0) {
+    return (
+      <Card className="border-border/50 bg-card/40">
+        <CardContent className="py-8 text-center text-sm text-foreground/60">Nenhum módulo publicado ainda.</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-border/50 bg-card/40">
+      <CardContent className="space-y-3 p-4">
+        <div className="flex items-center gap-2">
+          <ListVideo className="h-4 w-4 text-primary" />
+          <p className="text-sm font-medium">Próximos vídeos</p>
+        </div>
+        <div className="space-y-4 lg:max-h-[calc(100vh-240px)] lg:overflow-y-auto lg:pr-1">
+          {modules.map((m) => (
+            <div key={m.id}>
+              <p className="mb-1.5 px-1 text-[10px] uppercase tracking-[0.2em] text-foreground/45">{m.title}</p>
+              <div className="space-y-1">
+                {m.lessons.map((l) => {
+                  const unlocked = isLessonUnlocked(l, enrolledAt);
+                  const done = doneIds.has(l.id);
+                  const active = l.id === activeLessonId;
+                  const dur = formatDuration(l.duration_seconds);
+                  const thumb = thumbs[l.id];
+                  return (
+                    <button
+                      key={l.id}
+                      disabled={!unlocked}
+                      onClick={() => onSelect(l.id)}
+                      className={`flex w-full items-center gap-3 rounded-xl border p-2 text-left transition ${
+                        active
+                          ? "border-primary/40 bg-primary/10"
+                          : "border-transparent hover:border-border/60 hover:bg-accent/50"
+                      } ${!unlocked ? "cursor-not-allowed opacity-50" : ""}`}
+                    >
+                      <span className="relative aspect-video w-32 shrink-0 overflow-hidden rounded-lg bg-muted">
+                        {thumb ? (
+                          <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                        ) : (
+                          <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-foreground/40">
+                            {done ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Play className="h-5 w-5 fill-current" />}
+                          </span>
+                        )}
+                        {active && (
+                          <span className="absolute inset-0 grid place-items-center bg-black/40">
+                            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-2 ring-white/30">
+                              <Play className="ml-0.5 h-4 w-4 fill-current" />
+                            </span>
+                          </span>
+                        )}
+                        {dur && (
+                          <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-white">
+                            {dur}
+                          </span>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block truncate text-sm font-medium ${active ? "text-primary" : "text-foreground/85"}`}>
+                          {l.title}
+                        </span>
+                        {l.description && (
+                          <span className="mt-0.5 line-clamp-2 block text-[11px] leading-snug text-foreground/50">
+                            {l.description}
+                          </span>
+                        )}
+                        {done && (
+                          <span className="mt-1 flex items-center gap-1 text-[10px] font-medium text-primary">
+                            <CheckCircle2 className="h-3 w-3" /> Concluída
+                          </span>
+                        )}
+                      </span>
+                      {!done && !unlocked && <Lock className="h-4 w-4 shrink-0 text-foreground/40" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -465,6 +509,33 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
 
   return (
     <div className="space-y-4">
+      {/* Título da aula no topo */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/50">Aula</p>
+          <h1 className="mt-1 font-display text-3xl leading-none sm:text-4xl">{lesson.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-foreground/50">
+            {dur && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {dur}</span>}
+            {!completed && watchedPct > 0 && <span className="text-primary">{watchedPct}% assistido</span>}
+            {completed && <span className="flex items-center gap-1.5 text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> Concluída</span>}
+          </div>
+          {lesson.description && (
+            <p className="mt-2 line-clamp-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/65">{lesson.description}</p>
+          )}
+          {!completed && watchedPct > 0 && <Progress value={watchedPct} className="mt-3 h-1 max-w-sm" />}
+        </div>
+        {completed ? (
+          <Button variant="secondary" className="rounded-full" onClick={unmark}>
+            <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Concluída
+          </Button>
+        ) : (
+          <Button className="rounded-full" onClick={markComplete}>
+            <CheckCircle2 className="mr-2 h-4 w-4" /> Marcar como concluída
+          </Button>
+        )}
+      </div>
+
+      {/* Player */}
       <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black shadow-2xl shadow-black/40">
         {loadingVideo ? (
           <Skeleton className="h-full w-full rounded-none" />
@@ -490,30 +561,6 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
               Vídeo indisponível no momento.
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display text-2xl leading-none">{lesson.title}</h2>
-          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-foreground/50">
-            {dur && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {dur}</span>}
-            {!completed && watchedPct > 0 && <span className="text-primary">{watchedPct}% assistido</span>}
-            {completed && <span className="flex items-center gap-1.5 text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> Concluída</span>}
-          </div>
-          {lesson.description && (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground/65">{lesson.description}</p>
-          )}
-          {!completed && watchedPct > 0 && <Progress value={watchedPct} className="mt-3 h-1 max-w-sm" />}
-        </div>
-        {completed ? (
-          <Button variant="secondary" className="rounded-full" onClick={unmark}>
-            <CheckCircle2 className="mr-2 h-4 w-4 text-primary" /> Concluída
-          </Button>
-        ) : (
-          <Button className="rounded-full" onClick={markComplete}>
-            <CheckCircle2 className="mr-2 h-4 w-4" /> Marcar como concluída
-          </Button>
         )}
       </div>
 
