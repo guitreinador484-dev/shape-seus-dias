@@ -32,11 +32,11 @@ type Row = {
 /* ─── Mobile header ─────────────────────────────────────────────────────── */
 function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
-    <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-border/30 bg-background/95 backdrop-blur">
-      <span className="font-display text-xl">PERSONAL</span>
+    <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-white/10 bg-[#0A0A0B]/80 backdrop-blur-xl">
+      <span className="font-display text-xl tracking-wide text-white">PERSONAL</span>
       <button
         onClick={onMenu}
-        className="grid h-9 w-9 place-items-center rounded-xl border border-border/30 bg-card/40 text-foreground/70 hover:text-foreground transition"
+        className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/5 text-foreground/70 hover:text-white transition backdrop-blur-md"
         aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
       >
         {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -50,17 +50,17 @@ function StatPill({
   icon: Icon, label, value, accent,
 }: { icon: React.ElementType; label: string; value: string | number; accent?: boolean }) {
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
+    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition backdrop-blur-md ${
       accent
-        ? "border-primary/30 bg-primary/10 text-primary"
-        : "border-border/40 bg-card/40 text-foreground/70"
+        ? "border-primary/30 bg-primary/10 text-primary shadow-md shadow-primary/10"
+        : "border-white/10 bg-white/5 text-foreground/80 hover:bg-white/8"
     }`}>
-      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${accent ? "bg-primary/20" : "bg-muted/50"}`}>
+      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${accent ? "bg-primary/20 text-primary" : "bg-white/10 text-white"}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div>
-        <p className="text-[11px] uppercase tracking-[0.15em] opacity-60">{label}</p>
-        <p className="font-display text-lg leading-none">{value}</p>
+        <p className="text-[11px] uppercase tracking-[0.15em] opacity-60 font-medium">{label}</p>
+        <p className="font-display text-lg leading-none text-white">{value}</p>
       </div>
     </div>
   );

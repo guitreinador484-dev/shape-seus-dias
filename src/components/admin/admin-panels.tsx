@@ -1320,7 +1320,7 @@ export function AdminQuizPanel() {
             <Card><CardContent className="pt-6 space-y-4"><Select value={selectedId} onValueChange={selectConfig}><SelectTrigger><SelectValue placeholder="Selecione a seção" /></SelectTrigger><SelectContent>{configs.map((config) => <SelectItem key={config.id} value={config.id}>{config.section}</SelectItem>)}</SelectContent></Select><Textarea className="min-h-96 font-mono text-sm" value={contentText} onChange={(event) => setContentText(event.target.value)} /><Button onClick={saveConfig}><Save className="h-4 w-4" /> Salvar seção</Button></CardContent></Card>
           </TabsContent>
           <TabsContent value="respostas" className="mt-4">
-            {anamneses.length === 0 ? <EmptyState title="Nenhuma anamnese recebida" description="As respostas dos alunos aparecerão aqui." /> : <div className="space-y-4">{anamneses.map((item) => <Card key={item.id}><CardHeader><CardTitle>{studentById.get(item.user_id)?.full_name || studentById.get(item.user_id)?.email || "Aluno"}</CardTitle><p className="text-sm text-muted-foreground">{formatDate(item.created_at)}</p></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><Info label="Objetivo" value={item.objetivo} /><Info label="Frequência" value={item.frequencia} /><Info label="Experiência" value={item.experiencia} /><Info label="Local" value={item.local_treino} /><Info label="Limitação" value={item.limitacao} /><Info label="Descrição" value={item.limitacao_descricao} /><pre className="md:col-span-2 overflow-auto rounded-lg bg-muted p-3 text-xs">{JSON.stringify(item.quiz_answers, null, 2)}</pre></CardContent></Card>)}</div>}
+            {anamneses.length === 0 ? <EmptyState title="Nenhuma anamnese recebida" description="As respostas dos alunos aparecerão aqui." /> : <div className="space-y-4">{anamneses.map((item) => <Card key={item.id}><CardHeader><CardTitle>{studentById.get(item.user_id)?.full_name || studentById.get(item.user_id)?.email || "Aluno"}</CardTitle><p className="text-sm text-muted-foreground">{formatDate(item.created_at)}</p></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><InfoRow label="Objetivo" value={item.objetivo} /><InfoRow label="Frequência" value={item.frequencia} /><InfoRow label="Experiência" value={item.experiencia} /><InfoRow label="Local" value={item.local_treino} /><InfoRow label="Limitação" value={item.limitacao} /><InfoRow label="Descrição" value={item.limitacao_descricao} /><pre className="md:col-span-2 overflow-auto rounded-lg bg-muted p-3 text-xs">{JSON.stringify(item.quiz_answers, null, 2)}</pre></CardContent></Card>)}</div>}
           </TabsContent>
         </Tabs>
           </div>
@@ -1339,7 +1339,7 @@ export function AdminQuizPanel() {
   );
 }
 
-function Info({ label, value }: { label: string; value?: string | null }) {
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return <div><p className="text-xs uppercase text-muted-foreground">{label}</p><p className="font-medium">{value || "—"}</p></div>;
 }
 
@@ -1533,7 +1533,7 @@ export function AdminPlatformPanel() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Categorias</p>
-            <p className="font-display text-2xl mt-1 text-white">{categoryCount}</p>
+            <p className="font-display text-2xl mt-1 text-white">{allCategories.length}</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas de Vídeo</p>

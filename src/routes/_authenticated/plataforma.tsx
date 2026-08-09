@@ -621,31 +621,31 @@ function PlataformaPage() {
 
                   {orderedCats.map((cat) => (
                     <section key={cat} className="px-4 sm:px-12 max-w-7xl mx-auto">
-                      <h3 className="text-xl sm:text-2xl font-semibold mb-4 flex items-center gap-3">
-                        <span className="inline-block h-6 w-1.5 rounded-full bg-primary" /> {cat}
+                      <h3 className="text-xl sm:text-2xl font-semibold mb-4 flex items-center gap-3 text-white">
+                        <span className="inline-block h-6 w-1.5 rounded-full bg-primary shadow-sm shadow-primary/50" /> {cat}
                       </h3>
                       <div className="relative">
-                        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scroll-smooth">
+                        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none scroll-smooth">
                         {(byCategory.get(cat) ?? []).map((w) => {
                           const thumb = signedUrls[w.id]?.thumb || w.thumbnail_url;
                           return (
                             <button
                               key={w.id}
                               onClick={() => playWorkout(w)}
-                              className="group relative shrink-0 snap-start w-[260px] sm:w-[320px] aspect-video rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.08] hover:z-10 hover:shadow-2xl hover:shadow-primary/30 bg-muted ring-1 ring-border hover:ring-2 hover:ring-primary"
+                              className="group relative shrink-0 snap-start w-[260px] sm:w-[320px] aspect-video rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.04] hover:z-10 hover:shadow-2xl hover:shadow-primary/30 bg-[#131316]/80 backdrop-blur-md border border-white/10 hover:border-primary/50"
                             >
                               {thumb ? (
-                                <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <img src={thumb} alt={w.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                               ) : (
                                 <div className="absolute inset-0 grid place-items-center text-muted-foreground/40"><Video className="h-10 w-10" /></div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent opacity-90 group-hover:opacity-100" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
                               <div className="absolute inset-x-0 bottom-0 p-4 text-white translate-y-1 group-hover:translate-y-0 transition-transform">
-                                <p className="font-semibold text-sm sm:text-base line-clamp-1 drop-shadow">{w.title}</p>
+                                <p className="font-semibold text-sm sm:text-base line-clamp-1 drop-shadow text-white">{w.title}</p>
                                 <p className="text-xs text-white/70 line-clamp-1 mt-0.5">{w.difficulty || w.category}</p>
                               </div>
                               <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
-                                <div className="h-14 w-14 rounded-full bg-primary grid place-items-center shadow-2xl shadow-primary/50 ring-4 ring-white/20">
+                                <div className="h-14 w-14 rounded-2xl bg-primary grid place-items-center shadow-2xl shadow-primary/50 ring-4 ring-white/20">
                                   <Play className="h-6 w-6 text-primary-foreground fill-current ml-0.5" />
                                 </div>
                               </div>
