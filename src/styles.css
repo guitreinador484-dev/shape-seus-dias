@@ -182,6 +182,16 @@
 .platform-light .bg-primary *,
 .platform-light [class*="bg-primary"] * { color: #ffffff !important; }
 
+/* Video player keeps its own dark theme even inside the light platform scope */
+.platform-light .video-player-scope,
+.platform-light .video-player-scope button,
+.platform-light .video-player-scope span,
+.platform-light .video-player-scope p,
+.platform-light .video-player-scope h3,
+.platform-light .video-player-scope h4 {
+  color: #ffffff;
+}
+
 @layer base {
   * {
     border-color: var(--color-border);

@@ -177,7 +177,7 @@ export function VideoPlayer({
       ref={wrapRef}
       onMouseMove={bump}
       onMouseLeave={() => { if (!videoRef.current?.paused) setChrome(false); }}
-      className={`group relative w-full overflow-hidden bg-black ${chrome ? "" : "cursor-none"} ${className}`}
+      className={`video-player-scope group relative w-full overflow-hidden bg-black ${chrome ? "" : "cursor-none"} ${className}`}
     >
       <video
         ref={videoRef}
@@ -262,7 +262,7 @@ export function VideoPlayer({
       {/* Keyboard Shortcuts Dialog */}
       {showHelp && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in">
-          <div className="max-w-xs w-full bg-card border border-border/60 rounded-2xl p-5 text-card-foreground shadow-2xl space-y-4">
+          <div className="max-w-xs w-full bg-[#141414] border border-white/15 rounded-2xl p-5 text-white shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-display text-lg flex items-center gap-2">
                 <HelpCircle className="h-4 w-4 text-[#E63946]" /> Atalhos de Teclado

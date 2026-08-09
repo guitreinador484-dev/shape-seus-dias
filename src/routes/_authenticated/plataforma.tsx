@@ -574,7 +574,7 @@ function PlataformaPage() {
                     </div>
                   )}
 
-                  {heroWorkout && (
+                  {!activeVideo && heroWorkout && (
                     <div className="relative h-[72vh] min-h-[460px] w-full overflow-hidden">
                       {(heroBannerUrl || signedUrls[heroWorkout.id]?.thumb || heroWorkout.thumbnail_url) && (
                         <img
