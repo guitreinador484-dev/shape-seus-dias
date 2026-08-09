@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import SearchInput from "@/components/ui/search-input";
+import LeftSidebar from "@/components/ui/left-sidebar";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,8 +118,10 @@ function MyCoursesPage() {
   const globalPct = totalLessons ? Math.round((totalDone / totalLessons) * 100) : 0;
 
   return (
-    <div className="dark min-h-screen bg-background text-foreground">
-      {/* Hero */}
+    <div className="flex min-h-screen bg-background text-foreground dark">
+      <LeftSidebar />
+{/* Hero */}
+<main className="flex-1 overflow-auto">
       <section className="relative isolate overflow-hidden">
         <div className="absolute inset-0 -z-10">
           {featured?.coverUrl ? (
@@ -303,6 +306,7 @@ function MyCoursesPage() {
           <RecommendedRail items={recommended} loading={railsLoading} />
         </div>
       )}
-    </div>
+    </main>
+</div>
   );
 }
