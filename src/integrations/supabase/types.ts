@@ -359,6 +359,8 @@ export type Database = {
           has_class_access: boolean
           id: string
           is_active: boolean
+          referral_code: string
+          referred_by: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -370,6 +372,8 @@ export type Database = {
           has_class_access?: boolean
           id: string
           is_active?: boolean
+          referral_code?: string
+          referred_by?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -381,6 +385,8 @@ export type Database = {
           has_class_access?: boolean
           id?: string
           is_active?: boolean
+          referral_code?: string
+          referred_by?: string | null
           updated_at?: string
           whatsapp?: string | null
         }

@@ -64,6 +64,11 @@ function FunnelPage() {
     return () => document.documentElement.classList.remove("funnel-scope");
   }, []);
 
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) localStorage.setItem("referred_by_ref", ref);
+  }, []);
+
   const [stage, setStage] = useState<Stage>("form");
   const [measurements, setMeasurements] = useState<Measurements>({
     peso: "",

@@ -386,3 +386,19 @@ export const saveNutritionPlan = createServerFn({ method: "POST" })
     }
     return { ok: true as const };
   });
+
+/**
+ * Authenticated user: count of students referred by them (via service role,
+ * já que RLS de profiles impede o aluno de listar outros usuários).
+ */
+export const getReferralCount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("referred_by", context.userId);
+    if (error) throw new Error(error.message);
+    return { count: count ?? 0 };
+  });

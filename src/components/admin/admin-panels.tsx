@@ -413,6 +413,52 @@ export function AdminStudentsPanel() {
         </Card>
       )}
       <div className="mt-8">
+        <h3 className="font-display text-xl mb-1">Indicações</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Alunos que compartilharam seu código e as pessoas que cadastraram por indicação.
+        </p>
+        <Card>
+          <CardContent className="pt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Indicador</TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Indicados</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {students.filter((s) => s.referral_code).length === 0 ? (
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">Nenhum código de indicação gerado.</TableCell></TableRow>
+                ) : students.filter((s) => s.referral_code && s.role !== "admin").map((s) => {
+                  const referred = students.filter((r) => r.referred_by === s.id);
+                  return (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <p className="font-medium">{s.full_name || s.email}</p>
+                        <p className="text-xs text-muted-foreground">{s.email}</p>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-primary">{s.referral_code}</TableCell>
+                      <TableCell>
+                        {referred.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Nenhuma</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {referred.map((r) => (
+                              <Badge key={r.id} variant="secondary">{r.full_name || r.email}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      <div className="mt-8">
         <h3 className="font-display text-xl mb-1">Compradores</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Pessoas que compraram. Os que ainda não têm login estão marcados — clique para criar o acesso.

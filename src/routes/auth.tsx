@@ -136,12 +136,13 @@ function SignupForm() {
     e.preventDefault();
     setBusy(true);
     const redirectUrl = `${window.location.origin}/plataforma`;
+    const urlRef = new URLSearchParams(window.location.search).get("ref") ?? localStorage.getItem("referred_by_ref");
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName, whatsapp },
+        data: { full_name: fullName, whatsapp, ...(urlRef ? { referred_by: urlRef } : {}) },
       },
     });
     setBusy(false);

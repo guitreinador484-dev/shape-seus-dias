@@ -16,6 +16,7 @@ import { NutritionTab } from "@/components/platform/nutrition-tab";
 import { EvolutionTab } from "@/components/platform/evolution-tab";
 import { CheckinCard } from "@/components/platform/checkin-card";
 import { AnamneseTab } from "@/components/platform/anamnese-tab";
+import { ReferralCard } from "@/components/platform/referral-card";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -667,6 +668,7 @@ function PlataformaPage() {
 
           <TabsContent value="treino" className="mt-0">
             {user ? <CheckinCard userId={user.id} /> : null}
+            {user && showVideos && !isExpired ? <ReferralCard userId={user.id} /> : null}
             <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
           </TabsContent>
 
