@@ -1529,57 +1529,56 @@ export function AdminPlatformPanel() {
         </div>
       </div>
 
-      {/* Metrics Summary Badges */}
       {!loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas em Vídeo</p>
-            <p className="font-display text-2xl mt-1 text-primary">{workouts.length}</p>
-          </div>
-          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Categorias</p>
-            <p className="font-display text-2xl mt-1">{allCategories.length}</p>
+            <p className="font-display text-2xl mt-1 text-white">{categoryCount}</p>
           </div>
-          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas de Vídeo</p>
+            <p className="font-display text-2xl mt-1 text-white">{workouts.length}</p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Tema Ativo</p>
-            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5">
+            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5 text-white">
               <Palette className="h-4 w-4 text-primary" /> {settings.platform_theme === "dark" ? "Escuro" : "Claro"}
             </p>
           </div>
-          <div className="rounded-xl border border-border/50 bg-card/60 p-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Comunicado</p>
-            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-green-500" : "text-muted-foreground"}`}>
+            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-emerald-400" : "text-muted-foreground"}`}>
               <Megaphone className="h-4 w-4" /> {settings.platform_announcement_enabled ? "Ativo" : "Desativado"}
             </p>
           </div>
         </div>
       )}
 
-      {loading ? <Skeleton className="h-96 rounded-2xl" /> : (
+      {loading ? <Skeleton className="h-96 rounded-3xl" /> : (
         <Tabs defaultValue="banner" className="space-y-6">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-card border border-border/60 rounded-2xl gap-1">
-            <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl gap-1">
+            <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
               <Film className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Banner
             </TabsTrigger>
-            <TabsTrigger value="categories" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="categories" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
               <Layers className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Prateleiras
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="appearance" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
               <Palette className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Tema & Marca
             </TabsTrigger>
-            <TabsTrigger value="announcement" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="announcement" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
               <Megaphone className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Aviso
             </TabsTrigger>
-            <TabsTrigger value="visibility" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground col-span-2 sm:col-span-1">
+            <TabsTrigger value="visibility" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all col-span-2 sm:col-span-1">
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Seções
             </TabsTrigger>
           </TabsList>
 
           {/* TAB 1: Banner & Destaque */}
           <TabsContent value="banner" className="space-y-6 mt-0">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <Film className="h-5 w-5 text-primary" /> Banner Principal de Destaque
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -1663,18 +1662,18 @@ export function AdminPlatformPanel() {
 
           {/* TAB 2: Prateleiras & Ordem */}
           <TabsContent value="categories" className="space-y-6 mt-0">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <Layers className="h-5 w-5 text-primary" /> Organizador Visual de Prateleiras
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Altere a ordem em que as categorias de treinos/aulas aparecem na tela do aluno.
                 </p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-6">
                 {currentCategoryOrder.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed rounded-2xl">
+                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
                     Nenhuma categoria encontrada nos treinos cadastrados.
                   </div>
                 ) : (
@@ -1682,20 +1681,20 @@ export function AdminPlatformPanel() {
                     {currentCategoryOrder.map((cat, idx) => (
                       <div
                         key={cat}
-                        className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card/60 hover:bg-muted/30 transition"
+                        className="flex items-center justify-between p-3.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/8 transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary font-display text-sm font-bold">
+                          <span className="grid h-7 w-7 place-items-center rounded-xl bg-primary/20 text-primary border border-primary/30 font-display text-sm font-bold">
                             #{idx + 1}
                           </span>
-                          <span className="font-semibold text-sm">{cat}</span>
+                          <span className="font-semibold text-sm text-white">{cat}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 rounded-lg"
+                            className="h-8 w-8 rounded-xl hover:bg-white/10"
                             disabled={idx === 0}
                             onClick={() => moveCategory(idx, "up")}
                           >
@@ -1705,7 +1704,7 @@ export function AdminPlatformPanel() {
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 rounded-lg"
+                            className="h-8 w-8 rounded-xl hover:bg-white/10"
                             disabled={idx === currentCategoryOrder.length - 1}
                             onClick={() => moveCategory(idx, "down")}
                           >
@@ -1734,18 +1733,18 @@ export function AdminPlatformPanel() {
 
           {/* TAB 3: Tema & Marca */}
           <TabsContent value="appearance" className="space-y-6 mt-0">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <Palette className="h-5 w-5 text-primary" /> Aparência e Tema da Plataforma
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Escolha o estilo visual e mensagens padrão exibidas aos seus alunos.
                 </p>
               </CardHeader>
-              <CardContent className="grid gap-6">
+              <CardContent className="grid gap-6 p-6">
                 <div>
-                  <Label className="text-sm font-semibold mb-3 block">Tema da Área de Membros</Label>
+                  <Label className="text-sm font-semibold mb-3 block text-white">Tema da Área de Membros</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
                     {(["dark", "light"] as const).map((t) => {
                       const active = settings.platform_theme === t;
@@ -1754,14 +1753,14 @@ export function AdminPlatformPanel() {
                           key={t}
                           type="button"
                           onClick={() => setSettings({ ...settings, platform_theme: t })}
-                          className={`relative rounded-2xl border-2 p-4 text-left transition-all ${
+                          className={`relative rounded-2xl border p-4 text-left transition-all ${
                             active
-                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                              : "border-border hover:border-primary/40 bg-card"
+                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/20 backdrop-blur-md"
+                              : "border-white/10 hover:border-primary/40 bg-white/5 backdrop-blur-md"
                           }`}
                         >
                           <div className={`h-24 rounded-xl mb-3 border p-3 flex flex-col justify-between ${
-                            t === "dark" ? "bg-[#09090b] border-[#27272a]" : "bg-[#ffffff] border-[#e4e4e7]"
+                            t === "dark" ? "bg-[#09090b] border-white/10" : "bg-[#ffffff] border-[#e4e4e7]"
                           }`}>
                             <div className="flex items-center justify-between">
                               <div className={`h-2 w-12 rounded ${t === "dark" ? "bg-zinc-700" : "bg-zinc-300"}`} />
@@ -1769,9 +1768,9 @@ export function AdminPlatformPanel() {
                             </div>
                             <div className={`h-8 rounded-lg ${t === "dark" ? "bg-zinc-900 border border-zinc-800" : "bg-zinc-100 border border-zinc-200"}`} />
                           </div>
-                          <p className="font-semibold text-sm">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
+                          <p className="font-semibold text-sm text-white">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {t === "dark" ? "Estilo streaming de alta resolução" : "Alto contraste e fundo limpo"}
+                            {t === "dark" ? "Estilo streaming de alta resolução com blocos de vidro" : "Alto contraste e fundo limpo"}
                           </p>
                           {active && <CheckCircle2 className="absolute top-3 right-3 h-5 w-5 text-primary" />}
                         </button>
@@ -1813,19 +1812,19 @@ export function AdminPlatformPanel() {
 
           {/* TAB 4: Comunicado / Aviso */}
           <TabsContent value="announcement" className="space-y-6 mt-0">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <Megaphone className="h-5 w-5 text-primary" /> Barra de Comunicados / Avisos
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Exiba um banner de aviso importante no topo da plataforma de todos os alunos.
                 </p>
               </CardHeader>
-              <CardContent className="grid gap-5">
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+              <CardContent className="grid gap-5 p-6">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
                   <div>
-                    <p className="font-semibold text-sm">Ativar Barra de Comunicado</p>
+                    <p className="font-semibold text-sm text-white">Ativar Barra de Comunicado</p>
                     <p className="text-xs text-muted-foreground">Exibe a mensagem no topo para todos os alunos</p>
                   </div>
                   <Switch
@@ -1863,13 +1862,13 @@ export function AdminPlatformPanel() {
                     {/* Preview Box */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">Pré-visualização do Aviso:</Label>
-                      <div className={`p-3.5 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
-                        settings.platform_announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
-                        : settings.platform_announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                        : settings.platform_announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/30 text-purple-400"
-                        : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                      <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 backdrop-blur-md shadow-md ${
+                        settings.platform_announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : settings.platform_announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                        : settings.platform_announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                        : "bg-primary/10 border-primary/30 text-primary-foreground"
                       }`}>
-                        <Megaphone className="h-4 w-4 shrink-0" />
+                        <Megaphone className="h-4 w-4 shrink-0 text-primary" />
                         <span>{settings.platform_announcement_text || "Sua mensagem de comunicado aparecerá aqui..."}</span>
                       </div>
                     </div>
@@ -1881,19 +1880,19 @@ export function AdminPlatformPanel() {
 
           {/* TAB 5: Seções & Visibilidade */}
           <TabsContent value="visibility" className="space-y-6 mt-0">
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2">
+            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
+                <CardTitle className="text-xl flex items-center gap-2 text-white">
                   <SlidersHorizontal className="h-5 w-5 text-primary" /> Recursos & Seções Visíveis
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Ligue ou desligue seções específicas da área de membros dos alunos.
                 </p>
               </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+              <CardContent className="grid gap-4 p-6">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
                   <div>
-                    <p className="font-semibold text-sm">Barra de Pesquisa de Cursos</p>
+                    <p className="font-semibold text-sm text-white">Barra de Pesquisa de Cursos</p>
                     <p className="text-xs text-muted-foreground">Permite ao aluno pesquisar cursos por título</p>
                   </div>
                   <Switch
@@ -1902,9 +1901,9 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
                   <div>
-                    <p className="font-semibold text-sm">Trilho "Continuar Assistindo"</p>
+                    <p className="font-semibold text-sm text-white">Trilho "Continuar Assistindo"</p>
                     <p className="text-xs text-muted-foreground">Mostra a aula em andamento do aluno</p>
                   </div>
                   <Switch
@@ -1913,9 +1912,9 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
                   <div>
-                    <p className="font-semibold text-sm">Trilho "Próximos Módulos / Recomendados"</p>
+                    <p className="font-semibold text-sm text-white">Trilho "Próximos Módulos / Recomendados"</p>
                     <p className="text-xs text-muted-foreground">Sugere novos módulos baseados no histórico</p>
                   </div>
                   <Switch
@@ -1931,11 +1930,11 @@ export function AdminPlatformPanel() {
 
       {/* Floating / Bottom Save Bar */}
       {!loading && (
-        <div className="flex items-center justify-between p-4 bg-card border border-border/60 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between p-4 bg-[#131316]/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl">
           <p className="text-xs text-muted-foreground">
             Lembre-se de clicar em salvar após fazer alterações nas configurações.
           </p>
-          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-6">
+          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-6 bg-primary shadow-lg shadow-primary/30">
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
             Salvar Plataforma
           </Button>

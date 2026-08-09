@@ -147,7 +147,7 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
   return (
     <div className="space-y-6">
       {/* Day chips */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+      <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
         {WEEKDAYS_SHORT.map((label, idx) => {
           const has = plans.some((p) => p.day_of_week === idx);
           const active = idx === selectedDay;
@@ -157,104 +157,113 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
               key={idx}
               disabled={!has}
               onClick={() => has && setSelectedDay(idx)}
-              className={`shrink-0 w-14 h-16 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
+              className={`shrink-0 w-16 h-18 rounded-2xl border flex flex-col items-center justify-center gap-0.5 transition-all duration-200 backdrop-blur-md ${
                 active
-                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-105"
+                  ? "bg-primary text-primary-foreground border-primary/50 shadow-lg shadow-primary/30 scale-105"
                   : has
-                  ? "bg-card border-border hover:border-primary/50"
-                  : "bg-muted/30 border-border/50 text-muted-foreground/40 cursor-not-allowed"
+                  ? "bg-white/5 border-white/10 hover:border-primary/40 hover:bg-white/10 text-foreground"
+                  : "bg-white/[0.02] border-white/5 text-muted-foreground/30 cursor-not-allowed"
               }`}
             >
-              <span className="text-[10px] font-medium tracking-wider opacity-70">{label}</span>
-              <span className="font-display text-lg leading-none">{has ? "•" : "·"}</span>
+              <span className="text-[10px] font-medium tracking-wider uppercase opacity-70">{label}</span>
+              <span className="font-display text-xl leading-none">{has ? "•" : "·"}</span>
               {isToday && !active && <span className="text-[9px] uppercase font-bold text-primary">hoje</span>}
             </button>
           );
         })}
       </div>
 
-      {/* Day hero / stats */}
-      <div className={`relative overflow-hidden rounded-2xl border p-6 ${light ? "bg-card border-border" : "border-border bg-gradient-to-br from-primary/15 via-card to-card"}`}>
-        {!light && <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />}
+      {/* Day hero / stats glass block */}
+      <div className={`relative overflow-hidden rounded-3xl border p-6 sm:p-8 backdrop-blur-xl shadow-2xl transition-all duration-300 ${
+        light ? "bg-card border-border" : "border-white/10 bg-[#131316]/80 shadow-black/50"
+      }`}>
+        {!light && <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-primary/20 blur-3xl pointer-events-none" />}
         {light && <div className="absolute left-0 top-0 h-full w-1.5 bg-primary" />}
-        <div className="relative flex flex-wrap items-end justify-between gap-4">
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
-            <h3 className="font-display text-3xl sm:text-4xl mt-1">
+            <h3 className="font-display text-3xl sm:text-5xl mt-1 tracking-tight text-white">
               {dayPlans.map((p) => p.plan_name).join(" + ") || "Descanso"}
             </h3>
           </div>
-          <div className="flex gap-6 text-sm">
-            <div>
-              <p className="text-2xl font-display leading-none">{totalEx}</p>
+          <div className="flex gap-6 sm:gap-8 text-sm">
+            <div className="rounded-2xl border border-white/8 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
+              <p className="text-2xl font-display leading-none text-white">{totalEx}</p>
               <p className="text-xs text-muted-foreground mt-1">exercícios</p>
             </div>
-            <div>
-              <p className="text-2xl font-display leading-none">{totalSets}</p>
+            <div className="rounded-2xl border border-white/8 bg-white/5 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
+              <p className="text-2xl font-display leading-none text-white">{totalSets}</p>
               <p className="text-xs text-muted-foreground mt-1">séries</p>
             </div>
-            <div>
+            <div className="rounded-2xl border border-primary/20 bg-primary/10 backdrop-blur-md px-4 py-3 text-center min-w-[80px]">
               <p className="text-2xl font-display leading-none text-primary">{progress}%</p>
               <p className="text-xs text-muted-foreground mt-1">concluído</p>
             </div>
           </div>
         </div>
-        <div className="relative mt-5 h-1.5 w-full rounded-full bg-background/60 overflow-hidden">
-          <div className="h-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
+        <div className="relative mt-6 h-2 w-full rounded-full bg-white/8 overflow-hidden">
+          <div
+            className="h-full transition-all duration-500 ease-out"
+            style={{
+              width: `${progress}%`,
+              background: "linear-gradient(90deg, #7C5CFF 0%, #5B8CFF 100%)",
+              boxShadow: progress > 0 ? "0 0 12px rgba(124,92,255,0.5)" : undefined,
+            }}
+          />
         </div>
       </div>
 
-      {/* Plans + exercises */}
+      {/* Plans + exercises glass blocks */}
       {dayPlans.length === 0 ? (
-        <Card className="border-dashed">
+        <Card className="border-dashed border-white/10 bg-white/[0.02]">
           <CardContent className="py-12 text-center text-muted-foreground">
             Nenhum treino programado para {WEEKDAYS[selectedDay].toLowerCase()}. Aproveite para descansar.
           </CardContent>
         </Card>
       ) : dayPlans.map((plan) => (
-        <div key={plan.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
+        <div key={plan.id} className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/8 bg-white/[0.02]">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 shrink-0 rounded-lg bg-primary/15 text-primary grid place-items-center">
-                <Flame className="h-4 w-4" />
+              <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/15 border border-primary/20 text-primary grid place-items-center shadow-md shadow-primary/10">
+                <Flame className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold truncate">{plan.plan_name}</p>
+                <p className="font-semibold text-base text-white truncate">{plan.plan_name}</p>
                 <p className="text-xs text-muted-foreground">{plan.exercises.length} exercícios</p>
               </div>
             </div>
           </div>
           {plan.exercises.length === 0 ? (
-            <p className="p-5 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
+            <p className="p-6 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
           ) : (
-            <ol className="divide-y divide-border">
+            <ol className="divide-y divide-white/5">
               {plan.exercises.map((ex, i) => {
                 const isDone = done.has(ex.id);
                 return (
-                  <li key={ex.id} className={`group flex items-start gap-4 p-4 sm:p-5 transition-colors ${isDone ? "bg-primary/5" : "hover:bg-muted/30"}`}>
+                  <li key={ex.id} className={`group flex items-start gap-4 p-4 sm:p-5 transition-all duration-200 ${isDone ? "bg-primary/8" : "hover:bg-white/[0.04]"}`}>
                     <button
                       onClick={() => toggle(ex.id)}
-                      className={`shrink-0 h-10 w-10 rounded-full grid place-items-center font-display text-sm transition-all ${
+                      className={`shrink-0 h-10 w-10 rounded-2xl grid place-items-center font-display text-sm transition-all duration-200 ${
                         isDone
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground border border-border group-hover:border-primary/50"
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
+                          : "bg-white/5 text-muted-foreground border border-white/10 group-hover:border-primary/50 group-hover:text-white"
                       }`}
                       aria-label={isDone ? "Desmarcar" : "Marcar como feito"}
                     >
                       {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium leading-tight ${isDone ? "line-through text-muted-foreground" : ""}`}>{ex.exercise_name}</p>
-                      {ex.notes && <p className="text-xs text-muted-foreground mt-1">{ex.notes}</p>}
+                      <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
+                      {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
                       <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 text-primary px-2 py-1 font-semibold tabular-nums">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
                           <span className="font-display text-sm">{ex.sets}</span>
                           <span className="opacity-60">×</span>
                           <span className="font-display text-sm">{ex.reps}</span>
                         </span>
                         {ex.rest_seconds ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-muted-foreground">
-                            <Timer className="h-3 w-3" /> {ex.rest_seconds}s
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
+                            <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
                           </span>
                         ) : null}
                       </div>
@@ -426,45 +435,45 @@ function PlataformaPage() {
   return (
     <div className={`min-h-screen bg-background text-foreground ${config.theme === "light" ? "platform-light" : ""}`}>
       <Tabs defaultValue="treino" className="flex flex-col min-h-screen w-full">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0A0A0B]/80 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <h1 className="font-display text-xl sm:text-2xl shrink-0">PERSONAL</h1>
-            <TabsList className="h-11 bg-muted/60 p-1 rounded-full">
-              <TabsTrigger value="treino" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:shadow">
+            <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
+            <TabsList className="h-11 bg-white/5 border border-white/10 p-1 rounded-full backdrop-blur-md">
+              <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
               {showVideos && (
-                <TabsTrigger value="aulas" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:shadow">
+                <TabsTrigger value="aulas" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
                   <Video className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Aulas em vídeo</span>
                 </TabsTrigger>
               )}
             </TabsList>
             <Link
               to="/plataforma/cursos"
-              className="inline-flex items-center gap-2 rounded-full px-4 h-10 text-sm bg-muted/60 hover:bg-background transition shrink-0"
+              className="inline-flex items-center gap-2 rounded-full px-4 h-10 text-xs font-semibold border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition backdrop-blur-md shrink-0 shadow-sm"
             >
-              <BookOpen className="h-4 w-4" /> <span className="hidden sm:inline">Cursos</span>
+              <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Cursos</span>
             </Link>
             <div className="hidden sm:flex items-center gap-2 min-w-0">
-              <p className="text-xs text-muted-foreground truncate max-w-[160px]">{user?.email}</p>
-              <Button variant="ghost" size="sm" onClick={signOut}>
+              <p className="text-xs text-white/40 truncate max-w-[160px] font-mono">{user?.email}</p>
+              <Button variant="ghost" size="sm" onClick={signOut} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">
                 <LogOut className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Sair</span>
               </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="sm:hidden shrink-0" aria-label="Sair">
+            <Button variant="ghost" size="icon" onClick={signOut} className="sm:hidden shrink-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10" aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </header>
 
         {config.announcement_enabled && config.announcement_text && (
-          <div className={`w-full py-2.5 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b ${
-            config.announcement_type === "success" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-            : config.announcement_type === "warning" ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-            : config.announcement_type === "purple" ? "bg-purple-500/15 border-purple-500/30 text-purple-300"
-            : "bg-blue-500/15 border-blue-500/30 text-blue-300"
+          <div className={`w-full py-3 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b backdrop-blur-xl ${
+            config.announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            : config.announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+            : config.announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/20 text-purple-300"
+            : "bg-primary/10 border-primary/20 text-primary-foreground"
           }`}>
-            <Megaphone className="h-4 w-4 shrink-0" />
+            <Megaphone className="h-4 w-4 shrink-0 text-primary" />
             <span>{config.announcement_text}</span>
           </div>
         )}
