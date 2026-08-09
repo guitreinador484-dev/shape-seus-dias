@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { jsPDF } from "jspdf";
 import { toast } from "sonner";
@@ -116,6 +116,7 @@ function CourseDetailPage() {
   const { aula } = useSearch({ from: "/_authenticated/plataforma/cursos/$slug" });
   const { user, role, loading: authLoading } = useAuth();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
+  const navigate = useNavigate();
   const [course, setCourse] = useState<CourseFull | null>(null);
   const [enrolledAt, setEnrolledAt] = useState<string | null>(null);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
@@ -170,6 +171,20 @@ function CourseDetailPage() {
     setLoading(true);
     reload();
   }, [authLoading, user?.id, slug]);
+
+  // Ao mudar ?aula= (ex.: "Continuar de onde parou" na listagem de cursos),
+  // pula direto para a aula indicada mesmo com o curso já montado — antes o
+  // parâmetro só era respeitado no primeiro mount.
+  useEffect(() => {
+    if (!aula || !course) return;
+    const target = course.modules.flatMap((m) => m.lessons).find((l) => l.id === aula);
+    if (target && isLessonUnlocked(target, enrolledAt)) setActiveLessonId(aula);
+  }, [aula, course, enrolledAt]);
+
+  const selectLesson = useCallback((id: string) => {
+    setActiveLessonId(id);
+    navigate({ search: (prev) => ({ ...prev, aula: id }) as never });
+  }, [navigate]);
 
   const allLessons = useMemo(() => course?.modules.flatMap((m) => m.lessons) ?? [], [course]);
   const totalLessons = allLessons.length;
@@ -233,8 +248,8 @@ function CourseDetailPage() {
                 savedSeconds={progress.find((p) => p.lesson_id === activeLesson.id)?.watched_seconds ?? 0}
                 completed={progress.some((p) => p.lesson_id === activeLesson.id && p.completed_at)}
                 onProgress={reload}
-                onPrev={prevLesson && isLessonUnlocked(prevLesson, enrolledAt) ? () => setActiveLessonId(prevLesson.id) : undefined}
-                onNext={nextLessonSequential && isLessonUnlocked(nextLessonSequential, enrolledAt) ? () => setActiveLessonId(nextLessonSequential.id) : undefined}
+                onPrev={prevLesson && isLessonUnlocked(prevLesson, enrolledAt) ? () => selectLesson(prevLesson.id) : undefined}
+                onNext={nextLessonSequential && isLessonUnlocked(nextLessonSequential, enrolledAt) ? () => selectLesson(nextLessonSequential.id) : undefined}
               />
             ) : (
               <Card className="border-border/50 bg-card/40">
@@ -271,7 +286,7 @@ function CourseDetailPage() {
                 {nextLesson ? (
                   <Button
                     className="mt-1 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30 h-11 text-sm font-semibold"
-                    onClick={() => setActiveLessonId(nextLesson.id)}
+                    onClick={() => selectLesson(nextLesson.id)}
                   >
                     <Play className="mr-2 h-4 w-4 fill-current" />
                     {completedCount === 0 ? "Começar agora" : "Continuar de onde parou"}
@@ -291,7 +306,7 @@ function CourseDetailPage() {
               progress={progress}
               activeLessonId={activeLessonId}
               enrolledAt={enrolledAt}
-              onSelect={(id) => setActiveLessonId(id)}
+              onSelect={selectLesson}
             />
           </aside>
         </div>

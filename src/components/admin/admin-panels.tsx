@@ -1363,10 +1363,10 @@ export function AdminSettingsPanel() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle();
+    const { data, error } = await supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1);
     if (error) throw error;
-    setRowId(data?.id ?? null);
-    setSettings(readAdminSettings(data?.content ?? null));
+    setRowId(data?.[0]?.id ?? null);
+    setSettings(readAdminSettings(data?.[0]?.content ?? null));
     setLoading(false);
   }
 
@@ -1426,11 +1426,11 @@ export function AdminPlatformPanel() {
   async function load() {
     setLoading(true);
     const [cfg, wks] = await Promise.all([
-      supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("quiz_config").select("*").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1),
       supabase.from("workouts").select("*").order("display_order", { ascending: true }),
     ]);
-    setRowId(cfg.data?.id ?? null);
-    const loadedSettings = readAdminSettings(cfg.data?.content ?? null);
+    setRowId(cfg.data?.[0]?.id ?? null);
+    const loadedSettings = readAdminSettings(cfg.data?.[0]?.content ?? null);
     setSettings(loadedSettings);
     setWorkouts(wks.data ?? []);
     setLoading(false);

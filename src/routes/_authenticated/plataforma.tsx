@@ -345,7 +345,7 @@ function PlataformaPage() {
           supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
           supabase.from("workouts").select("*").order("display_order", { ascending: true }),
           supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
-          supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+          supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1),
           supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
         ]);
         if (cancelled) return;
@@ -354,7 +354,7 @@ function PlataformaPage() {
         setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
         setWorkouts(workoutsRes.data ?? []);
         setHasClassAccess(Boolean(profileRes.data?.has_class_access));
-        setConfig(readConfig(cfgRes.data?.content ?? null));
+        setConfig(readConfig(cfgRes.data?.[0]?.content ?? null));
         setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
       } catch (e) {
         if (!cancelled) setDataError(e instanceof Error ? e.message : "Erro ao carregar a plataforma");
