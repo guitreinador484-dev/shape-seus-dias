@@ -26,6 +26,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, Video, Upload, Save, X, FileText, Link2, Users, MessageSquare } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toggleCourseEnrollment } from "@/lib/admin.functions";
 
 export function AdminCourseEditor({ courseId }: { courseId: string }) {
   const [course, setCourse] = useState<CourseFull | null>(null);
@@ -455,12 +457,10 @@ function EnrollmentsPanel({ courseId }: { courseId: string }) {
   }
   useEffect(() => { reload(); }, [courseId]);
 
+  const toggleEnrollmentFn = useServerFn(toggleCourseEnrollment);
+
   async function toggle(userId: string) {
-    if (enrolled.has(userId)) {
-      await supabase.from("course_enrollments").delete().eq("course_id", courseId).eq("user_id", userId);
-    } else {
-      await supabase.from("course_enrollments").insert({ course_id: courseId, user_id: userId });
-    }
+    await toggleEnrollmentFn({ data: { course_id: courseId, user_id: userId, enrolled: !enrolled.has(userId) } });
     reload();
   }
 

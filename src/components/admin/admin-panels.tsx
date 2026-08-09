@@ -39,7 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { createStudent } from "@/lib/admin.functions";
+import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -349,19 +349,23 @@ export function AdminStudentsPanel() {
   const registeredEmails = new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean));
   const buyersWithoutAccount = purchases.filter((p) => p.customer_email && !registeredEmails.has(p.customer_email.toLowerCase()));
 
+  const updateStudentFn = useServerFn(updateStudentStatus);
+
   async function updateStudent(student: Student, patch: Partial<Profile>, nextRole?: AppRole) {
     if (isAdminEmail(student.email) && nextRole && nextRole !== "admin") {
       toast.error("Este email precisa continuar como administrador.");
       return;
     }
-    const { error } = await supabase.from("profiles").update(patch).eq("id", student.id);
-    if (error) throw error;
-    if (nextRole && nextRole !== student.role) {
-      const { error: deleteError } = await supabase.from("user_roles").delete().eq("user_id", student.id);
-      if (deleteError) throw deleteError;
-      const { error: insertError } = await supabase.from("user_roles").insert({ user_id: student.id, role: nextRole });
-      if (insertError) throw insertError;
-    }
+    await updateStudentFn({
+      data: {
+        userId: student.id,
+        full_name: patch.full_name ?? undefined,
+        whatsapp: patch.whatsapp ?? undefined,
+        has_class_access: patch.has_class_access,
+        is_active: patch.is_active,
+        role: nextRole && nextRole !== student.role ? nextRole : undefined,
+      },
+    });
     toast.success("Aluno atualizado");
     await load();
   }
@@ -930,16 +934,15 @@ export function AdminTrainingPanel() {
     });
   }, []);
 
+  const createPlanFn = useServerFn(createTrainingPlan);
+  const deletePlanFn = useServerFn(deleteTrainingPlan);
+
   async function createPlan() {
     if (!selectedStudent) {
       toast.error("Selecione um aluno.");
       return;
     }
-    const { error } = await supabase.from("student_plans").insert({ student_id: selectedStudent, day_of_week: Number(dayOfWeek), plan_name: planName || "Treino" });
-    if (error) {
-      toast.error("Erro ao criar treino", { description: error.message });
-      return;
-    }
+    await createPlanFn({ data: { student_id: selectedStudent, day_of_week: Number(dayOfWeek), plan_name: planName || "Treino" } });
     setPlanName("");
     toast.success("Treino criado");
     await load();
@@ -947,16 +950,7 @@ export function AdminTrainingPanel() {
 
   async function deletePlan(id: string) {
     if (!confirm("Excluir este treino e todos os seus exercícios?")) return;
-    const { error: exerciseError } = await supabase.from("student_plan_exercises").delete().eq("plan_id", id);
-    if (exerciseError) {
-      toast.error("Erro ao remover exercícios", { description: exerciseError.message });
-      return;
-    }
-    const { error } = await supabase.from("student_plans").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao remover treino", { description: error.message });
-      return;
-    }
+    await deletePlanFn({ data: { planId: id } });
     toast.success("Treino removido");
     await load();
   }
@@ -1018,21 +1012,22 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
   const [librarySearch, setLibrarySearch] = useState("");
   const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string } | null>(null);
 
+  const addExerciseFn = useServerFn(addPlanExercise);
+  const deleteExerciseFn = useServerFn(deletePlanExercise);
+
   async function confirmAddFromLibrary() {
     if (!pending) return;
-    const { error } = await supabase.from("student_plan_exercises").insert({
-      plan_id: plan.id,
-      exercise_name: pending.name,
-      sets: pending.sets,
-      reps: pending.reps,
-      rest_seconds: Number(pending.rest || 0),
-      notes: "",
-      display_order: plan.exercises.length + 1,
+    await addExerciseFn({
+      data: {
+        plan_id: plan.id,
+        exercise_name: pending.name,
+        sets: pending.sets,
+        reps: pending.reps,
+        rest_seconds: Number(pending.rest || 0),
+        notes: "",
+        display_order: plan.exercises.length + 1,
+      },
     });
-    if (error) {
-      toast.error("Erro ao adicionar exercício", { description: error.message });
-      return;
-    }
     toast.success(`${pending.name} adicionado`);
     setPending(null);
     await onReload();
@@ -1043,11 +1038,17 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
       toast.error("Informe o exercício.");
       return;
     }
-    const { error } = await supabase.from("student_plan_exercises").insert({ plan_id: plan.id, exercise_name: exerciseName, sets, reps, rest_seconds: Number(rest || 0), notes, display_order: plan.exercises.length + 1 });
-    if (error) {
-      toast.error("Erro ao adicionar exercício", { description: error.message });
-      return;
-    }
+    await addExerciseFn({
+      data: {
+        plan_id: plan.id,
+        exercise_name: exerciseName,
+        sets: sets || null,
+        reps: reps || null,
+        rest_seconds: Number(rest || 0),
+        notes: notes || null,
+        display_order: plan.exercises.length + 1,
+      },
+    });
     setExerciseName("");
     setSets("");
     setReps("");
@@ -1057,11 +1058,7 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
   }
 
   async function deleteExercise(id: string) {
-    const { error } = await supabase.from("student_plan_exercises").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao excluir exercício", { description: error.message });
-      return;
-    }
+    await deleteExerciseFn({ data: { exerciseId: id } });
     toast.success("Exercício removido");
     await onReload();
   }
@@ -1197,20 +1194,20 @@ export function AdminSalesPanel() {
     });
   }, []);
 
+  const savePurchaseFn = useServerFn(savePurchase);
+
   async function createPurchase() {
     const student = students.find((item) => item.id === form.user_id);
-    const { error } = await supabase.from("purchases").insert({
-      user_id: form.user_id === "none" ? null : form.user_id,
-      amount: Number(form.amount || 0),
-      status: form.status,
-      customer_name: form.customer_name || student?.full_name || null,
-      customer_email: form.customer_email || student?.email || null,
-      transaction_id: form.transaction_id || null,
+    await savePurchaseFn({
+      data: {
+        user_id: form.user_id === "none" ? null : form.user_id,
+        amount: Number(form.amount || 0),
+        status: form.status,
+        customer_name: form.customer_name || student?.full_name || null,
+        customer_email: form.customer_email || student?.email || null,
+        transaction_id: form.transaction_id || null,
+      },
     });
-    if (error) {
-      toast.error("Erro ao criar venda", { description: error.message });
-      return;
-    }
     if (["approved", "paid"].includes(form.status) && form.user_id !== "none") {
       toast.success("Venda registrada — acesso liberado para o aluno");
     } else {
@@ -1221,11 +1218,17 @@ export function AdminSalesPanel() {
 
   async function updateStatus(id: string, status: string) {
     const purchase = purchases.find((item) => item.id === id);
-    const { error } = await supabase.from("purchases").update({ status }).eq("id", id);
-    if (error) {
-      toast.error("Erro ao atualizar venda", { description: error.message });
-      return;
-    }
+    await savePurchaseFn({
+      data: {
+        id,
+        user_id: purchase?.user_id ?? null,
+        amount: Number(purchase?.amount ?? 0),
+        status,
+        customer_name: purchase?.customer_name ?? null,
+        customer_email: purchase?.customer_email ?? null,
+        transaction_id: purchase?.transaction_id ?? null,
+      },
+    });
     if (["approved", "paid"].includes(status)) {
       toast.success("Venda aprovada — acesso liberado para o aluno");
     } else if (purchase && ["approved", "paid"].includes(purchase.status)) {

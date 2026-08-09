@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, AlertCircle, RefreshCw } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
@@ -315,6 +315,7 @@ function PlataformaPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
+  const [isActive, setIsActive] = useState<boolean>(true);
   const [signedUrls, setSignedUrls] = useState<Record<string, { video?: string; thumb?: string }>>({});
   const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
   const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
@@ -340,11 +341,28 @@ function PlataformaPage() {
       setDataLoading(true);
       setDataError(null);
       try {
-        const [plansRes, exRes, workoutsRes, profileRes, cfgRes, progRes] = await Promise.all([
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("has_class_access, is_active")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+        if (profileError) throw profileError;
+        setHasClassAccess(Boolean(profile?.has_class_access));
+        setIsActive(profile?.is_active ?? true);
+        const hasAccess = Boolean(profile?.has_class_access) && (profile?.is_active ?? true);
+        if (!hasAccess) {
+          setPlans([]);
+          setWorkouts([]);
+          setWorkoutProgress({});
+          setConfig(defaultConfig);
+          setDataLoading(false);
+          return;
+        }
+        const [plansRes, exRes, workoutsRes, cfgRes, progRes] = await Promise.all([
           supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
           supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
           supabase.from("workouts").select("*").order("display_order", { ascending: true }),
-          supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
           supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1),
           supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
         ]);
@@ -353,7 +371,6 @@ function PlataformaPage() {
         const allEx = exRes.data ?? [];
         setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
         setWorkouts(workoutsRes.data ?? []);
-        setHasClassAccess(Boolean(profileRes.data?.has_class_access));
         setConfig(readConfig(cfgRes.data?.[0]?.content ?? null));
         setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
       } catch (e) {
@@ -366,17 +383,17 @@ function PlataformaPage() {
   }, [loading, user, role]);
 
   useEffect(() => {
-    if (!hasClassAccess || !config.hero_image_path) { setHeroBannerUrl(""); return; }
+    if (!hasClassAccess || !isActive || !config.hero_image_path) { setHeroBannerUrl(""); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(config.hero_image_path, 3600);
       if (!cancelled && data?.signedUrl) setHeroBannerUrl(data.signedUrl);
     })();
     return () => { cancelled = true; };
-  }, [hasClassAccess, config.hero_image_path]);
+  }, [hasClassAccess, isActive, config.hero_image_path]);
 
   useEffect(() => {
-    if (!hasClassAccess || workouts.length === 0) return;
+    if (!hasClassAccess || !isActive || workouts.length === 0) return;
     let cancelled = false;
     (async () => {
       const entries = await Promise.all(workouts.map(async (w) => {
@@ -395,7 +412,7 @@ function PlataformaPage() {
       setSignedUrls(Object.fromEntries(entries));
     })();
     return () => { cancelled = true; };
-  }, [hasClassAccess, workouts]);
+  }, [hasClassAccess, isActive, workouts]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -424,7 +441,7 @@ function PlataformaPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const showVideos = hasClassAccess;
+  const showVideos = hasClassAccess && isActive;
   const isLight = config.theme === "light";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
@@ -573,6 +590,19 @@ function PlataformaPage() {
                   <Button variant="outline" className="rounded-full" onClick={() => window.location.reload()}>
                     <RefreshCw className="h-4 w-4 mr-2" /> Tentar novamente
                   </Button>
+                </CardContent>
+              </Card>
+            ) : !isActive && !dataLoading ? (
+              <Card className="border-red-500/30 bg-red-500/5">
+                <CardContent className="py-12 text-center space-y-3">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-500/10 text-red-500">
+                    <Ban className="h-6 w-6" />
+                  </div>
+                  <h2 className="font-display text-3xl text-white tracking-tight">Acesso bloqueado</h2>
+                  <p className="text-sm text-white/60 max-w-md mx-auto leading-relaxed">
+                    Sua conta foi desativada. Fale com seu personal trainer para reativar o acesso.
+                  </p>
+                  <p className="text-xs text-white/40 pt-1">{user?.email}</p>
                 </CardContent>
               </Card>
             ) : !hasClassAccess && !dataLoading ? (
