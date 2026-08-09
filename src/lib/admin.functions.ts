@@ -287,3 +287,102 @@ export const toggleCourseEnrollment = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+/* ---------------- Nutrição ---------------- */
+
+type NutritionItemInput = {
+  food: string;
+  amount?: string | null;
+  calories?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fat?: number | null;
+};
+
+type NutritionMealInput = {
+  meal_label: string;
+  notes?: string | null;
+  items?: NutritionItemInput[];
+};
+
+export const createNutritionPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { student_id: string; plan_name?: string }) => {
+    if (!input?.student_id) throw new Error("Aluno não informado");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { data: plan, error } = await supabaseAdmin
+      .from("nutrition_plans")
+      .insert({ student_id: data.student_id, plan_name: data.plan_name || "Plano alimentar" })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true as const, plan_id: plan.id };
+  });
+
+export const deleteNutritionPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { planId: string }) => {
+    if (!input?.planId) throw new Error("Plano não informado");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { error } = await supabaseAdmin.from("nutrition_plans").delete().eq("id", data.planId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+type SaveNutritionPlanInput = {
+  planId: string;
+  plan_name?: string;
+  meals: NutritionMealInput[];
+};
+
+/** Substitui todas as refeições e itens do plano de uma vez. */
+export const saveNutritionPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: SaveNutritionPlanInput) => {
+    if (!input?.planId) throw new Error("Plano não informado");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+
+    if (data.plan_name) {
+      const { error: nameErr } = await supabaseAdmin.from("nutrition_plans").update({ plan_name: data.plan_name }).eq("id", data.planId);
+      if (nameErr) throw new Error(nameErr.message);
+    }
+
+    const { error: delMealsErr } = await supabaseAdmin.from("nutrition_meals").delete().eq("plan_id", data.planId);
+    if (delMealsErr) throw new Error(delMealsErr.message);
+
+    for (const [mi, meal] of (data.meals ?? []).entries()) {
+      const { data: inserted, error: mealErr } = await supabaseAdmin
+        .from("nutrition_meals")
+        .insert({ plan_id: data.planId, meal_label: meal.meal_label, meal_order: mi, notes: meal.notes ?? null })
+        .select("id")
+        .single();
+      if (mealErr) throw new Error(mealErr.message);
+      const rows = (meal.items ?? []).map((item, ii) => ({
+        meal_id: inserted.id,
+        food: item.food,
+        amount: item.amount ?? null,
+        calories: item.calories ?? null,
+        protein: item.protein ?? null,
+        carbs: item.carbs ?? null,
+        fat: item.fat ?? null,
+        display_order: ii,
+      }));
+      if (rows.length) {
+        const { error: itemsErr } = await supabaseAdmin.from("nutrition_items").insert(rows);
+        if (itemsErr) throw new Error(itemsErr.message);
+      }
+    }
+    return { ok: true as const };
+  });

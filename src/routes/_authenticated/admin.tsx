@@ -14,6 +14,7 @@ import {
   Sparkles,
   Settings,
   BookOpen,
+  Apple,
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
   { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
+  { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
   { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },

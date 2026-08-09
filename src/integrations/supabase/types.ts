@@ -708,6 +708,114 @@ export type Database = {
           },
         ]
       }
+      nutrition_items: {
+        Row: {
+          amount: string | null
+          calories: number | null
+          carbs: number | null
+          display_order: number
+          fat: number | null
+          food: string
+          id: string
+          meal_id: string
+          protein: number | null
+        }
+        Insert: {
+          amount?: string | null
+          calories?: number | null
+          carbs?: number | null
+          display_order?: number
+          fat?: number | null
+          food: string
+          id?: string
+          meal_id: string
+          protein?: number | null
+        }
+        Update: {
+          amount?: string | null
+          calories?: number | null
+          carbs?: number | null
+          display_order?: number
+          fat?: number | null
+          food?: string
+          id?: string
+          meal_id?: string
+          protein?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_items_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_meals"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      nutrition_meals: {
+        Row: {
+          id: string
+          meal_label: string
+          meal_order: number
+          notes: string | null
+          plan_id: string
+        }
+        Insert: {
+          id?: string
+          meal_label: string
+          meal_order?: number
+          notes?: string | null
+          plan_id: string
+        }
+        Update: {
+          id?: string
+          meal_label?: string
+          meal_order?: number
+          notes?: string | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_meals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_plans"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      nutrition_plans: {
+        Row: {
+          created_at: string
+          id: string
+          plan_name: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_name?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_name?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_plans_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
