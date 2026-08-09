@@ -6,6 +6,7 @@ import {
   uploadCourseAsset,
   signedAsset,
   deleteCourseAsset,
+  deleteLessonAssets,
   slugify,
   listAllProfiles,
   listCourseEnrollments,
@@ -148,8 +149,9 @@ function ModulesEditor({ course, onChange }: { course: CourseFull; onChange: () 
     await supabase.from("course_modules").update({ title }).eq("id", m.id);
     onChange();
   }
-  async function removeModule(m: CourseModule) {
+  async function removeModule(m: CourseModule & { lessons: CourseLesson[] }) {
     if (!confirm(`Excluir módulo "${m.title}" e suas aulas?`)) return;
+    await Promise.all(m.lessons.map((l) => deleteLessonAssets(l.id)));
     await supabase.from("course_modules").delete().eq("id", m.id);
     onChange();
   }
@@ -219,8 +221,7 @@ function LessonsEditor({ module, onChange }: { module: CourseModule & { lessons:
   }
   async function removeLesson(l: CourseLesson) {
     if (!confirm(`Excluir aula "${l.title}"?`)) return;
-    await deleteCourseAsset(l.video_path);
-    await deleteCourseAsset(l.thumbnail_path);
+    await deleteLessonAssets(l.id);
     await supabase.from("course_lessons").delete().eq("id", l.id);
     onChange();
   }

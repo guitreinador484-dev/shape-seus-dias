@@ -4,10 +4,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   listCoursesAdmin,
+  loadCourseFull,
   slugify,
   uploadCourseAsset,
   signedAsset,
-  deleteCourseAsset,
+  deleteCourseAssets,
   type Course,
 } from "@/lib/courses-api";
 import { Button } from "@/components/ui/button";
@@ -46,8 +47,9 @@ export function AdminCoursesListPanel() {
     reload();
   }
   async function remove(c: Course) {
-    if (!confirm(`Excluir "${c.title}"? Aulas e progresso serão removidos.`)) return;
-    await deleteCourseAsset(c.cover_path);
+    if (!confirm(`Excluir "${c.title}"? Aulas, progresso e arquivos (vídeos, capas e materiais) serão removidos.`)) return;
+    const full = await loadCourseFull(c.id);
+    if (full) await deleteCourseAssets(full);
     const { error } = await supabase.from("courses").delete().eq("id", c.id);
     if (error) return toast.error(error.message);
     toast.success("Curso excluído");

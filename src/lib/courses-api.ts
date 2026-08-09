@@ -68,6 +68,40 @@ export async function deleteCourseAsset(path: string | null | undefined) {
   await supabase.storage.from("course-assets").remove([path]);
 }
 
+/** Remove todos os arquivos de storage de uma aula (vídeo, thumbnail e materiais). */
+export async function deleteLessonAssets(lessonId: string) {
+  const paths: string[] = [];
+  const { data: lessons } = await supabase
+    .from("course_lessons").select("video_path, thumbnail_path").eq("id", lessonId).limit(1);
+  const lesson = lessons?.[0];
+  if (lesson?.video_path) paths.push(lesson.video_path);
+  if (lesson?.thumbnail_path) paths.push(lesson.thumbnail_path);
+  const { data: mats } = await supabase
+    .from("lesson_materials").select("file_path").eq("lesson_id", lessonId);
+  for (const m of mats ?? []) if (m.file_path) paths.push(m.file_path);
+  if (paths.length) await supabase.storage.from("course-assets").remove(paths);
+}
+
+/** Remove todos os arquivos de storage de um curso completo (capa, vídeos, thumbs, materiais). */
+export async function deleteCourseAssets(course: CourseFull) {
+  const paths: string[] = [];
+  if (course.cover_path) paths.push(course.cover_path);
+  const lessonIds: string[] = [];
+  for (const m of course.modules) {
+    for (const l of m.lessons) {
+      lessonIds.push(l.id);
+      if (l.video_path) paths.push(l.video_path);
+      if (l.thumbnail_path) paths.push(l.thumbnail_path);
+    }
+  }
+  if (lessonIds.length) {
+    const { data: mats } = await supabase
+      .from("lesson_materials").select("file_path").in("lesson_id", lessonIds);
+    for (const m of mats ?? []) if (m.file_path) paths.push(m.file_path);
+  }
+  if (paths.length) await supabase.storage.from("course-assets").remove(paths);
+}
+
 export async function signedAsset(path: string | null | undefined, expires = 3600): Promise<string | null> {
   if (!path) return null;
   const { data } = await supabase.storage.from("course-assets").createSignedUrl(path, expires);

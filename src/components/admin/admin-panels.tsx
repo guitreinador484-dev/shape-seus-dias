@@ -681,10 +681,18 @@ export function AdminLessonsPanel() {
   }
 
   async function removeWorkout(id: string) {
-    const { error } = await supabase.from("workouts").delete().eq("id", id);
-    if (error) throw error;
-    toast.success("Aula removida");
-    await load();
+    const workout = workouts.find((w) => w.id === id);
+    if (!confirm(`Excluir a aula "${workout?.title ?? ""}"?`)) return;
+    try {
+      if (workout?.video_path) await supabase.storage.from("workout-videos").remove([workout.video_path]);
+      if (workout?.thumbnail_path) await supabase.storage.from("workout-thumbnails").remove([workout.thumbnail_path]);
+      const { error } = await supabase.from("workouts").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Aula removida");
+      await load();
+    } catch (error) {
+      toast.error("Erro ao excluir aula", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
   }
 
   return (
@@ -939,6 +947,7 @@ export function AdminTrainingPanel() {
   }
 
   async function deletePlan(id: string) {
+    if (!confirm("Excluir este treino e todos os seus exercícios?")) return;
     const { error: exerciseError } = await supabase.from("student_plan_exercises").delete().eq("plan_id", id);
     if (exerciseError) {
       toast.error("Erro ao remover exercícios", { description: exerciseError.message });
