@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import SearchInput from "@/components/ui/search-input";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -34,6 +35,8 @@ function MyCoursesPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [continueItems, setContinueItems] = useState<ContinueItem[]>([]);
   const [recommended, setRecommended] = useState<RecommendedModule[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const filteredRows = useMemo(() => rows.filter(r => r.course.title.toLowerCase().includes(searchTerm.toLowerCase())), [rows, searchTerm]);
   const [railsLoading, setRailsLoading] = useState(true);
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -151,7 +154,7 @@ function MyCoursesPage() {
                 size="lg"
                 className="rounded-full px-7"
                 onClick={() => {
-                  const c = continueItems[0];
+                  const c = continueItems?.[0];
                   if (c) navigate({ to: "/plataforma/cursos/$slug", params: { slug: c.courseSlug }, search: { aula: c.lessonId } as never });
                   else if (featured) navigate({ to: "/plataforma/cursos/$slug", params: { slug: featured.course.slug } });
                 }}
@@ -174,6 +177,14 @@ function MyCoursesPage() {
         </div>
       )}
 
+      {/* Search Bar */}
+      <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+        <SearchInput
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar cursos..."
+        />
+      </div>
       {/* Carrossel de cursos */}
       <section className="mx-auto max-w-6xl space-y-6 px-4 pb-12 sm:px-6">
         <div className="flex items-end justify-between gap-4">
@@ -240,7 +251,7 @@ function MyCoursesPage() {
           </button>
 
           <div ref={railRef} className="flex gap-5 overflow-x-auto pb-4 snap-x scrollbar-none">
-            {rows.map((r) => {
+            {filteredRows.map((r) => {
               const pct = r.totalLessons ? Math.round((r.completedLessons / r.totalLessons) * 100) : 0;
               return (
                 <button
