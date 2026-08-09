@@ -33,6 +33,7 @@ import {
   Info,
   Image as ImageIcon,
   Layers,
+  BookOpen,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -1403,11 +1404,13 @@ export function AdminSettingsPanel() {
 
 export const adminCards = [
   { title: "Alunos", url: "/admin/alunos", icon: Users, desc: "Edite alunos, acesso, status e tipo." },
+  { title: "Cursos", url: "/admin/cursos", icon: BookOpen, desc: "Crie cursos, módulos e aulas com vídeo." },
   { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video, desc: "Cadastre aulas, categorias e vídeos." },
   { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video, desc: "Banner, destaque e ordem das prateleiras Netflix." },
   { title: "Treinos", url: "/admin/treinos", icon: Dumbbell, desc: "Monte planos por aluno e exercícios." },
   { title: "Vendas", url: "/admin/vendas", icon: BadgeDollarSign, desc: "Registre vendas e status de pagamento." },
-  { title: "Quiz / Anamnese", url: "/admin/quiz", icon: ClipboardList, desc: "Edite perguntas e veja respostas." },
+  { title: "Quiz de Vendas", url: "/admin/quiz-vendas", icon: ClipboardList, desc: "Crie quizzes para qualificar leads." },
+  { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles, desc: "Configure páginas de venda e captura." },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings, desc: "Ajuste marca, contato e links." },
 ];
 
