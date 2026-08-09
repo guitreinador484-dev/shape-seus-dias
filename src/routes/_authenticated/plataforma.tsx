@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
 
@@ -115,6 +116,12 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
     }
   }, [plans]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sincroniza o estado com o que veio do banco (exercícios já marcados).
+  useEffect(() => {
+    const completedIds = plans.flatMap((p) => p.exercises).filter((e) => e.completed_at).map((e) => e.id);
+    setDone(new Set(completedIds));
+  }, [plans]);
+
   if (loading) return <Skeleton className="h-64" />;
   if (plans.length === 0) {
     return (
@@ -137,11 +144,29 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
   const progress = totalEx ? Math.round((completed / totalEx) * 100) : 0;
 
   function toggle(id: string) {
+    const wasDone = done.has(id);
     setDone((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+    // Persiste no banco (optimistic; reverte em caso de erro).
+    supabase
+      .from("student_plan_exercises")
+      .update({ completed_at: wasDone ? null : new Date().toISOString() })
+      .eq("id", id)
+      .then(({ error }) => {
+        if (error) {
+          toast.error("Erro ao salvar progresso", { description: error.message });
+          setDone((prev) => {
+            const next = new Set(prev);
+            if (next.has(id) === wasDone) {
+              if (next.has(id)) next.delete(id); else next.add(id);
+            }
+            return next;
+          });
+        }
+      });
   }
 
   return (
@@ -293,8 +318,10 @@ function PlataformaPage() {
   const [signedUrls, setSignedUrls] = useState<Record<string, { video?: string; thumb?: string }>>({});
   const [config, setConfig] = useState<PlatformConfig>(defaultConfig);
   const [heroBannerUrl, setHeroBannerUrl] = useState<string>("");
-  const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string } | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{ id: string; url: string; title: string; startAt?: number } | null>(null);
   const [embedVideo, setEmbedVideo] = useState<{ url: string; title: string } | null>(null);
+  const [workoutProgress, setWorkoutProgress] = useState<Record<string, { watched_seconds: number; completed_at: string | null }>>({});
+  const lastSavedRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -310,12 +337,13 @@ function PlataformaPage() {
     let cancelled = false;
     (async () => {
       setDataLoading(true);
-      const [plansRes, exRes, workoutsRes, profileRes, cfgRes] = await Promise.all([
+      const [plansRes, exRes, workoutsRes, profileRes, cfgRes, progRes] = await Promise.all([
         supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
         supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
         supabase.from("workouts").select("*").order("display_order", { ascending: true }),
         supabase.from("profiles").select("has_class_access").eq("id", user.id).maybeSingle(),
         supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
       ]);
       if (cancelled) return;
       const allPlans = plansRes.data ?? [];
@@ -324,6 +352,7 @@ function PlataformaPage() {
       setWorkouts(workoutsRes.data ?? []);
       setHasClassAccess(Boolean(profileRes.data?.has_class_access));
       setConfig(readConfig(cfgRes.data?.content ?? null));
+      setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
       setDataLoading(false);
     })();
     return () => { cancelled = true; };
@@ -408,12 +437,51 @@ function PlataformaPage() {
 
   function playWorkout(w: Workout) {
     const url = signedUrls[w.id]?.video;
-    if (url) { setActiveVideo({ id: w.id, url, title: w.title }); return; }
-    if (w.video_url) {
-      const embed = toEmbedUrl(w.video_url);
-      if (embed) setEmbedVideo({ url: embed, title: w.title });
-      else setActiveVideo({ id: w.id, url: w.video_url, title: w.title });
+    if (!url) {
+      if (w.video_url) {
+        const embed = toEmbedUrl(w.video_url);
+        if (embed) setEmbedVideo({ url: embed, title: w.title });
+        else setActiveVideo({ id: w.id, url: w.video_url, title: w.title });
+      }
+      return;
     }
+    const saved = workoutProgress[w.id];
+    const resumed = saved && !saved.completed_at && saved.watched_seconds > 30;
+    const workout = workouts.find((x) => x.id === w.id);
+    const dur = (workout?.duration_minutes ?? 0) * 60;
+    const startAt = resumed && (!dur || saved.watched_seconds < dur - 10) ? saved.watched_seconds : 0;
+    setActiveVideo({ id: w.id, url, title: w.title, startAt });
+  }
+
+  function persistWorkoutProgress(id: string, seconds: number, completedAt: string | null) {
+    if (!user) return;
+    supabase
+      .from("workout_progress")
+      .upsert(
+        { user_id: user.id, workout_id: id, watched_seconds: Math.floor(seconds), completed_at: completedAt },
+        { onConflict: "user_id,workout_id" },
+      )
+      .then(({ error }) => {
+        if (error) console.error("[workout] falha ao salvar progresso", error.message);
+      });
+    setWorkoutProgress((prev) => ({ ...prev, [id]: { watched_seconds: Math.floor(seconds), completed_at: completedAt } }));
+  }
+
+  function onWorkoutTime(id: string) {
+    return (seconds: number, duration: number) => {
+      const cur = Math.floor(seconds);
+      const last = lastSavedRef.current[id] ?? 0;
+      const nearEnd = duration > 0 && cur >= duration - 2;
+      if (cur >= last + 10 || nearEnd) {
+        lastSavedRef.current[id] = cur;
+        persistWorkoutProgress(id, cur, null);
+      }
+    };
+  }
+
+  function onWorkoutEnded(id: string) {
+    const dur = (workouts.find((w) => w.id === id)?.duration_minutes ?? 0) * 60;
+    persistWorkoutProgress(id, dur, new Date().toISOString());
   }
 
   /** Next playable workout in the same category, for the "next up" prompt. */
@@ -541,9 +609,10 @@ function PlataformaPage() {
                               poster={signedUrls[activeVideo.id]?.thumb || activeWorkout.thumbnail_url || undefined}
                               subtitle={activeWorkout.category || "Assistindo"}
                               autoPlay={false}
-                              startAt={0}
-                              onEnded={nextPlayable(activeVideo.id) ? () => playWorkout(nextPlayable(activeVideo.id)!) : undefined}
-                              onNext={nextPlayable(activeVideo.id) ? () => playWorkout(nextPlayable(activeVideo.id)!) : undefined}
+                              startAt={activeVideo.startAt ?? 0}
+                              onTime={onWorkoutTime(activeVideo.id)}
+                              onEnded={nextPlayable(activeVideo.id) ? () => { onWorkoutEnded(activeVideo.id); playWorkout(nextPlayable(activeVideo.id)!); } : () => onWorkoutEnded(activeVideo.id)}
+                              onNext={nextPlayable(activeVideo.id) ? () => { onWorkoutEnded(activeVideo.id); playWorkout(nextPlayable(activeVideo.id)!); } : undefined}
                               nextLabel="Próxima aula"
                               onClose={() => setActiveVideo(null)}
                               className="h-full w-full"

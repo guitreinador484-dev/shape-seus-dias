@@ -490,6 +490,7 @@ export type Database = {
       }
       student_plan_exercises: {
         Row: {
+          completed_at: string | null
           display_order: number
           exercise_name: string
           id: string
@@ -500,6 +501,7 @@ export type Database = {
           sets: string | null
         }
         Insert: {
+          completed_at?: string | null
           display_order?: number
           exercise_name: string
           id?: string
@@ -510,6 +512,7 @@ export type Database = {
           sets?: string | null
         }
         Update: {
+          completed_at?: string | null
           display_order?: number
           exercise_name?: string
           id?: string
@@ -662,6 +665,45 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      workout_progress: {
+        Row: {
+          completed_at: string | null
+          updated_at: string
+          user_id: string
+          watched_seconds: number
+          workout_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          updated_at?: string
+          user_id: string
+          watched_seconds?: number
+          workout_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          updated_at?: string
+          user_id?: string
+          watched_seconds?: number
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_progress_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workout_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
