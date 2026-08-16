@@ -352,90 +352,33 @@ export type Database = {
       }
       profiles: {
         Row: {
-          access_expires_at: string | null
           created_at: string
           email: string
           full_name: string | null
           has_class_access: boolean
           id: string
           is_active: boolean
-          referral_code: string
-          referred_by: string | null
           updated_at: string
           whatsapp: string | null
         }
         Insert: {
-          access_expires_at?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           has_class_access?: boolean
           id: string
           is_active?: boolean
-          referral_code?: string
-          referred_by?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
         Update: {
-          access_expires_at?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           has_class_access?: boolean
           id?: string
           is_active?: boolean
-          referral_code?: string
-          referred_by?: string | null
           updated_at?: string
-          whatsapp?: string | null
-        }
-        Relationships: []
-      }
-      leads: {
-        Row: {
-          answers: Json
-          created_at: string
-          email: string | null
-          id: string
-          name: string | null
-          plan_id: string | null
-          profile: string | null
-          quiz_slug: string | null
-          quiz_title: string | null
-          score: number | null
-          source: string
-          status: string
-          whatsapp: string | null
-        }
-        Insert: {
-          answers?: Json
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string | null
-          plan_id?: string | null
-          profile?: string | null
-          quiz_slug?: string | null
-          quiz_title?: string | null
-          score?: number | null
-          source?: string
-          status?: string
-          whatsapp?: string | null
-        }
-        Update: {
-          answers?: Json
-          created_at?: string
-          email?: string | null
-          id?: string
-          name?: string | null
-          plan_id?: string | null
-          profile?: string | null
-          quiz_slug?: string | null
-          quiz_title?: string | null
-          score?: number | null
-          source?: string
-          status?: string
           whatsapp?: string | null
         }
         Relationships: []
@@ -499,7 +442,6 @@ export type Database = {
       }
       student_plan_exercises: {
         Row: {
-          completed_at: string | null
           display_order: number
           exercise_name: string
           id: string
@@ -510,7 +452,6 @@ export type Database = {
           sets: string | null
         }
         Insert: {
-          completed_at?: string | null
           display_order?: number
           exercise_name: string
           id?: string
@@ -521,7 +462,6 @@ export type Database = {
           sets?: string | null
         }
         Update: {
-          completed_at?: string | null
           display_order?: number
           exercise_name?: string
           id?: string
@@ -674,250 +614,6 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
-      }
-      workout_progress: {
-        Row: {
-          completed_at: string | null
-          updated_at: string
-          user_id: string
-          watched_seconds: number
-          workout_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          updated_at?: string
-          user_id: string
-          watched_seconds?: number
-          workout_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          updated_at?: string
-          user_id?: string
-          watched_seconds?: number
-          workout_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workout_progress_workout_id_fkey"
-            columns: ["workout_id"]
-            isOneToOne: false
-            referencedRelation: "workouts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "workout_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      nutrition_items: {
-        Row: {
-          amount: string | null
-          calories: number | null
-          carbs: number | null
-          display_order: number
-          fat: number | null
-          food: string
-          id: string
-          meal_id: string
-          protein: number | null
-        }
-        Insert: {
-          amount?: string | null
-          calories?: number | null
-          carbs?: number | null
-          display_order?: number
-          fat?: number | null
-          food: string
-          id?: string
-          meal_id: string
-          protein?: number | null
-        }
-        Update: {
-          amount?: string | null
-          calories?: number | null
-          carbs?: number | null
-          display_order?: number
-          fat?: number | null
-          food?: string
-          id?: string
-          meal_id?: string
-          protein?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nutrition_items_meal_id_fkey"
-            columns: ["meal_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_meals"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      nutrition_meals: {
-        Row: {
-          id: string
-          meal_label: string
-          meal_order: number
-          notes: string | null
-          plan_id: string
-        }
-        Insert: {
-          id?: string
-          meal_label: string
-          meal_order?: number
-          notes?: string | null
-          plan_id: string
-        }
-        Update: {
-          id?: string
-          meal_label?: string
-          meal_order?: number
-          notes?: string | null
-          plan_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nutrition_meals_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "nutrition_plans"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      nutrition_plans: {
-        Row: {
-          created_at: string
-          id: string
-          plan_name: string | null
-          student_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          plan_name?: string | null
-          student_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          plan_name?: string | null
-          student_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "nutrition_plans_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      body_measurements: {
-        Row: {
-          arm_cm: number | null
-          chest_cm: number | null
-          created_at: string
-          hip_cm: number | null
-          id: string
-          measured_at: string
-          notes: string | null
-          photo_path: string | null
-          thigh_cm: number | null
-          user_id: string
-          waist_cm: number | null
-          weight_kg: number | null
-        }
-        Insert: {
-          arm_cm?: number | null
-          chest_cm?: number | null
-          created_at?: string
-          hip_cm?: number | null
-          id?: string
-          measured_at?: string
-          notes?: string | null
-          photo_path?: string | null
-          thigh_cm?: number | null
-          user_id: string
-          waist_cm?: number | null
-          weight_kg?: number | null
-        }
-        Update: {
-          arm_cm?: number | null
-          chest_cm?: number | null
-          created_at?: string
-          hip_cm?: number | null
-          id?: string
-          measured_at?: string
-          notes?: string | null
-          photo_path?: string | null
-          thigh_cm?: number | null
-          user_id?: string
-          waist_cm?: number | null
-          weight_kg?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "body_measurements_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      checkins: {
-        Row: {
-          checkin_date: string
-          created_at: string
-          diet_done: boolean
-          id: string
-          mood: number | null
-          notes: string | null
-          treino_done: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          checkin_date: string
-          created_at?: string
-          diet_done?: boolean
-          id?: string
-          mood?: number | null
-          notes?: string | null
-          treino_done?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          checkin_date?: string
-          created_at?: string
-          diet_done?: boolean
-          id?: string
-          mood?: number | null
-          notes?: string | null
-          treino_done?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "checkins_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
       }
     }
     Views: {
