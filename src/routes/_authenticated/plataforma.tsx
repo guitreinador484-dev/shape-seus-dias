@@ -354,7 +354,10 @@ function PlataformaPage() {
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
-        if (profileError) throw profileError;
+        if (profileError) {
+          const msg = profileError.message || profileError.details || profileError.hint || "Erro ao carregar perfil";
+          throw new Error(msg);
+        }
         setHasClassAccess(Boolean(profile?.has_class_access));
         setIsActive(profile?.is_active ?? true);
         setAccessExpiresAt(profile?.access_expires_at ?? null);
@@ -377,6 +380,11 @@ function PlataformaPage() {
           supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
         ]);
         if (cancelled) return;
+        const firstError = [plansRes, exRes, workoutsRes, cfgRes, progRes].find((r) => r.error);
+        if (firstError?.error) {
+          const err = firstError.error;
+          throw new Error(err.message || err.details || err.hint || "Erro ao carregar dados da plataforma");
+        }
         const allPlans = plansRes.data ?? [];
         const allEx = exRes.data ?? [];
         setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
@@ -384,7 +392,7 @@ function PlataformaPage() {
         setConfig(readConfig(cfgRes.data?.[0]?.content ?? null));
         setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
       } catch (e) {
-        if (!cancelled) setDataError(e instanceof Error ? e.message : "Erro ao carregar a plataforma");
+        if (!cancelled) setDataError(e instanceof Error ? e.message : String(e) || "Erro ao carregar a plataforma");
       } finally {
         if (!cancelled) setDataLoading(false);
       }
