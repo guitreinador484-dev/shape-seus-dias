@@ -1,12 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Play, Dumbbell, Video, LogOut, ChevronRight } from "lucide-react";
+import { Dumbbell, LogOut, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 
 const navItems = [
   { to: "/plataforma", label: "Meu Treino", icon: Dumbbell, exact: true },
-  { to: "/plataforma/cursos", label: "Cursos", icon: BookOpen, exact: false },
 ];
 
 export default function LeftSidebar() {

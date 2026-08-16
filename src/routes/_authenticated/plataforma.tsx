@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, BookOpen, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
@@ -574,12 +574,7 @@ function PlataformaPage() {
                 <ClipboardList className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Ficha</span>
               </TabsTrigger>
             </TabsList>
-            <Link
-              to="/plataforma/cursos"
-              className="inline-flex items-center gap-2 rounded-full px-4 h-10 text-xs font-semibold border border-white/14 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white transition backdrop-blur-xl shrink-0 shadow-sm"
-            >
-              <BookOpen className="h-4 w-4 text-primary" /> <span className="hidden sm:inline">Cursos</span>
-            </Link>
+
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               <p className="text-xs text-white/40 truncate max-w-[160px] font-mono">{user?.email}</p>
               <Button variant="ghost" size="sm" onClick={signOut} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">

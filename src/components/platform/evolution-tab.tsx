@@ -159,36 +159,34 @@ export function EvolutionTab({ userId }: { userId: string }) {
                 <Input type="number" value={form[f.key] ?? ""} onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))} placeholder="0.0" />
               </div>
             ))}
-            <div className="space-y-1 sm:col-span-2 lg:col-span-3">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
               <Label>Foto de progresso (opcional)</Label>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
-              />
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-                  <Upload className="h-4 w-4" /> {photo ? "Trocar foto" : "Enviar foto"}
+              <Input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
+              {photo ? (
+                <div className="relative inline-block">
+                  <img src={URL.createObjectURL(photo)} alt="Preview" className="h-32 w-32 rounded-xl object-cover border border-border/60" />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    onClick={() => { setPhoto(null); if (fileRef.current) fileRef.current.value = ""; }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-32 w-full sm:w-64 border-dashed"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Selecionar foto</span>
+                  </div>
                 </Button>
-                {photo && (
-                  <>
-                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{photo.name}</p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setPhoto(null);
-                        if (fileRef.current) fileRef.current.value = "";
-                      }}
-                    >
-                      <X className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </>
-                )}
-              </div>
+              )}
             </div>
           </div>
           <div className="mt-4 flex justify-end">
