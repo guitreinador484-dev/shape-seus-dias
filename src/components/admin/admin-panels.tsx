@@ -34,6 +34,10 @@ import {
   Image as ImageIcon,
   Layers,
   BookOpen,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -225,25 +229,33 @@ export function AdminDashboardPanel() {
   const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [plans, setPlans] = useState<StudentPlan[]>([]);
+  const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [evoLoading, setEvoLoading] = useState(false);
+  const [evoPhotos, setEvoPhotos] = useState<Record<string, string>>({});
+  const [searchStudent, setSearchStudent] = useState("");
 
   async function load() {
     setLoading(true);
-    const [studentRows, purchaseRows, anamneseRows, workoutRows, planRows] = await Promise.all([
+    const [studentRows, purchaseRows, anamneseRows, workoutRows, planRows, measRows] = await Promise.all([
       fetchStudents(),
       supabase.from("purchases").select("*").order("created_at", { ascending: false }),
       supabase.from("anamnese").select("*").order("created_at", { ascending: false }),
       supabase.from("workouts").select("*").order("display_order", { ascending: true }),
       supabase.from("student_plans").select("*").order("created_at", { ascending: false }),
+      supabase.from("body_measurements").select("*").order("measured_at", { ascending: true }),
     ]);
     if (purchaseRows.error) throw purchaseRows.error;
     if (anamneseRows.error) throw anamneseRows.error;
     if (workoutRows.error) throw workoutRows.error;
     if (planRows.error) throw planRows.error;
+    if (measRows.error) throw measRows.error;
     setStudents(studentRows);
     setPurchases(purchaseRows.data ?? []);
     setAnamneses(anamneseRows.data ?? []);
     setWorkouts(workoutRows.data ?? []);
     setPlans(planRows.data ?? []);
+    setMeasurements(measRows.data ?? []);
     setLoading(false);
   }
 
@@ -254,67 +266,344 @@ export function AdminDashboardPanel() {
     });
   }, []);
 
+  async function loadStudentEvolution(studentId: string) {
+    setSelectedStudentId(studentId);
+    setEvoLoading(true);
+    setEvoPhotos({});
+    try {
+      const { data } = await supabase
+        .from("body_measurements")
+        .select("*")
+        .eq("user_id", studentId)
+        .order("measured_at", { ascending: true });
+      const rows = data ?? [];
+      setMeasurements(rows);
+      const photoRows = rows.filter((r) => r.photo_path);
+      if (photoRows.length) {
+        const entries = await Promise.all(photoRows.map(async (r) => {
+          const { data: url } = await supabase.storage.from("progress-photos").createSignedUrl(r.photo_path!, 3600);
+          return [r.id, url?.signedUrl ?? ""] as const;
+        }));
+        setEvoPhotos(Object.fromEntries(entries));
+      }
+    } finally {
+      setEvoLoading(false);
+    }
+  }
+
   const revenue = purchases.filter((purchase) => ["paid", "approved"].includes(purchase.status)).reduce((sum, purchase) => sum + Number(purchase.amount), 0);
   const latestStudents = students.slice(0, 5);
   const latestPurchases = purchases.slice(0, 5);
+  const activeStudents = students.filter((s) => s.is_active && s.has_class_access).length;
+  const expiredStudents = students.filter((s) => s.access_expires_at && new Date(s.access_expires_at).getTime() <= Date.now()).length;
+  const selectedStudent = students.find((s) => s.id === selectedStudentId);
+  const studentMeasurements = measurements.filter((m) => m.user_id === selectedStudentId);
+  const filteredStudents = students.filter((s) =>
+    s.role !== "admin" && (s.full_name?.toLowerCase().includes(searchStudent.toLowerCase()) || s.email?.toLowerCase().includes(searchStudent.toLowerCase()))
+  );
 
   if (loading) return <LoadingGrid />;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <PageHeader
-        title="Dashboard"
-        description="Resumo operacional da plataforma, alunos, vendas e conteúdos."
-        action={<Button variant="outline" onClick={() => load()}><RefreshCw className="h-4 w-4" /> Atualizar</Button>}
-      />
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="font-display text-4xl tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground mt-1">Visão geral da plataforma e alunos.</p>
+        </div>
+        <Button variant="outline" onClick={() => load()} className="rounded-full"><RefreshCw className="h-4 w-4 mr-2" /> Atualizar</Button>
+      </div>
+
+      {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard title="Alunos" value={students.length} icon={Users} />
-        <StatCard title="Aulas" value={workouts.length} icon={Video} />
-        <StatCard title="Treinos" value={plans.length} icon={Dumbbell} />
-        <StatCard title="Anamneses" value={anamneses.length} icon={ClipboardList} />
-        <StatCard title="Receita" value={formatCurrency(revenue)} icon={BadgeDollarSign} />
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 backdrop-blur-xl">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
+          <Users className="h-5 w-5 text-primary mb-3" />
+          <p className="text-3xl font-display text-white">{students.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">Alunos</p>
+        </div>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent p-5 backdrop-blur-xl">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/20 blur-2xl" />
+          <CheckCircle2 className="h-5 w-5 text-emerald-400 mb-3" />
+          <p className="text-3xl font-display text-white">{activeStudents}</p>
+          <p className="text-xs text-muted-foreground mt-1">Ativos</p>
+        </div>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/15 via-blue-500/5 to-transparent p-5 backdrop-blur-xl">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-500/20 blur-2xl" />
+          <Video className="h-5 w-5 text-blue-400 mb-3" />
+          <p className="text-3xl font-display text-white">{workouts.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">Aulas</p>
+        </div>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent p-5 backdrop-blur-xl">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl" />
+          <BadgeDollarSign className="h-5 w-5 text-amber-400 mb-3" />
+          <p className="text-3xl font-display text-white">{formatCurrency(revenue)}</p>
+          <p className="text-xs text-muted-foreground mt-1">Receita</p>
+        </div>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-red-500/15 via-red-500/5 to-transparent p-5 backdrop-blur-xl">
+          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/20 blur-2xl" />
+          <AlertCircle className="h-5 w-5 text-red-400 mb-3" />
+          <p className="text-3xl font-display text-white">{expiredStudents}</p>
+          <p className="text-xs text-muted-foreground mt-1">Acessos expirados</p>
+        </div>
       </div>
-      <div className="grid gap-4 lg:grid-cols-2 mt-6">
-        <Card>
-          <CardHeader><CardTitle>Alunos recentes</CardTitle></CardHeader>
-          <CardContent>
-            {latestStudents.length === 0 ? <EmptyState title="Nenhum aluno" description="Os alunos aparecerão aqui após o cadastro." /> : (
-              <div className="space-y-3">
+
+      {/* Main grid: Students + Sales + Evolution */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Recent students */}
+        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
+          <CardHeader className="border-b border-white/8 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
+              <Users className="h-4 w-4 text-primary" /> Alunos recentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {latestStudents.length === 0 ? <EmptyState title="Nenhum aluno" description="Cadastre alunos para começar." /> : (
+              <div className="space-y-2">
                 {latestStudents.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{student.full_name || student.email}</p>
-                      <p className="text-sm text-muted-foreground truncate">{student.email}</p>
+                  <div key={student.id} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] transition">
+                    <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-xs font-bold">
+                      {(student.full_name || student.email || "?")[0].toUpperCase()}
                     </div>
-                    <Badge variant="secondary">{student.role ? roleLabels[student.role] : "Sem papel"}</Badge>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{student.full_name || student.email}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{student.email}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">{student.is_active ? "Ativo" : "Inativo"}</Badge>
                   </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle>Vendas recentes</CardTitle></CardHeader>
-          <CardContent>
-            {latestPurchases.length === 0 ? <EmptyState title="Nenhuma venda" description="As vendas confirmadas e pendentes aparecerão aqui." /> : (
-              <div className="space-y-3">
+
+        {/* Recent sales */}
+        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
+          <CardHeader className="border-b border-white/8 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
+              <BadgeDollarSign className="h-4 w-4 text-amber-400" /> Vendas recentes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {latestPurchases.length === 0 ? <EmptyState title="Nenhuma venda" description="As vendas aparecerão aqui." /> : (
+              <div className="space-y-2">
                 {latestPurchases.map((purchase) => (
-                  <div key={purchase.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+                  <div key={purchase.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] transition">
                     <div className="min-w-0">
-                      <p className="font-medium truncate">{purchase.customer_name || purchase.customer_email || "Venda sem cliente"}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(purchase.created_at)}</p>
+                      <p className="text-sm font-medium text-white truncate">{purchase.customer_name || purchase.customer_email || "Sem cliente"}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatDate(purchase.created_at)}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(purchase.amount)}</p>
-                      <p className="text-xs text-muted-foreground">{statusLabels[purchase.status] ?? purchase.status}</p>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold text-white">{formatCurrency(purchase.amount)}</p>
+                      <p className="text-[10px] text-muted-foreground">{statusLabels[purchase.status] ?? purchase.status}</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Quick actions */}
+        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
+          <CardHeader className="border-b border-white/8 pb-4">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
+              <Sparkles className="h-4 w-4 text-primary" /> Acesso rápido
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="space-y-2">
+              {adminCards.slice(0, 5).map((card) => (
+                <Link key={card.url} to={card.url} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] hover:border-primary/30 transition group">
+                  <div className="h-9 w-9 shrink-0 rounded-xl bg-primary/10 grid place-items-center">
+                    <card.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{card.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{card.desc}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition" />
+                </Link>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Evolution section */}
+      <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
+        <CardHeader className="border-b border-white/8 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-white">
+              <TrendingUp className="h-4 w-4 text-emerald-400" /> Evolução dos Alunos
+            </CardTitle>
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchStudent}
+                onChange={(e) => setSearchStudent(e.target.value)}
+                placeholder="Buscar aluno..."
+                className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-all"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          {!selectedStudentId ? (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredStudents.length === 0 ? (
+                <p className="text-sm text-muted-foreground col-span-full text-center py-8">Nenhum aluno encontrado.</p>
+              ) : (
+                filteredStudents.map((student) => {
+                  const measCount = measurements.filter((m) => m.user_id === student.id).length;
+                  return (
+                    <button
+                      key={student.id}
+                      onClick={() => loadStudentEvolution(student.id)}
+                      className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-primary/10 hover:border-primary/30 transition text-left"
+                    >
+                      <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-sm font-bold">
+                        {(student.full_name || student.email || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{student.full_name || student.email}</p>
+                        <p className="text-[11px] text-muted-foreground">{measCount} {measCount === 1 ? "medição" : "medições"}</p>
+                      </div>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          ) : evoLoading ? (
+            <Skeleton className="h-48" />
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedStudentId(""); setMeasurements([]); setEvoPhotos({}); }} className="rounded-full">
+                  ← Voltar
+                </Button>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-xs font-bold">
+                    {(selectedStudent?.full_name || selectedStudent?.email || "?")[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{selectedStudent?.full_name || selectedStudent?.email}</p>
+                    <p className="text-[11px] text-muted-foreground">{studentMeasurements.length} {studentMeasurements.length === 1 ? "registro" : "registros"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {studentMeasurements.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Este aluno ainda não registrou medições.</p>
+              ) : (
+                <>
+                  {/* Weight chart summary */}
+                  {studentMeasurements.some((m) => m.weight_kg !== null) && (
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Peso</p>
+                        <div className="flex items-center gap-2">
+                          {studentMeasurements.length >= 2 && studentMeasurements[0].weight_kg !== null && studentMeasurements[studentMeasurements.length - 1].weight_kg !== null && (
+                            <span className={`flex items-center gap-1 text-xs font-semibold ${studentMeasurements[studentMeasurements.length - 1].weight_kg! < studentMeasurements[0].weight_kg! ? "text-emerald-400" : "text-red-400"}`}>
+                              {studentMeasurements[studentMeasurements.length - 1].weight_kg! < studentMeasurements[0].weight_kg! ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
+                              {(studentMeasurements[studentMeasurements.length - 1].weight_kg! - studentMeasurements[0].weight_kg!).toFixed(1)} kg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-end gap-1 h-16">
+                        {studentMeasurements.filter((m) => m.weight_kg !== null).map((m, i) => {
+                          const allWeights = studentMeasurements.filter((x) => x.weight_kg !== null).map((x) => x.weight_kg!);
+                          const min = Math.min(...allWeights);
+                          const max = Math.max(...allWeights);
+                          const range = max - min || 1;
+                          const height = ((m.weight_kg! - min) / range) * 100;
+                          return (
+                            <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
+                              <div
+                                className="w-full rounded-t bg-gradient-to-t from-primary to-blue-500 transition-all duration-500"
+                                style={{ height: `${Math.max(height, 8)}%` }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <span className="text-[10px] text-muted-foreground">{studentMeasurements.filter((m) => m.weight_kg !== null)[0]?.weight_kg} kg</span>
+                        <span className="text-[10px] text-muted-foreground">{studentMeasurements.filter((m) => m.weight_kg !== null).slice(-1)[0]?.weight_kg} kg</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Measurement table */}
+                  <div className="rounded-xl border border-white/10 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10 bg-white/[0.03]">
+                          <th className="px-3 py-2.5 text-left text-[11px] text-muted-foreground font-medium">Data</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Peso</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Cintura</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Peito</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Braço</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Quadril</th>
+                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Coxa</th>
+                          <th className="px-3 py-2.5 text-center text-[11px] text-muted-foreground font-medium">Foto</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...studentMeasurements].reverse().map((r) => (
+                          <tr key={r.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                            <td className="px-3 py-2.5 whitespace-nowrap text-white">{formatDate(r.measured_at)}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.weight_kg ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.waist_cm ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.chest_cm ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.arm_cm ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.hip_cm ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-right text-white">{r.thigh_cm ?? "—"}</td>
+                            <td className="px-3 py-2.5 text-center">
+                              {evoPhotos[r.id] ? (
+                                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                  <ImageIcon className="h-3.5 w-3.5" />
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Photos grid */}
+                  {Object.keys(evoPhotos).length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Fotos de progresso</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {Object.entries(evoPhotos).filter(([, url]) => url).map(([id, url]) => {
+                          const row = studentMeasurements.find((r) => r.id === id);
+                          return (
+                            <figure key={id} className="group relative rounded-xl overflow-hidden border border-white/10">
+                              <img src={url} alt="Progresso" className="h-40 w-full object-cover transition duration-300 group-hover:scale-105" />
+                              <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent px-3 py-2">
+                                <p className="text-[11px] text-white font-medium">{formatDate(row?.measured_at)}</p>
+                                {row?.weight_kg && <p className="text-[10px] text-white/70">{row.weight_kg} kg</p>}
+                              </figcaption>
+                            </figure>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
