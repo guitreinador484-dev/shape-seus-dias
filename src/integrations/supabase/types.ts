@@ -56,6 +56,51 @@ export type Database = {
         }
         Relationships: []
       }
+      body_measurements: {
+        Row: {
+          arm_cm: number | null
+          chest_cm: number | null
+          created_at: string
+          hip_cm: number | null
+          id: string
+          measured_at: string
+          notes: string | null
+          photo_path: string | null
+          thigh_cm: number | null
+          user_id: string
+          waist_cm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          arm_cm?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          photo_path?: string | null
+          thigh_cm?: number | null
+          user_id: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          arm_cm?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          photo_path?: string | null
+          thigh_cm?: number | null
+          user_id?: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       course_certificates: {
         Row: {
           code: string
