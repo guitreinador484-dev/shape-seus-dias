@@ -469,3 +469,25 @@
 .quiz-vendas-scope .text-slate-500 { color: #64748b !important; }
 .quiz-vendas-scope .text-slate-600 { color: #475569 !important; }
 .quiz-vendas-scope .text-slate-700 { color: #334155 !important; }
+
+/* Hide Lovable badge/watermark */
+[data-lovable-badge],
+a[href*="lovable"],
+a[href*="lovable.dev"],
+img[alt*="Lovable"],
+img[src*="lovable"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Target the floating badge by common patterns */
+[style*="position: fixed"][style*="bottom"][style*="right"],
+[style*="position:fixed"][style*="bottom"][style*="right"] {
+  display: none !important;
+}
