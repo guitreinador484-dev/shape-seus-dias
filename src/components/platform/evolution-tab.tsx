@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Loader2, Plus, Trash2, TrendingDown, TrendingUp, ImageIcon } from "lucide-react";
+import { Loader2, Plus, Trash2, TrendingDown, TrendingUp, ImageIcon, Upload, X } from "lucide-react";
 type Measurement = Tables<"body_measurements">;
 
 const FIELDS: { key: "weight_kg" | "waist_cm" | "chest_cm" | "arm_cm" | "hip_cm" | "thigh_cm"; label: string; suffix: string }[] = [
@@ -161,9 +161,33 @@ export function EvolutionTab({ userId }: { userId: string }) {
             ))}
             <div className="space-y-1 sm:col-span-2 lg:col-span-3">
               <Label>Foto de progresso (opcional)</Label>
-              <div className="flex items-center gap-3">
-                <Input ref={fileRef} type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
-                {photo && <p className="text-xs text-muted-foreground truncate">{photo.name}</p>}
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+                  <Upload className="h-4 w-4" /> {photo ? "Trocar foto" : "Enviar foto"}
+                </Button>
+                {photo && (
+                  <>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{photo.name}</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setPhoto(null);
+                        if (fileRef.current) fileRef.current.value = "";
+                      }}
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
