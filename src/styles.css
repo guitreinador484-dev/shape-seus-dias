@@ -470,12 +470,14 @@
 .quiz-vendas-scope .text-slate-600 { color: #475569 !important; }
 .quiz-vendas-scope .text-slate-700 { color: #334155 !important; }
 
-/* Hide Lovable badge/watermark */
+/* Hide Lovable badge/watermark — injected by hosting platform */
+#lovable-badge,
 [data-lovable-badge],
 a[href*="lovable"],
 a[href*="lovable.dev"],
 img[alt*="Lovable"],
-img[src*="lovable"] {
+img[src*="lovable"],
+iframe[src*="lovable"] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -484,10 +486,12 @@ img[src*="lovable"] {
   width: 0 !important;
   height: 0 !important;
   overflow: hidden !important;
+  z-index: -9999 !important;
 }
 
-/* Target the floating badge by common patterns */
-[style*="position: fixed"][style*="bottom"][style*="right"],
-[style*="position:fixed"][style*="bottom"][style*="right"] {
+/* Hide floating badge-like fixed elements injected at bottom-right */
+body > div[style*="position: fixed"][style*="z-index"],
+body > a[style*="position: fixed"],
+body > div[style*="position:fixed"][style*="z-index"] {
   display: none !important;
 }

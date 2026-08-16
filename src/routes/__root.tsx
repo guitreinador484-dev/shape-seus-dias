@@ -130,6 +130,17 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Remove Lovable badge injected by hosting platform
+  useEffect(() => {
+    const removeBadge = () => {
+      document.querySelectorAll('[id*="lovable"], [class*="lovable"], a[href*="lovable"]').forEach((el) => el.remove());
+    };
+    removeBadge();
+    const observer = new MutationObserver(removeBadge);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
