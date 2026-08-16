@@ -101,6 +101,42 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          diet_done: boolean
+          id: string
+          mood: number | null
+          notes: string | null
+          treino_done: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkin_date: string
+          created_at?: string
+          diet_done?: boolean
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          treino_done?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          diet_done?: boolean
+          id?: string
+          mood?: number | null
+          notes?: string | null
+          treino_done?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       course_certificates: {
         Row: {
           code: string
@@ -277,6 +313,54 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          answers: Json
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          plan_id: string | null
+          profile: string | null
+          quiz_slug: string | null
+          quiz_title: string | null
+          score: number | null
+          source: string
+          status: string
+          whatsapp: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          plan_id?: string | null
+          profile?: string | null
+          quiz_slug?: string | null
+          quiz_title?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          plan_id?: string | null
+          profile?: string | null
+          quiz_slug?: string | null
+          quiz_title?: string | null
+          score?: number | null
+          source?: string
+          status?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -504,6 +588,8 @@ export type Database = {
           has_class_access: boolean
           id: string
           is_active: boolean
+          referral_code: string
+          referred_by: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -515,6 +601,8 @@ export type Database = {
           has_class_access?: boolean
           id: string
           is_active?: boolean
+          referral_code: string
+          referred_by?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -526,6 +614,8 @@ export type Database = {
           has_class_access?: boolean
           id?: string
           is_active?: boolean
+          referral_code?: string
+          referred_by?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -590,6 +680,7 @@ export type Database = {
       }
       student_plan_exercises: {
         Row: {
+          completed_at: string | null
           display_order: number
           exercise_name: string
           id: string
@@ -600,6 +691,7 @@ export type Database = {
           sets: string | null
         }
         Insert: {
+          completed_at?: string | null
           display_order?: number
           exercise_name: string
           id?: string
@@ -610,6 +702,7 @@ export type Database = {
           sets?: string | null
         }
         Update: {
+          completed_at?: string | null
           display_order?: number
           exercise_name?: string
           id?: string
@@ -705,6 +798,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "workout_exercises_workout_id_fkey"
+            columns: ["workout_id"]
+            isOneToOne: false
+            referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_progress: {
+        Row: {
+          completed_at: string | null
+          updated_at: string
+          user_id: string
+          watched_seconds: number
+          workout_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          updated_at?: string
+          user_id: string
+          watched_seconds?: number
+          workout_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          updated_at?: string
+          user_id?: string
+          watched_seconds?: number
+          workout_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_progress_workout_id_fkey"
             columns: ["workout_id"]
             isOneToOne: false
             referencedRelation: "workouts"
