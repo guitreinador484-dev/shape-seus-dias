@@ -17,6 +17,7 @@ import {
   createPixPaymentFn,
   getPaymentStatusFn,
 } from "@/lib/payments.functions";
+import { provisionAccessFn } from "@/lib/access.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -61,6 +62,7 @@ function FunnelPage() {
   const createCheckout = useServerFn(createMercadoPagoCheckoutFn);
   const createPix = useServerFn(createPixPaymentFn);
   const getPaymentStatus = useServerFn(getPaymentStatusFn);
+  const provisionAccess = useServerFn(provisionAccessFn);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +107,8 @@ function FunnelPage() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
   const [pixError, setPixError] = useState<string | null>(null);
+  const [account, setAccount] = useState<{ ok: boolean; created: boolean; emailSent: boolean } | null>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
 
   const measurementProgress = useMemo(() => {
     const v = Object.values(measurements).filter(Boolean).length;
@@ -213,6 +217,15 @@ function FunnelPage() {
           clearInterval(timer);
           setStage("done");
           window.scrollTo({ top: 0, behavior: "smooth" });
+          setAccountLoading(true);
+          try {
+            const result = await provisionAccess({ data: { reference: pix.reference } });
+            if (active) setAccount(result);
+          } catch (e) {
+            console.error("[funil] falha ao criar conta de acesso", e);
+          } finally {
+            if (active) setAccountLoading(false);
+          }
         }
       } catch {
         /* tenta de novo no próximo ciclo */
@@ -222,7 +235,7 @@ function FunnelPage() {
       active = false;
       clearInterval(timer);
     };
-  }, [stage, pix, pixPaid, getPaymentStatus]);
+  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess]);
 
   if (loading) {
     return (
@@ -771,9 +784,43 @@ function FunnelPage() {
             </div>
             <h2 className="mt-4 text-2xl font-extrabold">Tudo pronto, {contact.name || "atleta"}!</h2>
             <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">{cfg.thankYou}</p>
-            <p className="mt-4 text-xs text-slate-400">
-              Enviamos os detalhes para <b>{contact.email}</b>. Fique de olho na sua caixa de entrada.
-            </p>
+
+            {accountLoading && (
+              <p className="mt-6 text-sm text-slate-600 flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-700" />
+                Criando sua conta de acesso...
+              </p>
+            )}
+
+            {!accountLoading && account?.ok && (
+              <div className="mx-auto mt-6 max-w-md rounded-2xl border border-blue-200 bg-blue-50 p-5 text-left">
+                <p className="text-sm font-bold text-blue-800">
+                  {account.created ? "Sua conta foi criada!" : "Seu acesso foi liberado!"}
+                </p>
+                <p className="mt-2 text-sm text-slate-700">
+                  Enviamos um e-mail para <b>{contact.email}</b> com o link para você criar a sua senha e entrar
+                  na plataforma.
+                </p>
+                <a
+                  href="/auth"
+                  className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800"
+                >
+                  Ir para a plataforma
+                </a>
+                {!account.emailSent && (
+                  <p className="mt-3 text-xs text-amber-700">
+                    Não conseguimos enviar o e-mail agora. Use “Esqueci minha senha” na tela de acesso com este
+                    mesmo e-mail.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!accountLoading && !account && (
+              <p className="mt-4 text-xs text-slate-400">
+                Enviamos os detalhes para <b>{contact.email}</b>. Fique de olho na sua caixa de entrada.
+              </p>
+            )}
           </Card>
         )}
       </main>

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as FunilRouteImport } from './routes/funil'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -31,6 +32,11 @@ import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/pu
 import { Route as AuthenticatedPlataformaCursosSlugRouteImport } from './routes/_authenticated/plataforma.cursos.$slug'
 import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FunilRoute = FunilRouteImport.update({
   id: '/funil',
   path: '/funil',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/funil': typeof FunilRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/funil'
+    | '/reset-password'
     | '/admin'
     | '/plataforma'
     | '/admin/alunos'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/funil'
+    | '/reset-password'
     | '/plataforma'
     | '/admin/alunos'
     | '/admin/aulas'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/funil'
+    | '/reset-password'
     | '/_authenticated/admin'
     | '/_authenticated/plataforma'
     | '/_authenticated/admin/alunos'
@@ -290,11 +302,19 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   FunilRoute: typeof FunilRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/funil': {
       id: '/funil'
       path: '/funil'
@@ -538,6 +558,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   FunilRoute: FunilRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
