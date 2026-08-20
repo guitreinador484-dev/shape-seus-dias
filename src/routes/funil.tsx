@@ -671,6 +671,9 @@ function FunnelPage() {
                   type="email"
                 />
               </div>
+              {pixError && (
+                <p className="mt-3 text-center text-xs font-medium text-red-600">{pixError}</p>
+              )}
               <button
                 onClick={handleFinish}
                 disabled={!contact.email || submitting}
@@ -685,6 +688,79 @@ function FunnelPage() {
                 )}
               </button>
             </div>
+          </Card>
+        )}
+
+        {stage === "pix" && pix && (
+          <Card>
+            <div className="text-center">
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                <ShieldCheck className="h-3 w-3" /> Pagamento via PIX
+              </span>
+              <h2 className="mt-3 text-xl font-extrabold text-slate-900">
+                Escaneie o QR Code para pagar
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Valor:{" "}
+                <b className="text-blue-700">
+                  {pix.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </b>
+              </p>
+            </div>
+
+            {pix.qrCodeBase64 && (
+              <img
+                src={`data:image/png;base64,${pix.qrCodeBase64}`}
+                alt="QR Code PIX para pagamento"
+                className="mx-auto mt-5 h-56 w-56 rounded-xl border border-slate-200 bg-white p-2"
+              />
+            )}
+
+            <div className="mt-5">
+              <label className="text-xs font-medium text-slate-500">PIX copia e cola</label>
+              <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] break-all text-slate-600">
+                {pix.qrCode}
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(pix.qrCode);
+                    setPixCopied(true);
+                    setTimeout(() => setPixCopied(false), 2500);
+                  } catch {
+                    setPixCopied(false);
+                  }
+                }}
+                className="mt-3 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
+              >
+                {pixCopied ? "Código copiado ✓" : "Copiar código PIX"}
+              </button>
+              {pix.ticketUrl && (
+                <a
+                  href={pix.ticketUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 block text-center text-xs font-medium text-blue-700 hover:underline"
+                >
+                  Abrir comprovante no Mercado Pago
+                </a>
+              )}
+            </div>
+
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+              Aguardando confirmação do pagamento... a liberação é automática.
+            </div>
+
+            <button
+              onClick={() => {
+                setPix(null);
+                setStage("checkout");
+              }}
+              className="mt-4 w-full text-center text-xs text-slate-500 hover:text-slate-800"
+            >
+              ← Voltar e escolher outra forma de pagamento
+            </button>
           </Card>
         )}
 
