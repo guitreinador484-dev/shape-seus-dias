@@ -628,9 +628,15 @@ export type Database = {
           created_at: string
           customer_email: string | null
           customer_name: string | null
+          customer_whatsapp: string | null
           id: string
+          payment_method: string | null
+          plan_id: string | null
+          provider: string | null
+          provider_reference: string | null
           status: string
           transaction_id: string | null
+          updated_at: string
           user_id: string | null
         }
         Insert: {
@@ -639,9 +645,15 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_whatsapp?: string | null
           id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          provider?: string | null
+          provider_reference?: string | null
           status?: string
           transaction_id?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
@@ -650,9 +662,15 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_whatsapp?: string | null
           id?: string
+          payment_method?: string | null
+          plan_id?: string | null
+          provider?: string | null
+          provider_reference?: string | null
           status?: string
           transaction_id?: string | null
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: []
