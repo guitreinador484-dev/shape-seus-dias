@@ -107,6 +107,8 @@ function FunnelPage() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
   const [pixError, setPixError] = useState<string | null>(null);
+  const [account, setAccount] = useState<{ ok: boolean; created: boolean; emailSent: boolean } | null>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
 
   const measurementProgress = useMemo(() => {
     const v = Object.values(measurements).filter(Boolean).length;
