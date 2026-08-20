@@ -784,9 +784,43 @@ function FunnelPage() {
             </div>
             <h2 className="mt-4 text-2xl font-extrabold">Tudo pronto, {contact.name || "atleta"}!</h2>
             <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">{cfg.thankYou}</p>
-            <p className="mt-4 text-xs text-slate-400">
-              Enviamos os detalhes para <b>{contact.email}</b>. Fique de olho na sua caixa de entrada.
-            </p>
+
+            {accountLoading && (
+              <p className="mt-6 text-sm text-slate-600 flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-700" />
+                Criando sua conta de acesso...
+              </p>
+            )}
+
+            {!accountLoading && account?.ok && (
+              <div className="mx-auto mt-6 max-w-md rounded-2xl border border-blue-200 bg-blue-50 p-5 text-left">
+                <p className="text-sm font-bold text-blue-800">
+                  {account.created ? "Sua conta foi criada!" : "Seu acesso foi liberado!"}
+                </p>
+                <p className="mt-2 text-sm text-slate-700">
+                  Enviamos um e-mail para <b>{contact.email}</b> com o link para você criar a sua senha e entrar
+                  na plataforma.
+                </p>
+                <a
+                  href="/auth"
+                  className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800"
+                >
+                  Ir para a plataforma
+                </a>
+                {!account.emailSent && (
+                  <p className="mt-3 text-xs text-amber-700">
+                    Não conseguimos enviar o e-mail agora. Use “Esqueci minha senha” na tela de acesso com este
+                    mesmo e-mail.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!accountLoading && !account && (
+              <p className="mt-4 text-xs text-slate-400">
+                Enviamos os detalhes para <b>{contact.email}</b>. Fique de olho na sua caixa de entrada.
+              </p>
+            )}
           </Card>
         )}
       </main>
