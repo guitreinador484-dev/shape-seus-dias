@@ -17,6 +17,7 @@ import {
   createPixPaymentFn,
   getPaymentStatusFn,
 } from "@/lib/payments.functions";
+import { provisionAccessFn } from "@/lib/access.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
