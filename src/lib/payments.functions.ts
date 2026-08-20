@@ -69,7 +69,7 @@ export const createMercadoPagoCheckoutFn = createServerFn({ method: "POST" })
         pending: `${origin}/funil?pagamento=pendente`,
         failure: `${origin}/funil?pagamento=falhou`,
       },
-      auto_return: "approved",
+      ...(origin.startsWith("https://") ? { auto_return: "approved" } : {}),
       statement_descriptor: "SHAPE SEUS DIAS",
       payment_methods:
         data.method === "pix"
