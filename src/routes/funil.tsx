@@ -101,6 +101,10 @@ function FunnelPage() {
   const [method, setMethod] = useState<"pix" | "card">("pix");
   const [contact, setContact] = useState({ name: "", email: "", whatsapp: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [pix, setPix] = useState<PixData | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [pixPaid, setPixPaid] = useState(false);
+  const [pixError, setPixError] = useState<string | null>(null);
 
   const measurementProgress = useMemo(() => {
     const v = Object.values(measurements).filter(Boolean).length;
@@ -153,6 +157,24 @@ function FunnelPage() {
     }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
 
     try {
+      if (method === "pix") {
+        const data = await createPix({
+          data: {
+            planId: selectedPlan.id,
+            planName: selectedPlan.name,
+            price: selectedPlan.price,
+            method: "pix",
+            name: contact.name,
+            email: contact.email,
+            whatsapp: contact.whatsapp,
+          },
+        });
+        setPix(data);
+        setSubmitting(false);
+        setStage("pix");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       const { checkoutUrl } = await createCheckout({
         data: {
           planId: selectedPlan.id,
@@ -167,11 +189,40 @@ function FunnelPage() {
       window.location.href = checkoutUrl;
     } catch (e) {
       console.error("[funil] falha ao criar checkout", e);
+      if (method === "pix") {
+        setPixError("Não foi possível gerar o PIX agora. Tente novamente em instantes.");
+        setSubmitting(false);
+        return;
+      }
       setSubmitting(false);
       setStage("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  // Polling do status do PIX enquanto o cliente paga
+  useEffect(() => {
+    if (stage !== "pix" || !pix || pixPaid) return;
+    let active = true;
+    const timer = setInterval(async () => {
+      try {
+        const { status } = await getPaymentStatus({ data: { reference: pix.reference } });
+        if (!active) return;
+        if (status === "approved") {
+          setPixPaid(true);
+          clearInterval(timer);
+          setStage("done");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch {
+        /* tenta de novo no próximo ciclo */
+      }
+    }, 5000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [stage, pix, pixPaid, getPaymentStatus]);
 
   if (loading) {
     return (
