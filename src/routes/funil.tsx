@@ -12,7 +12,11 @@ import {
 } from "@/lib/funnel-store";
 import { fetchPublicFunnel } from "@/lib/funnel.functions";
 import { submitLeadFn } from "@/lib/leads.functions";
-import { createMercadoPagoCheckoutFn } from "@/lib/payments.functions";
+import {
+  createMercadoPagoCheckoutFn,
+  createPixPaymentFn,
+  getPaymentStatusFn,
+} from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -38,7 +42,15 @@ type Measurements = {
   sexo: "" | "M" | "F";
 };
 
-type Stage = "form" | "plans" | "checkout" | "done";
+type Stage = "form" | "plans" | "checkout" | "pix" | "done";
+
+type PixData = {
+  reference: string;
+  qrCode: string;
+  qrCodeBase64: string | null;
+  ticketUrl: string | null;
+  amount: number;
+};
 
 const MEASUREMENT_FIELDS_REQUIRED = 7;
 
@@ -47,6 +59,8 @@ function FunnelPage() {
   const [loading, setLoading] = useState(true);
   const submitLead = useServerFn(submitLeadFn);
   const createCheckout = useServerFn(createMercadoPagoCheckoutFn);
+  const createPix = useServerFn(createPixPaymentFn);
+  const getPaymentStatus = useServerFn(getPaymentStatusFn);
 
   useEffect(() => {
     let cancelled = false;
