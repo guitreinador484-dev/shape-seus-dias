@@ -66,6 +66,29 @@ async function handle(request: Request): Promise<Response> {
     return new Response("db error", { status: 500 });
   }
 
+  if (status === "approved") {
+    const { data: purchase } = await supabaseAdmin
+      .from("purchases")
+      .select("customer_email, customer_name, customer_whatsapp, user_id")
+      .eq("provider_reference", reference)
+      .maybeSingle();
+
+    if (purchase?.customer_email && !purchase.user_id) {
+      const { provisionAccess } = await import("@/lib/access.server");
+      try {
+        await provisionAccess({
+          email: purchase.customer_email,
+          name: purchase.customer_name,
+          whatsapp: purchase.customer_whatsapp,
+          reference,
+          origin: new URL(request.url).origin,
+        });
+      } catch (e) {
+        console.error("[mercadopago] falha ao liberar acesso", e);
+      }
+    }
+  }
+
   return new Response("ok", { status: 200 });
 }
 
