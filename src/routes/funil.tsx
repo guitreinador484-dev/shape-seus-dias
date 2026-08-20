@@ -62,6 +62,7 @@ function FunnelPage() {
   const createCheckout = useServerFn(createMercadoPagoCheckoutFn);
   const createPix = useServerFn(createPixPaymentFn);
   const getPaymentStatus = useServerFn(getPaymentStatusFn);
+  const provisionAccess = useServerFn(provisionAccessFn);
 
   useEffect(() => {
     let cancelled = false;
