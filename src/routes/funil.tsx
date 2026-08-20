@@ -217,6 +217,15 @@ function FunnelPage() {
           clearInterval(timer);
           setStage("done");
           window.scrollTo({ top: 0, behavior: "smooth" });
+          setAccountLoading(true);
+          try {
+            const result = await provisionAccess({ data: { reference: pix.reference } });
+            if (active) setAccount(result);
+          } catch (e) {
+            console.error("[funil] falha ao criar conta de acesso", e);
+          } finally {
+            if (active) setAccountLoading(false);
+          }
         }
       } catch {
         /* tenta de novo no próximo ciclo */
