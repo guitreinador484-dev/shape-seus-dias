@@ -235,7 +235,7 @@ function FunnelPage() {
       active = false;
       clearInterval(timer);
     };
-  }, [stage, pix, pixPaid, getPaymentStatus]);
+  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess]);
 
   if (loading) {
     return (
