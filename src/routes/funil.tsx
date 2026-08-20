@@ -12,6 +12,7 @@ import {
 } from "@/lib/funnel-store";
 import { fetchPublicFunnel } from "@/lib/funnel.functions";
 import { submitLeadFn } from "@/lib/leads.functions";
+import { createMercadoPagoCheckoutFn } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -45,6 +46,7 @@ function FunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [loading, setLoading] = useState(true);
   const submitLead = useServerFn(submitLeadFn);
+  const createCheckout = useServerFn(createMercadoPagoCheckoutFn);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +116,7 @@ function FunnelPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (!contact.email || !selectedPlan) return;
     setSubmitting(true);
     saveFunnelLead({
@@ -135,11 +137,26 @@ function FunnelPage() {
         answers: { measurements, broad, routine, plan: selectedPlan },
       },
     }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
-    setTimeout(() => {
+
+    try {
+      const { checkoutUrl } = await createCheckout({
+        data: {
+          planId: selectedPlan.id,
+          planName: selectedPlan.name,
+          price: selectedPlan.price,
+          method,
+          name: contact.name,
+          email: contact.email,
+          whatsapp: contact.whatsapp,
+        },
+      });
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      console.error("[funil] falha ao criar checkout", e);
       setSubmitting(false);
       setStage("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 600);
+    }
   };
 
   if (loading) {
