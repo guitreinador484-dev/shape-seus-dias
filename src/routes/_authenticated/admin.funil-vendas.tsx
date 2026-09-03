@@ -422,6 +422,50 @@ function AdminFunnelPage() {
         </Button>
       </Section>
 
+      <Section title="Fotos de resultados reais">
+        <p className="text-xs text-muted-foreground">
+          Fotos de antes/depois e resultados exibidas no funil. Envie do computador ou cole uma URL.
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          {cfg.results.map((src, i) => (
+            <div key={i} className="rounded-xl border border-border bg-background p-2 space-y-2">
+              <FunnelImage src={src} className="h-32 w-full rounded-lg object-cover bg-muted" />
+              <div className="flex items-center gap-1">
+                <UploadButton
+                  busy={uploading === `result-${i}`}
+                  label="Trocar"
+                  onFile={(f) => uploadImage(f, (ref) => setResultImage(i, ref), `result-${i}`)}
+                />
+                <Button variant="ghost" size="sm" onClick={() => removeResultImage(i)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          <div className="rounded-xl border border-dashed border-border bg-background p-2 flex flex-col items-center justify-center gap-2 min-h-32">
+            <UploadButton
+              busy={uploading === "result-new"}
+              label="Adicionar foto"
+              onFile={(f) =>
+                uploadImage(f, (ref) => update("results", [...cfg.results, ref]), "result-new")
+              }
+            />
+            <Input
+              placeholder="ou cole uma URL e pressione Enter"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (v) {
+                    update("results", [...cfg.results, v]);
+                    (e.target as HTMLInputElement).value = "";
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+      </Section>
+
       <Section title="Depoimentos">
         <div className="grid gap-3 md:grid-cols-2">
           {(cfg.testimonials ?? []).map((t, i) => (
@@ -445,8 +489,17 @@ function AdminFunnelPage() {
                 </Field>
               </Row>
               <Row>
-                <Field label="Foto (URL)">
-                  <Input value={t.avatar ?? ""} onChange={(e) => updateTestimonial(i, { avatar: e.target.value })} />
+                <Field label="Foto (URL ou envio)">
+                  <div className="flex gap-2 items-center">
+                    <Input value={t.avatar ?? ""} onChange={(e) => updateTestimonial(i, { avatar: e.target.value })} />
+                    <UploadButton
+                      busy={uploading === `testimonial-${i}`}
+                      label=""
+                      onFile={(f) =>
+                        uploadImage(f, (ref) => updateTestimonial(i, { avatar: ref }), `testimonial-${i}`)
+                      }
+                    />
+                  </div>
                 </Field>
                 <Field label="Estrelas (0-5)">
                   <Input
