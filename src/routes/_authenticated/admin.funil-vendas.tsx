@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
-import { Save, ExternalLink, Loader2, Users, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +19,31 @@ import {
   type FunnelLead,
 } from "@/lib/funnel-store";
 import { publishFunnelFn, fetchPublicFunnel } from "@/lib/funnel.functions";
+import {
+  uploadFunnelImage,
+  deleteFunnelImage,
+  resolveFunnelUrl,
+} from "@/lib/funnel-assets";
 import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
 import { toast } from "sonner";
+
+/** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
+function FunnelImage({ src, className }: { src?: string; className?: string }) {
+  const [url, setUrl] = useState<string | undefined>(
+    src && !src.startsWith("funnel://") ? src : undefined,
+  );
+  useEffect(() => {
+    let on = true;
+    resolveFunnelUrl(src).then((u) => {
+      if (on) setUrl(u);
+    });
+    return () => {
+      on = false;
+    };
+  }, [src]);
+  if (!url) return <div className={className} />;
+  return <img src={url} alt="" className={className} />;
+}
 
 export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
   component: AdminFunnelPage,
