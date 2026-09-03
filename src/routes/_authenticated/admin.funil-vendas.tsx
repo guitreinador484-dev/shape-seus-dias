@@ -186,6 +186,14 @@ function AdminFunnelPage() {
   const removeBadge = (idx: number) =>
     setCfg((c) => ({ ...c, trustBadges: (c.trustBadges ?? []).filter((_, i) => i !== idx) }));
 
+  const setResultImage = (idx: number, src: string) =>
+    setCfg((c) => ({ ...c, results: c.results.map((r, i) => (i === idx ? src : r)) }));
+  const removeResultImage = (idx: number) => {
+    const ref = cfg.results[idx];
+    if (ref?.startsWith("funnel://")) deleteFunnelImage(ref).catch(() => {});
+    setCfg((c) => ({ ...c, results: c.results.filter((_, i) => i !== idx) }));
+  };
+
   return (
     <div className="funnel-admin-scope p-4 md:p-6 space-y-6 max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
