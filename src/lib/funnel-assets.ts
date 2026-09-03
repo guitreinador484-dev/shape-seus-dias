@@ -48,6 +48,7 @@ export async function resolveFunnelConfigImages(cfg: FunnelConfig): Promise<Funn
     ...cfg,
     results: results.filter(Boolean) as string[],
     testimonials,
-    banner: cfg.banner ? { ...cfg.banner, image: bannerImage } : cfg.banner,
+    banner:
+      cfg.banner && bannerImage ? { ...cfg.banner, image: bannerImage } : cfg.banner,
   };
 }
