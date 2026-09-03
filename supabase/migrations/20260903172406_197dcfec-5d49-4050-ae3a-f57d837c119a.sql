@@ -1,0 +1,1 @@
+revoke execute on function app_private.is_admin(uuid) from authenticated, anon;
