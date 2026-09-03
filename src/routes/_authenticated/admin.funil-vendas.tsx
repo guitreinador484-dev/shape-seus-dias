@@ -312,12 +312,19 @@ function AdminFunnelPage() {
           Exibir banner no topo do funil
         </label>
         <Row>
-          <Field label="Imagem do banner (URL)">
+          <Field label="Imagem do banner (URL ou envio)">
             <Input
               value={cfg.banner?.image ?? ""}
               onChange={(e) => updateBanner({ image: e.target.value })}
               placeholder="https://..."
             />
+            <div className="mt-2">
+              <UploadButton
+                busy={uploading === "banner"}
+                label="Enviar do computador"
+                onFile={(f) => uploadImage(f, (ref) => updateBanner({ image: ref }), "banner")}
+              />
+            </div>
           </Field>
           <Field label="Texto do botão (opcional)">
             <Input
@@ -342,7 +349,7 @@ function AdminFunnelPage() {
         </Row>
         {cfg.banner?.image && (
           <div className="overflow-hidden rounded-xl border border-border">
-            <img src={cfg.banner.image} alt="" className="h-32 w-full object-cover" />
+            <FunnelImage src={cfg.banner.image} className="h-32 w-full object-cover" />
           </div>
         )}
       </Section>
