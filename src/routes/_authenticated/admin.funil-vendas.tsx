@@ -53,8 +53,22 @@ function AdminFunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [saving, setSaving] = useState(false);
   const [leads, setLeads] = useState<FunnelLead[]>([]);
+  const [uploading, setUploading] = useState<string | null>(null);
   const publish = useServerFn(publishFunnelFn);
   const listLeads = useServerFn(listLeadsFn);
+
+  const uploadImage = async (file: File, apply: (ref: string) => void, slot: string) => {
+    setUploading(slot);
+    try {
+      const ref = await uploadFunnelImage(file);
+      apply(ref);
+      toast.success("Imagem enviada! Salve para publicar.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao enviar imagem");
+    } finally {
+      setUploading(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
