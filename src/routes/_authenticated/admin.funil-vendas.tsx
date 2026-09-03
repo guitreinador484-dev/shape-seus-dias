@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
-import { Save, ExternalLink, Loader2, Users, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +19,72 @@ import {
   type FunnelLead,
 } from "@/lib/funnel-store";
 import { publishFunnelFn, fetchPublicFunnel } from "@/lib/funnel.functions";
+import {
+  uploadFunnelImage,
+  deleteFunnelImage,
+  resolveFunnelUrl,
+} from "@/lib/funnel-assets";
 import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
 import { toast } from "sonner";
+
+/** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
+function FunnelImage({ src, className }: { src?: string; className?: string }) {
+  const [url, setUrl] = useState<string | undefined>(
+    src && !src.startsWith("funnel://") ? src : undefined,
+  );
+  useEffect(() => {
+    let on = true;
+    resolveFunnelUrl(src).then((u) => {
+      if (on) setUrl(u);
+    });
+    return () => {
+      on = false;
+    };
+  }, [src]);
+  if (!url) return <div className={className} />;
+  return <img src={url} alt="" className={className} />;
+}
+
+function UploadButton({
+  busy,
+  onFile,
+  label,
+}: {
+  busy: boolean;
+  onFile: (f: File) => void;
+  label?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.target.value = "";
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={() => ref.current?.click()}
+      >
+        {busy ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <ImagePlus className="h-4 w-4 mr-2" />
+        )}
+        {label ?? "Enviar imagem"}
+      </Button>
+    </>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
   component: AdminFunnelPage,
@@ -30,8 +94,22 @@ function AdminFunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [saving, setSaving] = useState(false);
   const [leads, setLeads] = useState<FunnelLead[]>([]);
+  const [uploading, setUploading] = useState<string | null>(null);
   const publish = useServerFn(publishFunnelFn);
   const listLeads = useServerFn(listLeadsFn);
+
+  const uploadImage = async (file: File, apply: (ref: string) => void, slot: string) => {
+    setUploading(slot);
+    try {
+      const ref = await uploadFunnelImage(file);
+      apply(ref);
+      toast.success("Imagem enviada! Salve para publicar.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao enviar imagem");
+    } finally {
+      setUploading(null);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -149,6 +227,14 @@ function AdminFunnelPage() {
   const removeBadge = (idx: number) =>
     setCfg((c) => ({ ...c, trustBadges: (c.trustBadges ?? []).filter((_, i) => i !== idx) }));
 
+  const setResultImage = (idx: number, src: string) =>
+    setCfg((c) => ({ ...c, results: c.results.map((r, i) => (i === idx ? src : r)) }));
+  const removeResultImage = (idx: number) => {
+    const ref = cfg.results[idx];
+    if (ref?.startsWith("funnel://")) deleteFunnelImage(ref).catch(() => {});
+    setCfg((c) => ({ ...c, results: c.results.filter((_, i) => i !== idx) }));
+  };
+
   return (
     <div className="funnel-admin-scope p-4 md:p-6 space-y-6 max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -226,12 +312,19 @@ function AdminFunnelPage() {
           Exibir banner no topo do funil
         </label>
         <Row>
-          <Field label="Imagem do banner (URL)">
+          <Field label="Imagem do banner (URL ou envio)">
             <Input
               value={cfg.banner?.image ?? ""}
               onChange={(e) => updateBanner({ image: e.target.value })}
               placeholder="https://..."
             />
+            <div className="mt-2">
+              <UploadButton
+                busy={uploading === "banner"}
+                label="Enviar do computador"
+                onFile={(f) => uploadImage(f, (ref) => updateBanner({ image: ref }), "banner")}
+              />
+            </div>
           </Field>
           <Field label="Texto do botão (opcional)">
             <Input
@@ -256,7 +349,7 @@ function AdminFunnelPage() {
         </Row>
         {cfg.banner?.image && (
           <div className="overflow-hidden rounded-xl border border-border">
-            <img src={cfg.banner.image} alt="" className="h-32 w-full object-cover" />
+            <FunnelImage src={cfg.banner.image} className="h-32 w-full object-cover" />
           </div>
         )}
       </Section>
@@ -329,6 +422,50 @@ function AdminFunnelPage() {
         </Button>
       </Section>
 
+      <Section title="Fotos de resultados reais">
+        <p className="text-xs text-muted-foreground">
+          Fotos de antes/depois e resultados exibidas no funil. Envie do computador ou cole uma URL.
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          {cfg.results.map((src, i) => (
+            <div key={i} className="rounded-xl border border-border bg-background p-2 space-y-2">
+              <FunnelImage src={src} className="h-32 w-full rounded-lg object-cover bg-muted" />
+              <div className="flex items-center gap-1">
+                <UploadButton
+                  busy={uploading === `result-${i}`}
+                  label="Trocar"
+                  onFile={(f) => uploadImage(f, (ref) => setResultImage(i, ref), `result-${i}`)}
+                />
+                <Button variant="ghost" size="sm" onClick={() => removeResultImage(i)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          <div className="rounded-xl border border-dashed border-border bg-background p-2 flex flex-col items-center justify-center gap-2 min-h-32">
+            <UploadButton
+              busy={uploading === "result-new"}
+              label="Adicionar foto"
+              onFile={(f) =>
+                uploadImage(f, (ref) => update("results", [...cfg.results, ref]), "result-new")
+              }
+            />
+            <Input
+              placeholder="ou cole uma URL e pressione Enter"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const v = (e.target as HTMLInputElement).value.trim();
+                  if (v) {
+                    update("results", [...cfg.results, v]);
+                    (e.target as HTMLInputElement).value = "";
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+      </Section>
+
       <Section title="Depoimentos">
         <div className="grid gap-3 md:grid-cols-2">
           {(cfg.testimonials ?? []).map((t, i) => (
@@ -352,8 +489,17 @@ function AdminFunnelPage() {
                 </Field>
               </Row>
               <Row>
-                <Field label="Foto (URL)">
-                  <Input value={t.avatar ?? ""} onChange={(e) => updateTestimonial(i, { avatar: e.target.value })} />
+                <Field label="Foto (URL ou envio)">
+                  <div className="flex gap-2 items-center">
+                    <Input value={t.avatar ?? ""} onChange={(e) => updateTestimonial(i, { avatar: e.target.value })} />
+                    <UploadButton
+                      busy={uploading === `testimonial-${i}`}
+                      label=""
+                      onFile={(f) =>
+                        uploadImage(f, (ref) => updateTestimonial(i, { avatar: ref }), `testimonial-${i}`)
+                      }
+                    />
+                  </div>
                 </Field>
                 <Field label="Estrelas (0-5)">
                   <Input
