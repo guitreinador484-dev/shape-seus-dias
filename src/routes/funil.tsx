@@ -11,6 +11,7 @@ import {
   saveFunnelLead,
 } from "@/lib/funnel-store";
 import { fetchPublicFunnel } from "@/lib/funnel.functions";
+import { resolveFunnelConfigImages } from "@/lib/funnel-assets";
 import { submitLeadFn } from "@/lib/leads.functions";
 import {
   createMercadoPagoCheckoutFn,
@@ -68,8 +69,10 @@ function FunnelPage() {
     let cancelled = false;
     (async () => {
       const remote = await fetchPublicFunnel();
+      const base = remote ?? loadFunnelLocal();
+      const resolved = await resolveFunnelConfigImages(base).catch(() => base);
       if (cancelled) return;
-      setCfg(remote ?? loadFunnelLocal());
+      setCfg(resolved);
       setLoading(false);
     })();
     return () => {
