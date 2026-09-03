@@ -45,6 +45,47 @@ function FunnelImage({ src, className }: { src?: string; className?: string }) {
   return <img src={url} alt="" className={className} />;
 }
 
+function UploadButton({
+  busy,
+  onFile,
+  label,
+}: {
+  busy: boolean;
+  onFile: (f: File) => void;
+  label?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.target.value = "";
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={() => ref.current?.click()}
+      >
+        {busy ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <ImagePlus className="h-4 w-4 mr-2" />
+        )}
+        {label ?? "Enviar imagem"}
+      </Button>
+    </>
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
   component: AdminFunnelPage,
 });
