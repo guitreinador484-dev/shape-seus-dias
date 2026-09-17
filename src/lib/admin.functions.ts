@@ -79,13 +79,27 @@ export const createStudent = createServerFn({ method: "POST" })
     if (!userId) throw new Error("Falha ao criar usuário");
 
     // Keep creation reliable even if the auth trigger is delayed or missing.
-    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
-      id: userId,
-      email,
+    const profileValues = {
       full_name: data.full_name?.trim() || null,
       whatsapp: data.whatsapp?.trim() || null,
       has_class_access: hasAccess,
-    }, { onConflict: "id" });
+    };
+    const { data: updatedProfiles, error: updateProfileError } = await supabaseAdmin
+      .from("profiles")
+      .update(profileValues)
+      .eq("id", userId)
+      .select("id");
+    let profileError = updateProfileError;
+    if (!profileError && !updatedProfiles?.length) {
+      const fallbackReferralCode = crypto.randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
+      const result = await supabaseAdmin.from("profiles").insert({
+        id: userId,
+        email,
+        referral_code: fallbackReferralCode,
+        ...profileValues,
+      });
+      profileError = result.error;
+    }
     if (profileError) {
       await supabaseAdmin.auth.admin.deleteUser(userId);
       throw new Error(`Não foi possível criar o perfil do aluno: ${profileError.message}`);
