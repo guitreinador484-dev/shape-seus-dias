@@ -106,11 +106,11 @@ function FunnelPage() {
   const [broad, setBroad] = useState<Record<string, string>>({});
   const [routine, setRoutine] = useState<Record<string, string>>({});
   const [selectedPlan, setSelectedPlan] = useState<FunnelPlan | null>(null);
-  const [bump, setBump] = useState<OrderBumpConfig>(DEFAULT_ORDER_BUMP);
-  const [bumpChecked, setBumpChecked] = useState(false);
+  const [bumps, setBumps] = useState<OrderBumpConfig[]>([]);
+  const [bumpChecked, setBumpChecked] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    loadOrderBump().then(setBump).catch(() => {});
+    loadOrderBumps().then(setBumps).catch(() => {});
   }, []);
   const [method, setMethod] = useState<"pix" | "card">("pix");
   const [contact, setContact] = useState({ name: "", email: "", whatsapp: "" });
