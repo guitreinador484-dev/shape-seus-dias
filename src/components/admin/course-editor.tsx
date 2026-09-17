@@ -451,17 +451,28 @@ function EnrollmentsPanel({ courseId }: { courseId: string }) {
 
   async function reload() {
     setLoading(true);
-    const [p, e] = await Promise.all([listAllProfiles(), listCourseEnrollments(courseId)]);
-    setProfiles(p); setEnrolled(new Set(e.map((x) => x.user_id)));
-    setLoading(false);
+    try {
+      const [p, e] = await Promise.all([listAllProfiles(), listCourseEnrollments(courseId)]);
+      setProfiles(p); setEnrolled(new Set(e.map((x) => x.user_id)));
+    } catch (error) {
+      toast.error("Erro ao carregar alunos", { description: error instanceof Error ? error.message : "Tente novamente." });
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { reload(); }, [courseId]);
 
   const toggleEnrollmentFn = useServerFn(toggleCourseEnrollment);
 
   async function toggle(userId: string) {
-    await toggleEnrollmentFn({ data: { course_id: courseId, user_id: userId, enrolled: !enrolled.has(userId) } });
-    reload();
+    const shouldEnroll = !enrolled.has(userId);
+    try {
+      await toggleEnrollmentFn({ data: { course_id: courseId, user_id: userId, enrolled: shouldEnroll } });
+      toast.success(shouldEnroll ? "Aluno adicionado ao produto" : "Aluno removido do produto");
+      await reload();
+    } catch (error) {
+      toast.error("Não foi possível atualizar o acesso", { description: error instanceof Error ? error.message : "Tente novamente." });
+    }
   }
 
   const filtered = profiles.filter((p) => {
@@ -474,7 +485,9 @@ function EnrollmentsPanel({ courseId }: { courseId: string }) {
       <Input placeholder="Buscar aluno por nome ou email..." value={q} onChange={(e) => setQ(e.target.value)} />
       {loading ? <Skeleton className="h-40" /> : (
         <div className="max-h-96 overflow-y-auto divide-y">
-          {filtered.map((p) => (
+          {filtered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Nenhum aluno encontrado.</p>
+          ) : filtered.map((p) => (
             <label key={p.id} className="flex items-center gap-3 py-2 cursor-pointer hover:bg-accent/50 px-2 rounded">
               <Switch checked={enrolled.has(p.id)} onCheckedChange={() => toggle(p.id)} />
               <div className="min-w-0 flex-1">
