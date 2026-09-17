@@ -1201,6 +1201,8 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   const [librarySearch, setLibrarySearch] = useState("");
   const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string; load: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [deletePlanOpen, setDeletePlanOpen] = useState(false);
+  const [deleteExerciseId, setDeleteExerciseId] = useState<string | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
 
   const addExerciseFn = useServerFn(addPlanExercise);
@@ -1270,7 +1272,6 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   }
 
   async function deleteExercise(id: string) {
-    if (!confirm("Remover este exercício do treino?")) return;
     try {
       setBusy(id);
       await deleteExerciseFn({ data: { exerciseId: id } });
@@ -1377,9 +1378,9 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
               <DropdownMenuItem onSelect={() => void duplicatePlan()}><Copy className="mr-2 h-4 w-4" /> Duplicar treino</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void generatePdf()}><FileText className="mr-2 h-4 w-4" /> {pdf ? "Gerar novo PDF" : "Gerar PDF"}</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(event) => { event.preventDefault(); document.getElementById(`delete-plan-${plan.id}`)?.click(); }}><Trash2 className="mr-2 h-4 w-4" /> Excluir treino</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeletePlanOpen(true)}><Trash2 className="mr-2 h-4 w-4" /> Excluir treino</DropdownMenuItem>
             </RowActions>
-            <ConfirmDialog trigger={<button id={`delete-plan-${plan.id}`} className="hidden" aria-hidden />} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
+            <ConfirmDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
           </div>
         </div>
       </CardHeader>
@@ -1398,9 +1399,10 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
         {plan.exercises.length === 0 ? <EmptyState title="Sem exercícios" description="Adicione os exercícios deste treino." /> : (
           <div className="overflow-x-auto"><Table className="min-w-[640px]">
             <TableHeader><TableRow><TableHead>Exercício</TableHead><TableHead>Séries</TableHead><TableHead>Reps</TableHead><TableHead>Carga</TableHead><TableHead>Descanso</TableHead><TableHead></TableHead></TableRow></TableHeader>
-            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" disabled={busy === exercise.id} onClick={() => deleteExercise(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
+            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" aria-label={`Excluir ${exercise.exercise_name}`} disabled={busy === exercise.id} onClick={() => setDeleteExerciseId(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
           </Table></div>
         )}
+        <ConfirmDialog open={Boolean(deleteExerciseId)} onOpenChange={(open) => { if (!open) setDeleteExerciseId(null); }} title="Excluir este exercício?" description="O exercício será removido deste treino." confirmLabel="Sim, excluir exercício" destructive onConfirm={async () => { if (deleteExerciseId) await deleteExercise(deleteExerciseId); setDeleteExerciseId(null); }} />
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>

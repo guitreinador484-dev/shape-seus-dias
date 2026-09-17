@@ -511,3 +511,19 @@ body > a[style*="position: fixed"],
 body > div[style*="position:fixed"][style*="z-index"] {
   display: none !important;
 }
+
+@media (max-width: 639px) {
+  .admin-mobile [data-slot="dialog-footer"] {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-mobile [data-slot="dialog-footer"] > * {
+    width: 100%;
+  }
+
+  .admin-mobile h1,
+  .admin-mobile h2 {
+    overflow-wrap: anywhere;
+  }
+}
