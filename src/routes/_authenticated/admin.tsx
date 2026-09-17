@@ -15,6 +15,8 @@ import {
   BookOpen,
   Apple,
   Flame,
+  LayoutGrid,
+  Tag,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,45 +42,71 @@ type NavItem = {
   exact?: boolean;
 };
 
-const navItems: NavItem[] = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true },
-  { title: "Alunos", url: "/admin/alunos", icon: Users },
-  { title: "Cursos", url: "/admin/cursos", icon: BookOpen },
-  { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
-  { title: "Plataforma do aluno", url: "/admin/plataforma", icon: Video },
-  { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
-  { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
-  { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
-  { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
-  { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles },
-  { title: "Order bump", url: "/admin/order-bump", icon: ShoppingBag },
+type NavGroup = { label: string; items: NavItem[] };
+
+export const navGroups: NavGroup[] = [
+  {
+    label: "Visão geral",
+    items: [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true }],
+  },
+  {
+    label: "Alunos",
+    items: [
+      { title: "Alunos", url: "/admin/alunos", icon: Users },
+      { title: "Plataforma do aluno", url: "/admin/plataforma", icon: LayoutGrid },
+      { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
+    ],
+  },
+  {
+    label: "Conteúdo",
+    items: [
+      { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
+      { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
+      { title: "Cursos", url: "/admin/cursos", icon: BookOpen },
+      { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
+    ],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
+      { title: "Funil de vendas", url: "/admin/funil-vendas", icon: Sparkles },
+      { title: "Ofertas extras", url: "/admin/order-bump", icon: Tag },
+    ],
+  },
 ];
+
+export const navItems: NavItem[] = navGroups.flatMap((group) => group.items);
 
 function AdminSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Administração</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const active = item.exact ? pathname === item.url : pathname === item.url || pathname.startsWith(item.url + "/");
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  const active = item.exact
+                    ? pathname === item.url
+                    : pathname === item.url || pathname.startsWith(item.url + "/");
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                        <Link to={item.url} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   );
@@ -109,24 +137,24 @@ function AdminLayout() {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 border-b border-border bg-popover flex items-center px-3 gap-3">
             <SidebarTrigger />
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-lg">ADMIN</h1>
-              <span className="text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">PERSONAL</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <h1 className="font-display text-lg truncate">Painel do personal</h1>
+              <span className="hidden sm:inline text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">Administrador</span>
             </div>
             <div className="ml-auto flex items-center gap-3 text-sm">
-              <span className="text-muted-foreground hidden sm:inline">{user?.email}</span>
-              <Button variant="ghost" size="sm" onClick={signOut}>
+              <span className="text-muted-foreground hidden md:inline">{user?.email}</span>
+              <Button variant="outline" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" /> Sair
               </Button>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto">
             <Outlet />
           </main>
         </div>

@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AdminStudentsPanel } from "@/components/admin/admin-panels";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/admin/alunos")({
-  component: AdminStudentsPanel,
+  component: () => <Outlet />,
 });

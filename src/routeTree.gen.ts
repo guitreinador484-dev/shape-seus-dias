@@ -30,9 +30,11 @@ import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
 import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
+import { Route as AuthenticatedAdminAlunosIndexRouteImport } from './routes/_authenticated/admin.alunos.index'
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
 import { Route as AuthenticatedPlataformaCursosSlugRouteImport } from './routes/_authenticated/plataforma.cursos.$slug'
 import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
+import { Route as AuthenticatedAdminAlunosIdRouteImport } from './routes/_authenticated/admin.alunos.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -149,6 +151,12 @@ const AuthenticatedAdminAlunosRoute =
     path: '/alunos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAlunosIndexRoute =
+  AuthenticatedAdminAlunosIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminAlunosRoute,
+  } as any)
 const ApiPublicMercadopagoWebhookRoute =
   ApiPublicMercadopagoWebhookRouteImport.update({
     id: '/api/public/mercadopago/webhook',
@@ -167,6 +175,12 @@ const AuthenticatedAdminCursosIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminCursosRoute,
   } as any)
+const AuthenticatedAdminAlunosIdRoute =
+  AuthenticatedAdminAlunosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminAlunosRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -176,7 +190,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
-  '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
+  '/admin/alunos': typeof AuthenticatedAdminAlunosRouteWithChildren
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
@@ -189,9 +203,11 @@ export interface FileRoutesByFullPath {
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/admin/alunos/': typeof AuthenticatedAdminAlunosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -200,7 +216,6 @@ export interface FileRoutesByTo {
   '/funil': typeof FunilRoute
   '/reset-password': typeof ResetPasswordRoute
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
-  '/admin/alunos': typeof AuthenticatedAdminAlunosRoute
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
@@ -213,9 +228,11 @@ export interface FileRoutesByTo {
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/admin/alunos': typeof AuthenticatedAdminAlunosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -227,7 +244,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
-  '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRoute
+  '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRouteWithChildren
   '/_authenticated/admin/aulas': typeof AuthenticatedAdminAulasRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
@@ -240,9 +257,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/_authenticated/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
+  '/_authenticated/admin/alunos/': typeof AuthenticatedAdminAlunosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -267,9 +286,11 @@ export interface FileRouteTypes {
     | '/admin/vendas'
     | '/plataforma/cursos'
     | '/admin/'
+    | '/admin/alunos/$id'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
     | '/api/public/mercadopago/webhook'
+    | '/admin/alunos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -278,7 +299,6 @@ export interface FileRouteTypes {
     | '/funil'
     | '/reset-password'
     | '/plataforma'
-    | '/admin/alunos'
     | '/admin/aulas'
     | '/admin/configuracoes'
     | '/admin/cursos'
@@ -291,9 +311,11 @@ export interface FileRouteTypes {
     | '/admin/vendas'
     | '/plataforma/cursos'
     | '/admin'
+    | '/admin/alunos/$id'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
     | '/api/public/mercadopago/webhook'
+    | '/admin/alunos'
   id:
     | '__root__'
     | '/'
@@ -317,9 +339,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/vendas'
     | '/_authenticated/plataforma/cursos'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/alunos/$id'
     | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/plataforma/cursos/$slug'
     | '/api/public/mercadopago/webhook'
+    | '/_authenticated/admin/alunos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -481,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAlunosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/alunos/': {
+      id: '/_authenticated/admin/alunos/'
+      path: '/'
+      fullPath: '/admin/alunos/'
+      preLoaderRoute: typeof AuthenticatedAdminAlunosIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminAlunosRoute
+    }
     '/api/public/mercadopago/webhook': {
       id: '/api/public/mercadopago/webhook'
       path: '/api/public/mercadopago/webhook'
@@ -502,8 +533,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCursosIdRouteImport
       parentRoute: typeof AuthenticatedAdminCursosRoute
     }
+    '/_authenticated/admin/alunos/$id': {
+      id: '/_authenticated/admin/alunos/$id'
+      path: '/$id'
+      fullPath: '/admin/alunos/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAlunosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAlunosRoute
+    }
   }
 }
+
+interface AuthenticatedAdminAlunosRouteChildren {
+  AuthenticatedAdminAlunosIdRoute: typeof AuthenticatedAdminAlunosIdRoute
+  AuthenticatedAdminAlunosIndexRoute: typeof AuthenticatedAdminAlunosIndexRoute
+}
+
+const AuthenticatedAdminAlunosRouteChildren: AuthenticatedAdminAlunosRouteChildren =
+  {
+    AuthenticatedAdminAlunosIdRoute: AuthenticatedAdminAlunosIdRoute,
+    AuthenticatedAdminAlunosIndexRoute: AuthenticatedAdminAlunosIndexRoute,
+  }
+
+const AuthenticatedAdminAlunosRouteWithChildren =
+  AuthenticatedAdminAlunosRoute._addFileChildren(
+    AuthenticatedAdminAlunosRouteChildren,
+  )
 
 interface AuthenticatedAdminCursosRouteChildren {
   AuthenticatedAdminCursosIdRoute: typeof AuthenticatedAdminCursosIdRoute
@@ -520,7 +574,7 @@ const AuthenticatedAdminCursosRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRoute
+  AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRouteWithChildren
   AuthenticatedAdminAulasRoute: typeof AuthenticatedAdminAulasRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRouteWithChildren
@@ -535,7 +589,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminAlunosRoute: AuthenticatedAdminAlunosRoute,
+  AuthenticatedAdminAlunosRoute: AuthenticatedAdminAlunosRouteWithChildren,
   AuthenticatedAdminAulasRoute: AuthenticatedAdminAulasRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRouteWithChildren,

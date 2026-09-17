@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ConfirmDialog } from "@/components/admin/ui-kit";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus } from "lucide-react";
@@ -672,9 +673,18 @@ function AdminFunnelPage() {
             <div key={p.id} className="rounded-xl border border-border p-4 space-y-2 bg-background">
               <div className="flex items-center justify-between">
                 <b>Plano {i + 1}</b>
-                <Button variant="ghost" size="sm" onClick={() => removePlan(i)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <ConfirmDialog
+                  trigger={
+                    <Button variant="ghost" size="sm">
+                      <Trash2 className="h-4 w-4" /> Excluir
+                    </Button>
+                  }
+                  title="Excluir este plano do funil?"
+                  description="O plano deixa de aparecer na página de vendas assim que você salvar. Nenhuma compra anterior é afetada."
+                  confirmLabel="Sim, excluir plano"
+                  destructive
+                  onConfirm={() => removePlan(i)}
+                />
               </div>
               <Field label="Nome">
                 <Input value={p.name} onChange={(e) => updatePlan(i, { name: e.target.value })} />
