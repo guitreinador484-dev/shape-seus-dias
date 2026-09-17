@@ -51,6 +51,7 @@ const navItems: NavItem[] = [
   { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
   { title: "Vendas", url: "/admin/vendas", icon: ShoppingBag },
   { title: "Funil de Vendas", url: "/admin/funil-vendas", icon: Sparkles },
+  { title: "Order bump", url: "/admin/order-bump", icon: ShoppingBag },
 ];
 
 function AdminSidebar() {

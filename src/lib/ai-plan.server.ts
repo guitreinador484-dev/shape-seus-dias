@@ -93,8 +93,11 @@ async function askAiForPlan(promptText: string, tier: PlanTier): Promise<AiResul
       stream: true,
       reasoning: { effort: "low", summary: "auto" },
       instructions:
-        "Você é um personal trainer brasileiro. Monte uma divisão de treino semanal segura e objetiva " +
-        "para academia, em português do Brasil. Use nomes de exercícios simples que um iniciante entenda. " +
+        "Você é um personal trainer brasileiro especialista em MUSCULAÇÃO. Monte uma divisão de treino semanal " +
+        "de musculação (academia, pesos livres e máquinas), em português do Brasil. " +
+        "O foco principal é SEMPRE o treino de músculo, mesmo para quem quer emagrecer: nesse caso mantenha a musculação " +
+        "como base e use apenas um complemento curto de cardio no fim do treino. Não monte treinos só de cardio, " +
+        "aeróbico, funcional, HIIT ou peso do corpo. Use nomes de exercícios simples que um iniciante entenda. " + 
         `Crie um treino por dia disponível (day_of_week: 0=domingo ... 6=sábado), com ${tier.exercises[0]} a ${tier.exercises[1]} exercícios cada, ` +
         "séries, repetições, descanso em segundos e observações curtas de execução. " +
         "Em load_text sugira uma orientação de carga (ex.: 'peso leve', 'moderado') ou null. " +
@@ -165,7 +168,8 @@ function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanT
     `Atualização do treino a cada ${tier.updateEveryDays} dias.`,
     "Respostas do questionário (JSON):",
     JSON.stringify(answers, null, 2),
-    "Monte a divisão semanal respeitando a quantidade de dias disponíveis informada e o objetivo declarado.",
+    "Monte a divisão semanal de MUSCULAÇÃO respeitando a quantidade de dias disponíveis informada e o objetivo declarado. " +
+      "Se o objetivo for emagrecer, mantenha a musculação como base do treino e acrescente no máximo um cardio curto no final.",
   ].join("\n");
 }
 

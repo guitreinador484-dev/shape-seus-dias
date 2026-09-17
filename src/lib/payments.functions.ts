@@ -9,6 +9,7 @@ type CheckoutInput = {
   name?: string;
   email?: string;
   whatsapp?: string;
+  orderBump?: boolean;
 };
 
 function parsePrice(price: string | number): number {
@@ -45,6 +46,7 @@ export const createMercadoPagoCheckoutFn = createServerFn({ method: "POST" })
       provider_reference: externalReference,
       plan_id: data.planId,
       payment_method: data.method ?? null,
+      order_bump: Boolean(data.orderBump),
       customer_email: data.email ?? null,
       customer_name: data.name ?? null,
       customer_whatsapp: data.whatsapp ?? null,
@@ -128,6 +130,7 @@ export const createPixPaymentFn = createServerFn({ method: "POST" })
       provider_reference: externalReference,
       plan_id: data.planId,
       payment_method: "pix",
+      order_bump: Boolean(data.orderBump),
       customer_email: data.email ?? null,
       customer_name: data.name ?? null,
       customer_whatsapp: data.whatsapp ?? null,

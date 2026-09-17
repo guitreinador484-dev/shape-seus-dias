@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS has_order_bump BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.purchases ADD COLUMN IF NOT EXISTS order_bump BOOLEAN NOT NULL DEFAULT false;
