@@ -287,10 +287,8 @@ function FunnelPage() {
         void generateAiPlan({ data: { reference } }).catch(() => {});
         if (!active) return;
         setAccount(result);
-        if (result?.actionLink) {
-          window.location.href = result.actionLink;
-          return;
-        }
+        window.location.href = `/criar-senha?ref=${encodeURIComponent(reference)}`;
+        return;
       } catch (e) {
         console.error("[funil] falha ao liberar acesso após o cartão", e);
       } finally {
