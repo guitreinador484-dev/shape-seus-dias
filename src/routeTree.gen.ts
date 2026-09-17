@@ -17,7 +17,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as ApiPublicEnsureSelftestRouteImport } from './routes/api/public/ensure-selftest'
 import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_authenticated/plataforma.cursos'
 import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
 import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
@@ -71,11 +70,6 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const ApiPublicEnsureSelftestRoute = ApiPublicEnsureSelftestRouteImport.update({
-  id: '/api/public/ensure-selftest',
-  path: '/api/public/ensure-selftest',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPlataformaCursosRoute =
   AuthenticatedPlataformaCursosRouteImport.update({
@@ -179,7 +173,6 @@ export interface FileRoutesByFullPath {
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
-  '/api/public/ensure-selftest': typeof ApiPublicEnsureSelftestRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -202,7 +195,6 @@ export interface FileRoutesByTo {
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
-  '/api/public/ensure-selftest': typeof ApiPublicEnsureSelftestRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -228,7 +220,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/_authenticated/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
-  '/api/public/ensure-selftest': typeof ApiPublicEnsureSelftestRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -254,7 +245,6 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/plataforma/cursos'
-    | '/api/public/ensure-selftest'
     | '/admin/'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
@@ -277,7 +267,6 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/plataforma/cursos'
-    | '/api/public/ensure-selftest'
     | '/admin'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
@@ -302,7 +291,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
     | '/_authenticated/plataforma/cursos'
-    | '/api/public/ensure-selftest'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/plataforma/cursos/$slug'
@@ -315,7 +303,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FunilRoute: typeof FunilRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiPublicEnsureSelftestRoute: typeof ApiPublicEnsureSelftestRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
@@ -376,13 +363,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/api/public/ensure-selftest': {
-      id: '/api/public/ensure-selftest'
-      path: '/api/public/ensure-selftest'
-      fullPath: '/api/public/ensure-selftest'
-      preLoaderRoute: typeof ApiPublicEnsureSelftestRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/plataforma/cursos': {
       id: '/_authenticated/plataforma/cursos'
@@ -579,7 +559,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FunilRoute: FunilRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiPublicEnsureSelftestRoute: ApiPublicEnsureSelftestRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
