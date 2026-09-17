@@ -2,6 +2,7 @@
 // e grava o treino + PDF na conta do aluno.
 
 import { buildWorkoutPdf, DAY_NAMES } from "./workout-pdf";
+import { resolvePlanTier, type PlanTier } from "./plan-tiers";
 
 const BUCKET = "workout-pdfs";
 const PROFESSIONAL = "Gui Treinador";
@@ -21,13 +22,21 @@ type AiPlan = {
   exercises: AiExercise[];
 };
 
-type AiResult = { plans: AiPlan[] };
+type AiResult = {
+  summary: string | null;
+  goals: string[] | null;
+  progression: string | null;
+  plans: AiPlan[];
+};
 
 const PLAN_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["plans"],
+  required: ["summary", "goals", "progression", "plans"],
   properties: {
+    summary: { type: ["string", "null"] },
+    goals: { type: ["array", "null"], items: { type: "string" } },
+    progression: { type: ["string", "null"] },
     plans: {
       type: "array",
       items: {
@@ -68,7 +77,7 @@ function decodeBase64(base64: string): Uint8Array {
 }
 
 /** Chama o Lovable AI Gateway (streaming obrigatório) e devolve o JSON do plano. */
-async function askAiForPlan(promptText: string): Promise<AiResult> {
+async function askAiForPlan(promptText: string, tier: PlanTier): Promise<AiResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("LOVABLE_API_KEY ausente");
 
@@ -86,9 +95,17 @@ async function askAiForPlan(promptText: string): Promise<AiResult> {
       instructions:
         "Você é um personal trainer brasileiro. Monte uma divisão de treino semanal segura e objetiva " +
         "para academia, em português do Brasil. Use nomes de exercícios simples que um iniciante entenda. " +
-        "Crie um treino por dia disponível (day_of_week: 0=domingo ... 6=sábado), com 5 a 8 exercícios cada, " +
+        `Crie um treino por dia disponível (day_of_week: 0=domingo ... 6=sábado), com ${tier.exercises[0]} a ${tier.exercises[1]} exercícios cada, ` +
         "séries, repetições, descanso em segundos e observações curtas de execução. " +
-        "Em load_text sugira uma orientação de carga (ex.: 'peso leve', 'moderado') ou null.",
+        "Em load_text sugira uma orientação de carga (ex.: 'peso leve', 'moderado') ou null. " +
+        `O aluno comprou o ${tier.name}. ${tier.aiInstructions} ` +
+        "Em summary, escreva uma frase resumindo o objetivo do aluno. " +
+        (tier.pdf.goals
+          ? "Em goals, liste de 3 a 5 metas de treino. "
+          : "Deixe goals como null. ") +
+        (tier.pdf.progression
+          ? "Em progression, explique como aumentar a carga ao longo das semanas."
+          : "Deixe progression como null."),
       input: promptText,
       text: {
         format: {
@@ -141,12 +158,14 @@ async function askAiForPlan(promptText: string): Promise<AiResult> {
   return JSON.parse(text) as AiResult;
 }
 
-function buildPrompt(name: string, answers: Record<string, unknown>): string {
+function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanTier): string {
   return [
     `Aluno: ${name || "Aluno"}.`,
+    `Plano comprado: ${tier.name} (${tier.tagline}).`,
+    `Atualização do treino a cada ${tier.updateEveryDays} dias.`,
     "Respostas do questionário (JSON):",
     JSON.stringify(answers, null, 2),
-    "Monte a divisão semanal respeitando a quantidade de dias disponíveis informada.",
+    "Monte a divisão semanal respeitando a quantidade de dias disponíveis informada e o objetivo declarado.",
   ].join("\n");
 }
 
@@ -162,7 +181,7 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
 
     const { data: purchase } = await supabaseAdmin
       .from("purchases")
-      .select("user_id, customer_email, customer_name, status")
+      .select("user_id, customer_email, customer_name, status, plan_id")
       .eq("provider_reference", reference)
       .maybeSingle();
 
@@ -203,7 +222,8 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
     }
 
     const studentName = purchase.customer_name || email || "Aluno";
-    const ai = await askAiForPlan(buildPrompt(studentName, answers));
+    const tier = resolvePlanTier(purchase.plan_id);
+    const ai = await askAiForPlan(buildPrompt(studentName, answers, tier), tier);
     const plans = (ai.plans ?? []).slice(0, 7);
     if (!plans.length) return { ok: false, plans: 0, pdf: false, message: "A IA não retornou treinos" };
 
@@ -252,6 +272,11 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
           dayOfWeek: day,
           professional: PROFESSIONAL,
           exercises,
+          tierLabel: tier.name,
+          updateNote: `Atualização a cada ${tier.updateEveryDays} dias`,
+          summary: ai.summary ?? null,
+          goals: tier.pdf.goals ? (ai.goals ?? null) : null,
+          progression: tier.pdf.progression ? (ai.progression ?? null) : null,
         });
         const path = `${userId}/${planRow.id}-v1.pdf`;
         const { error: upErr } = await supabaseAdmin.storage

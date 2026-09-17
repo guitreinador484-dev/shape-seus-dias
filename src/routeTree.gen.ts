@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ApiPublicAiPlanSelftestRouteImport } from './routes/api/public/ai-plan-selftest'
 import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_authenticated/plataforma.cursos'
 import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
 import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
@@ -70,6 +71,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const ApiPublicAiPlanSelftestRoute = ApiPublicAiPlanSelftestRouteImport.update({
+  id: '/api/public/ai-plan-selftest',
+  path: '/api/public/ai-plan-selftest',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPlataformaCursosRoute =
   AuthenticatedPlataformaCursosRouteImport.update({
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
+  '/api/public/ai-plan-selftest': typeof ApiPublicAiPlanSelftestRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
+  '/api/public/ai-plan-selftest': typeof ApiPublicAiPlanSelftestRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/_authenticated/plataforma/cursos': typeof AuthenticatedPlataformaCursosRouteWithChildren
+  '/api/public/ai-plan-selftest': typeof ApiPublicAiPlanSelftestRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/plataforma/cursos'
+    | '/api/public/ai-plan-selftest'
     | '/admin/'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/admin/treinos'
     | '/admin/vendas'
     | '/plataforma/cursos'
+    | '/api/public/ai-plan-selftest'
     | '/admin'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
     | '/_authenticated/plataforma/cursos'
+    | '/api/public/ai-plan-selftest'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/plataforma/cursos/$slug'
@@ -303,6 +315,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FunilRoute: typeof FunilRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicAiPlanSelftestRoute: typeof ApiPublicAiPlanSelftestRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
@@ -363,6 +376,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/ai-plan-selftest': {
+      id: '/api/public/ai-plan-selftest'
+      path: '/api/public/ai-plan-selftest'
+      fullPath: '/api/public/ai-plan-selftest'
+      preLoaderRoute: typeof ApiPublicAiPlanSelftestRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/plataforma/cursos': {
       id: '/_authenticated/plataforma/cursos'
@@ -559,6 +579,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FunilRoute: FunilRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicAiPlanSelftestRoute: ApiPublicAiPlanSelftestRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
