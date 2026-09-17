@@ -65,8 +65,8 @@ export const createMercadoPagoCheckoutFn = createServerFn({ method: "POST" })
       external_reference: externalReference,
       notification_url: `${origin}/api/public/mercadopago/webhook`,
       back_urls: {
-        success: `${origin}/funil?pagamento=sucesso`,
-        pending: `${origin}/funil?pagamento=pendente`,
+        success: `${origin}/funil?pagamento=sucesso&ref=${encodeURIComponent(externalReference)}`,
+        pending: `${origin}/funil?pagamento=pendente&ref=${encodeURIComponent(externalReference)}`,
         failure: `${origin}/funil?pagamento=falhou`,
       },
       ...(origin.startsWith("https://") ? { auto_return: "approved" } : {}),

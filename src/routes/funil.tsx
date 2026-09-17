@@ -110,7 +110,12 @@ function FunnelPage() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixPaid, setPixPaid] = useState(false);
   const [pixError, setPixError] = useState<string | null>(null);
-  const [account, setAccount] = useState<{ ok: boolean; created: boolean; emailSent: boolean } | null>(null);
+  const [account, setAccount] = useState<{
+    ok: boolean;
+    created: boolean;
+    emailSent: boolean;
+    actionLink?: string | null;
+  } | null>(null);
   const [accountLoading, setAccountLoading] = useState(false);
 
   const measurementProgress = useMemo(() => {
@@ -224,6 +229,10 @@ function FunnelPage() {
           try {
             const result = await provisionAccess({ data: { reference: pix.reference } });
             if (active) setAccount(result);
+            if (result?.actionLink) {
+              window.location.href = result.actionLink;
+              return;
+            }
           } catch (e) {
             console.error("[funil] falha ao criar conta de acesso", e);
           } finally {
@@ -239,6 +248,35 @@ function FunnelPage() {
       clearInterval(timer);
     };
   }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess]);
+
+  // Volta do checkout de cartão: libera o acesso e leva direto para criar a senha.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get("ref");
+    if (params.get("pagamento") !== "sucesso" || !reference) return;
+    let active = true;
+    setStage("done");
+    setAccountLoading(true);
+    (async () => {
+      try {
+        const result = await provisionAccess({ data: { reference } });
+        if (!active) return;
+        setAccount(result);
+        if (result?.actionLink) {
+          window.location.href = result.actionLink;
+          return;
+        }
+      } catch (e) {
+        console.error("[funil] falha ao liberar acesso após o cartão", e);
+      } finally {
+        if (active) setAccountLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -801,14 +839,16 @@ function FunnelPage() {
                   {account.created ? "Sua conta foi criada!" : "Seu acesso foi liberado!"}
                 </p>
                 <p className="mt-2 text-sm text-slate-700">
-                  Enviamos um e-mail para <b>{contact.email}</b> com o link para você criar a sua senha e entrar
-                  na plataforma.
+                  {account.actionLink
+                    ? "Vamos te levar agora para criar a sua senha de acesso."
+                    : "Enviamos um e-mail com o link para você criar a sua senha e entrar na plataforma."}{" "}
+                  Também enviamos uma cópia para <b>{contact.email}</b>.
                 </p>
                 <a
-                  href="/auth"
+                  href={account.actionLink || "/auth"}
                   className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800"
                 >
-                  Ir para a plataforma
+                  {account.actionLink ? "Criar minha senha" : "Ir para a plataforma"}
                 </a>
                 {!account.emailSent && (
                   <p className="mt-3 text-xs text-amber-700">

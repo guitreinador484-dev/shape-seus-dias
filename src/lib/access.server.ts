@@ -13,6 +13,8 @@ export type ProvisionResult = {
   ok: boolean;
   created: boolean;
   emailSent: boolean;
+  /** Link de uso único para o comprador definir a senha sem abrir o e-mail. */
+  actionLink?: string | null;
   message?: string;
 };
 
@@ -124,7 +126,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       .eq("provider_reference", input.reference);
   }
 
-  // Envia o e-mail para o cliente definir a senha de acesso
+  // Envia o e-mail para o cliente definir a senha de acesso (reserva)
   let emailSent = false;
   const { error: mailError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
     redirectTo: `${input.origin}/reset-password`,
@@ -135,5 +137,22 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     emailSent = true;
   }
 
-  return { ok: true, created, emailSent };
+  // Link de uso único: o comprador vai direto para "Crie sua senha" sem abrir o e-mail.
+  let actionLink: string | null = null;
+  try {
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: `${input.origin}/reset-password` },
+    });
+    if (linkError) {
+      console.error("[access] falha ao gerar link de acesso", linkError.message);
+    } else {
+      actionLink = linkData?.properties?.action_link ?? null;
+    }
+  } catch (e) {
+    console.error("[access] erro ao gerar link de acesso", e instanceof Error ? e.message : e);
+  }
+
+  return { ok: true, created, emailSent, actionLink };
 }
