@@ -127,6 +127,7 @@ type UpdateStudentStatusInput = {
   full_name?: string | null;
   whatsapp?: string | null;
   has_class_access?: boolean;
+  has_order_bump?: boolean;
   is_active?: boolean;
   access_expires_at?: string | null;
   role?: AppRole;
