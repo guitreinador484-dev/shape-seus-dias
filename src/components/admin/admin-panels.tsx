@@ -376,9 +376,9 @@ export function AdminDashboardPanel() {
                 <li key={item.key}>
                   <Link
                     to={item.to}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60"
+                    className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-muted/30 px-3 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4"
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex min-w-0 items-start gap-2 sm:items-center">
                       <StatusPill tone={item.tone}>Atenção</StatusPill>
                       {item.text}
                     </span>
@@ -583,8 +583,8 @@ export function AdminDashboardPanel() {
                   )}
 
                   {/* Measurement table */}
-                  <div className="rounded-xl border border-white/10 overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="overflow-x-auto rounded-xl border border-white/10">
+                    <table className="min-w-[720px] w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/[0.03]">
                           <th className="px-3 py-2.5 text-left text-[11px] text-muted-foreground font-medium">Data</th>
@@ -685,7 +685,7 @@ export function EvolutionDialog({ student, open, onOpenChange }: { student: Stud
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-3xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Evolução — {student.full_name || student.email}</DialogTitle>
           <DialogDescription>Medidas e fotos de progresso registradas pelo aluno.</DialogDescription>
@@ -694,7 +694,7 @@ export function EvolutionDialog({ student, open, onOpenChange }: { student: Stud
           <p className="text-sm text-muted-foreground">Nenhuma medição registrada ainda.</p>
         ) : (
           <div className="space-y-4">
-            <Table>
+            <Table className="min-w-[680px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -771,7 +771,7 @@ export function AnamneseDialog({ student, open, onOpenChange }: { student: Stude
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Ficha de anamnese — {student.full_name || student.email}</DialogTitle>
           <DialogDescription>Informações preenchidas pelo aluno para montagem do programa.</DialogDescription>
@@ -1018,7 +1018,7 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
       <DialogTrigger asChild>
         <Button size="sm" variant={workout ? "outline" : "default"}>{workout ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {workout ? "Editar" : "Nova aula"}</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>{workout ? "Editar aula" : "Nova aula"}</DialogTitle>
           <DialogDescription>Envie o vídeo direto pela plataforma — cada aluno acessa por link assinado individual.</DialogDescription>
@@ -1444,7 +1444,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
         </div>
       </CardContent>
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-5xl overflow-hidden flex flex-col sm:w-full">
           <DialogHeader>
             <DialogTitle>Biblioteca de exercícios</DialogTitle>
             <DialogDescription>Clique em um exercício para definir séries, repetições e descanso antes de adicionar.</DialogDescription>
@@ -1491,7 +1491,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
         </DialogContent>
       </Dialog>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto sm:w-full">
           <DialogHeader>
             <DialogTitle>{pending?.name}</DialogTitle>
             <DialogDescription>Defina séries, repetições e descanso.</DialogDescription>

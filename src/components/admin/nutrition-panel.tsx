@@ -103,7 +103,7 @@ export function AdminNutritionPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="grid grid-cols-1 items-start gap-3 mb-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div>
           <h2 className="font-display text-2xl tracking-wide">Nutrição</h2>
           <p className="text-sm text-muted-foreground">Monte planos alimentares por aluno (refeições e macros).</p>
@@ -141,7 +141,7 @@ export function AdminNutritionPanel() {
                     </div>
                      <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={() => setEditing(plan)}><Pencil className="h-4 w-4" /> Editar</Button>
-                      <Button variant="destructive" size="sm" onClick={() => deletePlan(plan.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="outline" size="sm" onClick={() => deletePlan(plan.id)}><Trash2 className="h-4 w-4" /> Excluir</Button>
                     </div>
                   </div>
                 </CardHeader>

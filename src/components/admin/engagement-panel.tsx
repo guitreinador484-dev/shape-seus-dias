@@ -91,7 +91,7 @@ export function AdminEngagementPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+      <div className="grid grid-cols-1 items-end gap-3 mb-6 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <h2 className="font-display text-2xl tracking-wide">Engajamento</h2>
           <p className="text-sm text-muted-foreground">Quem está treinando com consistência e quem precisa de atenção.</p>

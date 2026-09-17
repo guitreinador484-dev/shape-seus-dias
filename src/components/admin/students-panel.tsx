@@ -1048,7 +1048,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
               {plans.map((p) => {
                 const pdf = pdfs.find((f) => f.plan_id === p.id);
                 return (
-                  <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                  <li key={p.id} className="grid grid-cols-1 gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{p.plan_name || "Treino"}</p>
                       <p className="text-xs text-muted-foreground">
@@ -1103,7 +1103,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
           ) : (
             <ul className="divide-y divide-border">
               {studentPurchases.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <li key={p.id} className="grid grid-cols-1 gap-2 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                   <div>
                     <p className="font-medium">{resolvePlanTier(p.plan_id).shortName}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(p.created_at)}</p>
