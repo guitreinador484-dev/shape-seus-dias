@@ -825,6 +825,13 @@ function CreateStudentDialog({
   defaultName?: string;
   onCreated: () => void;
 }) {
+  function generateTemporaryPassword() {
+    const bytes = new Uint32Array(14);
+    crypto.getRandomValues(bytes);
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+    return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
+  }
+
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = open !== undefined;
   const isOpen = isControlled ? open : internalOpen;
@@ -843,7 +850,7 @@ function CreateStudentDialog({
     if (isOpen) {
       setEmail(defaultEmail);
       setFullName(defaultName);
-      setPassword("");
+      setPassword(generateTemporaryPassword());
       setWhatsapp("");
       setRole("online");
       setHasAccess(true);
@@ -879,7 +886,13 @@ function CreateStudentDialog({
           </div>
           <div className="space-y-1">
             <Label>Senha provisória</Label>
-            <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            <div className="flex gap-2">
+              <Input type="text" minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 10 caracteres" />
+              <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
+                Gerar
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Use uma senha única com letras, números e símbolos.</p>
           </div>
           <div className="space-y-1">
             <Label>Nome completo</Label>
@@ -909,7 +922,7 @@ function CreateStudentDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancelar</Button>
-          <Button onClick={submit} disabled={saving || !email || !password}>
+          <Button onClick={submit} disabled={saving || !email || password.length < 10}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Cadastrar
           </Button>
         </DialogFooter>
