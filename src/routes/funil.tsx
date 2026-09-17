@@ -19,6 +19,7 @@ import {
   getPaymentStatusFn,
 } from "@/lib/payments.functions";
 import { provisionAccessFn } from "@/lib/access.functions";
+import { generateAiPlanFn } from "@/lib/ai-plan.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
