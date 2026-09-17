@@ -19,6 +19,7 @@ import {
   getPaymentStatusFn,
 } from "@/lib/payments.functions";
 import { provisionAccessFn } from "@/lib/access.functions";
+import { generateAiPlanFn } from "@/lib/ai-plan.functions";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -64,6 +65,7 @@ function FunnelPage() {
   const createPix = useServerFn(createPixPaymentFn);
   const getPaymentStatus = useServerFn(getPaymentStatusFn);
   const provisionAccess = useServerFn(provisionAccessFn);
+  const generateAiPlan = useServerFn(generateAiPlanFn);
 
   useEffect(() => {
     let cancelled = false;
@@ -228,6 +230,8 @@ function FunnelPage() {
           setAccountLoading(true);
           try {
             const result = await provisionAccess({ data: { reference: pix.reference } });
+            // Dispara o treino da IA em paralelo (não bloqueia o redirecionamento).
+            void generateAiPlan({ data: { reference: pix.reference } }).catch(() => {});
             if (active) setAccount(result);
             if (result?.actionLink) {
               window.location.href = result.actionLink;
@@ -247,7 +251,7 @@ function FunnelPage() {
       active = false;
       clearInterval(timer);
     };
-  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess]);
+  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess, generateAiPlan]);
 
   // Volta do checkout de cartão: libera o acesso e leva direto para criar a senha.
   useEffect(() => {
@@ -260,6 +264,7 @@ function FunnelPage() {
     (async () => {
       try {
         const result = await provisionAccess({ data: { reference } });
+        void generateAiPlan({ data: { reference } }).catch(() => {});
         if (!active) return;
         setAccount(result);
         if (result?.actionLink) {

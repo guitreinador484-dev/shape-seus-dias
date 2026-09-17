@@ -1,4 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/** O aluno abriu a plataforma sem treino: gera na hora a partir da compra aprovada dele. */
+export const ensureMyPlanFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { ensureAiPlanForUser } = await import("./ai-plan.server");
+    return ensureAiPlanForUser(context.userId);
+  });
 
 /**
  * Público (protegido pela referência da compra): gera o treino com IA

@@ -18,6 +18,8 @@ import { CheckinCard } from "@/components/platform/checkin-card";
 import { AnamneseTab } from "@/components/platform/anamnese-tab";
 import { ReferralCard } from "@/components/platform/referral-card";
 import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -109,6 +111,52 @@ function toEmbedUrl(raw: string): string | null {
   } catch { return null; }
 }
 
+/**
+ * Sem treino: tenta montar na hora a partir da compra aprovada do aluno.
+ */
+function EmptyTraining() {
+  const ensureMyPlan = useServerFn(ensureMyPlanFn);
+  const [state, setState] = useState<"checking" | "none">("checking");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const result = await ensureMyPlan({ data: undefined });
+        if (cancelled) return;
+        if (result?.plans && result.plans > 0) {
+          window.location.reload();
+          return;
+        }
+      } catch {
+        /* mostra o estado vazio abaixo */
+      }
+      if (!cancelled) setState("none");
+    })();
+    return () => { cancelled = true; };
+  }, [ensureMyPlan]);
+
+  return (
+    <Card className="border-dashed">
+      <CardContent className="py-16 text-center space-y-3">
+        <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
+          {state === "checking"
+            ? <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            : <Dumbbell className="h-6 w-6 text-muted-foreground" />}
+        </div>
+        <p className="font-display text-xl">
+          {state === "checking" ? "Montando seu treino..." : "Sem treino cadastrado"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {state === "checking"
+            ? "Estamos preparando seu plano com base nas suas respostas. Leva menos de um minuto."
+            : "Seu personal ainda não montou seu plano. Fale com ele para começar."}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
   const today = new Date().getDay();
   const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
@@ -130,19 +178,7 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
   }, [plans]);
 
   if (loading) return <Skeleton className="h-64" />;
-  if (plans.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="py-16 text-center space-y-3">
-          <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
-            <Dumbbell className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="font-display text-xl">Sem treino cadastrado</p>
-          <p className="text-sm text-muted-foreground">Seu personal ainda não montou seu plano. Fale com ele para começar.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (plans.length === 0) return <EmptyTraining />;
 
   const dayPlans = plans.filter((p) => p.day_of_week === selectedDay);
   const totalEx = dayPlans.reduce((acc, p) => acc + p.exercises.length, 0);
