@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/ui-kit";
 import {
   DEFAULT_ORDER_BUMP,
   formatBRL,
@@ -82,14 +83,18 @@ export function OrderBumpEditor() {
                     onCheckedChange={(v) => update(i, { enabled: v })}
                   />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setItems((list) => list.filter((_, idx) => idx !== i))}
-                  aria-label="Excluir oferta"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <ConfirmDialog
+                  trigger={
+                    <Button variant="ghost" size="icon" aria-label="Excluir oferta">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  }
+                  title="Excluir esta oferta do checkout?"
+                  description="A oferta deixa de aparecer para quem comprar. Quem já comprou continua com o acesso."
+                  confirmLabel="Sim, excluir oferta"
+                  destructive
+                  onConfirm={() => setItems((list) => list.filter((_, idx) => idx !== i))}
+                />
               </div>
             </div>
 

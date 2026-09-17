@@ -438,3 +438,85 @@ export const getReferralCount = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { count: count ?? 0 };
   });
+/**
+ * Admin-only: dados de acesso de cada aluno (último acesso e se já criou senha).
+ * Vem do Auth, que não é acessível pelo cliente.
+ */
+export const listStudentAccess = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw new Error(error.message);
+    return {
+      users: (data?.users ?? []).map((u) => ({
+        id: u.id,
+        email: u.email ?? null,
+        last_sign_in_at: u.last_sign_in_at ?? null,
+        created_at: u.created_at ?? null,
+      })),
+    };
+  });
+
+/** Admin-only: define uma nova senha de acesso para o aluno. */
+export const resetStudentPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; password: string }) => {
+    if (!input?.userId) throw new Error("Aluno não informado");
+    if (!input?.password || input.password.length < 10) throw new Error("A senha deve ter pelo menos 10 caracteres");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error) {
+      throw new Error(
+        /weak|easy to guess/i.test(error.message)
+          ? "Essa senha é muito comum. Use a senha sugerida ou crie outra com letras, números e símbolos."
+          : error.message,
+      );
+    }
+    return { ok: true as const };
+  });
+
+/**
+ * Admin-only: remove o aluno. `mode: "inativar"` mantém o histórico e apenas
+ * tira o acesso; `mode: "excluir"` apaga a conta de verdade.
+ */
+export const removeStudent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string; mode: "inativar" | "excluir" }) => {
+    if (!input?.userId) throw new Error("Aluno não informado");
+    if (input.mode !== "inativar" && input.mode !== "excluir") throw new Error("Ação inválida");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    if (data.userId === context.userId) throw new Error("Você não pode remover a sua própria conta.");
+
+    const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", data.userId);
+    if ((roles ?? []).some((r) => r.role === "admin")) {
+      throw new Error("Não é possível remover uma conta de administrador.");
+    }
+
+    if (data.mode === "inativar") {
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({ is_active: false, has_class_access: false, updated_at: new Date().toISOString() })
+        .eq("id", data.userId);
+      if (error) throw new Error(error.message);
+      return { ok: true as const, mode: "inativar" as const };
+    }
+
+    // Desvincula o histórico de compras antes de apagar a conta.
+    await supabaseAdmin.from("purchases").update({ user_id: null }).eq("user_id", data.userId);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const, mode: "excluir" as const };
+  });

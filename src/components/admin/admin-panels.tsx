@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { ConfirmDialog, MetricCard, StatusPill } from "@/components/admin/ui-kit";
 import {
   BadgeDollarSign,
   CheckCircle2,
@@ -73,7 +74,7 @@ type BodyMeasurement = Tables<"body_measurements">;
 type WorkoutInsert = Database["public"]["Tables"]["workouts"]["Insert"];
 type WorkoutUpdate = Database["public"]["Tables"]["workouts"]["Update"];
 
-type Student = Profile & { role: AppRole | null };
+export type Student = Profile & { role: AppRole | null };
 type PlanWithExercises = StudentPlan & { exercises: StudentPlanExercise[] };
 type AdminSettings = {
   personal_name: string;
@@ -121,20 +122,24 @@ const roleLabels: Record<AppRole, string> = {
   presencial: "Aluno presencial",
 };
 
-const statusLabels: Record<string, string> = {
+export const purchaseStatusLabels: Record<string, string> = {
   pending: "Pendente",
   paid: "Pago",
   approved: "Aprovado",
   canceled: "Cancelado",
   refunded: "Reembolsado",
+  failed: "Não concluída",
+  rejected: "Recusada",
+  expired: "Expirada",
+  in_process: "Em análise",
 };
 
-function formatDate(value?: string | null) {
+export function formatDate(value?: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
-function formatCurrency(value: number | null | undefined) {
+export function formatCurrency(value: number | null | undefined) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value ?? 0));
 }
 
@@ -215,7 +220,7 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string |
   );
 }
 
-async function fetchStudents(): Promise<Student[]> {
+export async function fetchStudents(): Promise<Student[]> {
   const [{ data: profiles, error: profilesError }, { data: roles, error: rolesError }] = await Promise.all([
     supabase.from("profiles").select("*").order("created_at", { ascending: false }),
     supabase.from("user_roles").select("user_id, role"),
@@ -306,6 +311,30 @@ export function AdminDashboardPanel() {
     s.role !== "admin" && (s.full_name?.toLowerCase().includes(searchStudent.toLowerCase()) || s.email?.toLowerCase().includes(searchStudent.toLowerCase()))
   );
 
+  const onlyStudents = students.filter((s) => s.role !== "admin");
+  const studentsWithoutPlan = onlyStudents.filter((s) => s.is_active && !plans.some((p) => p.student_id === s.id));
+  const blockedStudents = onlyStudents.filter((s) => !s.is_active);
+  const pendingSales = purchases.filter((p) => p.status === "pending");
+  const registeredEmails = new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean));
+  const buyersWithoutLogin = purchases.filter(
+    (p) => ["paid", "approved"].includes(p.status) && p.customer_email && !registeredEmails.has(p.customer_email.toLowerCase()),
+  );
+  const newStudents30d = onlyStudents.filter(
+    (s) => Date.now() - new Date(s.created_at).getTime() < 30 * 24 * 60 * 60 * 1000,
+  ).length;
+
+  const attention: { key: string; text: string; to: string; tone: "amber" | "orange" | "red" | "blue" }[] = [];
+  if (studentsWithoutPlan.length)
+    attention.push({ key: "sem-treino", text: `${studentsWithoutPlan.length} aluno(s) ainda sem treino cadastrado.`, to: "/admin/treinos", tone: "amber" });
+  if (expiredStudents)
+    attention.push({ key: "vencidos", text: `${expiredStudents} aluno(s) com o acesso vencido.`, to: "/admin/alunos", tone: "orange" });
+  if (blockedStudents.length)
+    attention.push({ key: "bloqueados", text: `${blockedStudents.length} aluno(s) com o acesso bloqueado.`, to: "/admin/alunos", tone: "red" });
+  if (buyersWithoutLogin.length)
+    attention.push({ key: "sem-login", text: `${buyersWithoutLogin.length} comprador(es) ainda sem login criado.`, to: "/admin/alunos", tone: "blue" });
+  if (pendingSales.length)
+    attention.push({ key: "pendentes", text: `${pendingSales.length} venda(s) aguardando pagamento.`, to: "/admin/vendas", tone: "amber" });
+
   if (loading) return <LoadingGrid />;
 
   return (
@@ -313,45 +342,54 @@ export function AdminDashboardPanel() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-4xl tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground mt-1">Visão geral da plataforma e alunos.</p>
+          <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Dashboard</h2>
+          <p className="text-muted-foreground mt-1">Um resumo do que está acontecendo com seus alunos e vendas.</p>
         </div>
-        <Button variant="outline" onClick={() => load()} className="rounded-full"><RefreshCw className="h-4 w-4 mr-2" /> Atualizar</Button>
+        <Button variant="outline" onClick={() => load()}><RefreshCw className="h-4 w-4 mr-2" /> Atualizar</Button>
       </div>
 
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 backdrop-blur-xl">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
-          <Users className="h-5 w-5 text-primary mb-3" />
-          <p className="text-3xl font-display text-white">{students.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Alunos</p>
-        </div>
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent p-5 backdrop-blur-xl">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/20 blur-2xl" />
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 mb-3" />
-          <p className="text-3xl font-display text-white">{activeStudents}</p>
-          <p className="text-xs text-muted-foreground mt-1">Ativos</p>
-        </div>
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/15 via-blue-500/5 to-transparent p-5 backdrop-blur-xl">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-500/20 blur-2xl" />
-          <Video className="h-5 w-5 text-blue-400 mb-3" />
-          <p className="text-3xl font-display text-white">{workouts.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Aulas</p>
-        </div>
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent p-5 backdrop-blur-xl">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/20 blur-2xl" />
-          <BadgeDollarSign className="h-5 w-5 text-amber-400 mb-3" />
-          <p className="text-3xl font-display text-white">{formatCurrency(revenue)}</p>
-          <p className="text-xs text-muted-foreground mt-1">Receita</p>
-        </div>
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-red-500/15 via-red-500/5 to-transparent p-5 backdrop-blur-xl">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/20 blur-2xl" />
-          <AlertCircle className="h-5 w-5 text-red-400 mb-3" />
-          <p className="text-3xl font-display text-white">{expiredStudents}</p>
-          <p className="text-xs text-muted-foreground mt-1">Acessos expirados</p>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <MetricCard label="Total de alunos" value={onlyStudents.length} icon={Users} tone="blue" />
+        <MetricCard label="Alunos ativos" value={activeStudents} icon={CheckCircle2} tone="green" />
+        <MetricCard label="Novos em 30 dias" value={newStudents30d} icon={TrendingUp} tone="purple" />
+        <MetricCard label="Treinos cadastrados" value={plans.length} icon={Dumbbell} tone="amber" />
+        <MetricCard label="Receita aprovada" value={formatCurrency(revenue)} icon={BadgeDollarSign} tone="green" />
+        <MetricCard label="Acessos vencidos" value={expiredStudents} icon={AlertCircle} tone="red" />
       </div>
+
+      {/* Attention */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-500" /> O que precisa da sua atenção?
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {attention.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Tudo em dia. Nenhuma pendência no momento.</p>
+          ) : (
+            <ul className="space-y-2">
+              {attention.map((item) => (
+                <li key={item.key}>
+                  <Link
+                    to={item.to}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60"
+                  >
+                    <span className="flex items-center gap-2">
+                      <StatusPill tone={item.tone}>Atenção</StatusPill>
+                      {item.text}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
+                      Resolver <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main grid: Students + Sales + Evolution */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -400,7 +438,7 @@ export function AdminDashboardPanel() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-sm font-semibold text-white">{formatCurrency(purchase.amount)}</p>
-                      <p className="text-[10px] text-muted-foreground">{statusLabels[purchase.status] ?? purchase.status}</p>
+                      <p className="text-[10px] text-muted-foreground">{purchaseStatusLabels[purchase.status] ?? purchase.status}</p>
                     </div>
                   </div>
                 ))}
@@ -612,407 +650,7 @@ export function AdminDashboardPanel() {
   );
 }
 
-export function AdminStudentsPanel() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-
-  async function load() {
-    setLoading(true);
-    const [rows, purchaseRes] = await Promise.all([
-      fetchStudents(),
-      supabase.from("purchases").select("*").order("created_at", { ascending: false }),
-    ]);
-    if (purchaseRes.error) throw purchaseRes.error;
-    setStudents(rows);
-    setPurchases(purchaseRes.data ?? []);
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    load().catch((error) => {
-      setLoading(false);
-      toast.error("Erro ao carregar alunos", { description: error.message });
-    });
-  }, []);
-
-  const filtered = students.filter((student) => [student.email, student.full_name, student.whatsapp, student.role].some((value) => value?.toLowerCase().includes(query.toLowerCase())));
-
-  const registeredEmails = new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean));
-  const buyersWithoutAccount = purchases.filter((p) => p.customer_email && !registeredEmails.has(p.customer_email.toLowerCase()));
-
-  const updateStudentFn = useServerFn(updateStudentStatus);
-
-  async function updateStudent(student: Student, patch: Partial<Profile>, nextRole?: AppRole) {
-    if (isAdminEmail(student.email) && nextRole && nextRole !== "admin") {
-      toast.error("Este email precisa continuar como administrador.");
-      return;
-    }
-    await updateStudentFn({
-      data: {
-        userId: student.id,
-        full_name: patch.full_name ?? undefined,
-        whatsapp: patch.whatsapp ?? undefined,
-        has_class_access: patch.has_class_access,
-        is_active: patch.is_active,
-        access_expires_at: patch.access_expires_at ?? undefined,
-        role: nextRole && nextRole !== student.role ? nextRole : undefined,
-      },
-    });
-    toast.success("Aluno atualizado");
-    await load();
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto">
-      <PageHeader
-        title="Alunos"
-        description="Cadastre logins, edite dados, tipo de aluno e liberação de acesso às aulas."
-        action={
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" /> Cadastrar aluno
-          </Button>
-        }
-      />
-      <CreateStudentDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => load()} />
-      <div className="mb-4 flex items-center gap-2 rounded-lg border border-border px-3 py-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, email, WhatsApp ou tipo" className="border-0 shadow-none focus-visible:ring-0" />
-      </div>
-      {loading ? <Skeleton className="h-80" /> : filtered.length === 0 ? <EmptyState title="Nenhum aluno encontrado" description="Ajuste a busca ou aguarde novos cadastros." /> : (
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Aluno</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Aulas</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Validade</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((student) => (
-                  <StudentRow key={student.id} student={student} onSave={updateStudent} />
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-      <div className="mt-8">
-        <h3 className="font-display text-xl mb-1">Indicações</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Alunos que compartilharam seu código e as pessoas que cadastraram por indicação.
-        </p>
-        <Card>
-          <CardContent className="pt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Indicador</TableHead>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Indicados</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.filter((s) => s.referral_code).length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-6">Nenhum código de indicação gerado.</TableCell></TableRow>
-                ) : students.filter((s) => s.referral_code && s.role !== "admin").map((s) => {
-                  const referred = students.filter((r) => r.referred_by === s.id);
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell>
-                        <p className="font-medium">{s.full_name || s.email}</p>
-                        <p className="text-xs text-muted-foreground">{s.email}</p>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-primary">{s.referral_code}</TableCell>
-                      <TableCell>
-                        {referred.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Nenhuma</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {referred.map((r) => (
-                              <Badge key={r.id} variant="secondary">{r.full_name || r.email}</Badge>
-                            ))}
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mt-8">
-        <h3 className="font-display text-xl mb-1">Compradores</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Pessoas que compraram. Os que ainda não têm login estão marcados — clique para criar o acesso.
-        </p>
-        {purchases.length === 0 ? (
-          <EmptyState title="Nenhuma compra registrada" description="As vendas aparecerão aqui automaticamente." />
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Login</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchases.map((purchase) => {
-                    const hasAccount = purchase.customer_email && registeredEmails.has(purchase.customer_email.toLowerCase());
-                    return (
-                      <TableRow key={purchase.id}>
-                        <TableCell>{purchase.customer_name || "—"}</TableCell>
-                        <TableCell className="text-muted-foreground">{purchase.customer_email || "—"}</TableCell>
-                        <TableCell>{formatCurrency(purchase.amount)}</TableCell>
-                        <TableCell><Badge variant="secondary">{statusLabels[purchase.status] ?? purchase.status}</Badge></TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(purchase.created_at)}</TableCell>
-                        <TableCell className="text-right">
-                          {hasAccount ? (
-                            <Badge><CheckCircle2 className="h-3 w-3" /> Cadastrado</Badge>
-                          ) : purchase.customer_email ? (
-                            <CreateStudentDialog
-                              trigger={<Button size="sm" variant="outline"><Plus className="h-4 w-4" /> Criar login</Button>}
-                              defaultEmail={purchase.customer_email}
-                              defaultName={purchase.customer_name ?? ""}
-                              onCreated={() => load()}
-                            />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Sem email</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {buyersWithoutAccount.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-3">
-                  {buyersWithoutAccount.length} comprador(es) ainda sem login criado.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CreateStudentDialog({
-  open,
-  onOpenChange,
-  trigger,
-  defaultEmail = "",
-  defaultName = "",
-  onCreated,
-}: {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  trigger?: ReactNode;
-  defaultEmail?: string;
-  defaultName?: string;
-  onCreated: () => void;
-}) {
-  function generateTemporaryPassword() {
-    const bytes = new Uint32Array(14);
-    crypto.getRandomValues(bytes);
-    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-    return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
-  }
-
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = open !== undefined;
-  const isOpen = isControlled ? open : internalOpen;
-  const setOpen = (v: boolean) => { if (isControlled) onOpenChange?.(v); else setInternalOpen(v); };
-
-  const createFn = useServerFn(createStudent);
-  const [email, setEmail] = useState(defaultEmail);
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState(defaultName);
-  const [whatsapp, setWhatsapp] = useState("");
-  const [role, setRole] = useState<AppRole>("online");
-  const [hasAccess, setHasAccess] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setEmail(defaultEmail);
-      setFullName(defaultName);
-      setPassword(generateTemporaryPassword());
-      setWhatsapp("");
-      setRole("online");
-      setHasAccess(true);
-    }
-  }, [isOpen, defaultEmail, defaultName]);
-
-  async function submit() {
-    setSaving(true);
-    try {
-      await createFn({ data: { email, password, full_name: fullName || undefined, whatsapp: whatsapp || undefined, role, has_class_access: hasAccess } });
-      toast.success("Aluno cadastrado", { description: `Login criado para ${email}` });
-      setOpen(false);
-      onCreated();
-    } catch (error) {
-      toast.error("Erro ao cadastrar aluno", { description: error instanceof Error ? error.message : "Tente novamente." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Cadastrar novo aluno</DialogTitle>
-          <DialogDescription>Crie o login (email + senha). O aluno poderá entrar imediatamente.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="aluno@email.com" />
-          </div>
-          <div className="space-y-1">
-            <Label>Senha provisória</Label>
-            <div className="flex gap-2">
-              <Input type="text" minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 10 caracteres" />
-              <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
-                Gerar
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Use uma senha única com letras, números e símbolos.</p>
-          </div>
-          <div className="space-y-1">
-            <Label>Nome completo</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Nome do aluno" />
-          </div>
-          <div className="space-y-1">
-            <Label>WhatsApp</Label>
-            <Input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(00) 00000-0000" />
-          </div>
-          <div className="space-y-1">
-            <Label>Tipo de aluno</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="online">Aluno online</SelectItem>
-                <SelectItem value="presencial">Aluno presencial</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-            <div>
-              <p className="text-sm font-medium">Liberar aulas em vídeo</p>
-              <p className="text-xs text-muted-foreground">Define o acesso inicial à área de aulas.</p>
-            </div>
-            <Switch checked={hasAccess} onCheckedChange={setHasAccess} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancelar</Button>
-          <Button onClick={submit} disabled={saving || !email || password.length < 10}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Cadastrar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function StudentRow({ student, onSave }: { student: Student; onSave: (student: Student, patch: Partial<Profile>, role?: AppRole) => Promise<void> }) {
-  const [name, setName] = useState(student.full_name ?? "");
-  const [whatsapp, setWhatsapp] = useState(student.whatsapp ?? "");
-  const [role, setRole] = useState<AppRole>(student.role ?? "online");
-  const [hasClassAccess, setHasClassAccess] = useState(student.has_class_access);
-  const [isActive, setIsActive] = useState(student.is_active);
-  const [accessExpiresAt, setAccessExpiresAt] = useState(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
-  const [saving, setSaving] = useState(false);
-  const [evolutionOpen, setEvolutionOpen] = useState(false);
-  const [anamneseOpen, setAnamneseOpen] = useState(false);
-
-  async function save() {
-    setSaving(true);
-    try {
-      const expiresAt = accessExpiresAt
-        ? new Date(`${accessExpiresAt}T23:59:59`).toISOString()
-        : null;
-      await onSave(student, { full_name: name || null, whatsapp: whatsapp || null, has_class_access: hasClassAccess, is_active: isActive, access_expires_at: expiresAt }, role);
-    } catch (error) {
-      toast.error("Erro ao salvar aluno", { description: error instanceof Error ? error.message : "Tente novamente." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <>
-    <TableRow>
-      <TableCell>
-        <div className="space-y-2">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome" />
-          <p className="text-xs text-muted-foreground">{student.email}</p>
-          <Input value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder="WhatsApp" />
-        </div>
-      </TableCell>
-      <TableCell className="min-w-44">
-        <Select value={role} onValueChange={(value) => setRole(value as AppRole)} disabled={isAdminEmail(student.email)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="online">Aluno online</SelectItem>
-            <SelectItem value="presencial">Aluno presencial</SelectItem>
-            <SelectItem value="admin">Administrador</SelectItem>
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell>
-        <Switch checked={hasClassAccess} onCheckedChange={setHasClassAccess} />
-      </TableCell>
-      <TableCell>
-        <Switch checked={isActive} onCheckedChange={setIsActive} />
-      </TableCell>
-      <TableCell className="min-w-40">
-        <Input
-          type="date"
-          value={accessExpiresAt}
-          onChange={(event) => setAccessExpiresAt(event.target.value)}
-          aria-label="Validade do acesso"
-        />
-        <p className="text-[11px] text-muted-foreground mt-1">
-          {accessExpiresAt ? "Validade" : "Sem validade"}
-        </p>
-      </TableCell>
-      <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(student.created_at)}</TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          <Button size="sm" variant="outline" onClick={() => setEvolutionOpen(true)}>Evolução</Button>
-          <Button size="sm" variant="outline" onClick={() => setAnamneseOpen(true)}>Ficha</Button>
-          <Button size="sm" onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar</Button>
-        </div>
-      </TableCell>
-    </TableRow>
-    <EvolutionDialog student={student} open={evolutionOpen} onOpenChange={setEvolutionOpen} />
-    <AnamneseDialog student={student} open={anamneseOpen} onOpenChange={setAnamneseOpen} />
-    </>
-  );
-}
-
-function EvolutionDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function EvolutionDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
   const [rows, setRows] = useState<BodyMeasurement[]>([]);
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -1100,7 +738,7 @@ function EvolutionDialog({ student, open, onOpenChange }: { student: Student; op
   );
 }
 
-function AnamneseDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function AnamneseDialog({ student, open, onOpenChange }: { student: Student; open: boolean; onOpenChange: (open: boolean) => void }) {
   const [row, setRow] = useState<Tables<"anamnese"> | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -1887,6 +1525,7 @@ export function AdminSalesPanel() {
   }, []);
 
   const savePurchaseFn = useServerFn(savePurchase);
+  const [pendingStatus, setPendingStatus] = useState<{ id: string; status: string } | null>(null);
 
   async function createPurchase() {
     const student = students.find((item) => item.id === form.user_id);
@@ -1906,6 +1545,16 @@ export function AdminSalesPanel() {
       toast.success("Venda registrada");
     }
     await load();
+  }
+
+  function requestStatusChange(id: string, status: string) {
+    const purchase = purchases.find((item) => item.id === id);
+    const revoga = purchase && ["approved", "paid"].includes(purchase.status) && !["approved", "paid"].includes(status);
+    if (revoga) {
+      setPendingStatus({ id, status });
+      return;
+    }
+    void updateStatus(id, status);
   }
 
   async function updateStatus(id: string, status: string) {
@@ -1944,13 +1593,27 @@ export function AdminSalesPanel() {
           <Input value={form.customer_name} onChange={(event) => setForm({ ...form, customer_name: event.target.value })} placeholder="Nome" />
           <Input value={form.customer_email} onChange={(event) => setForm({ ...form, customer_email: event.target.value })} placeholder="Email" />
           <Input type="number" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} placeholder="Valor" />
-          <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(statusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
+          <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(purchaseStatusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
           <Input className="md:col-span-5" value={form.transaction_id} onChange={(event) => setForm({ ...form, transaction_id: event.target.value })} placeholder="ID da transação" />
           <Button onClick={createPurchase}><Plus className="h-4 w-4" /> Registrar</Button>
         </CardContent>
       </Card>
+      <ConfirmDialog
+          open={pendingStatus !== null}
+          onOpenChange={(open) => { if (!open) setPendingStatus(null); }}
+          title="Alterar a situação desta venda?"
+          description="Ao tirar a venda de aprovada, o aluno perde o acesso à plataforma automaticamente."
+          confirmLabel="Sim, alterar situação"
+          destructive
+          onConfirm={async () => {
+            if (!pendingStatus) return;
+            const pending = pendingStatus;
+            setPendingStatus(null);
+            await updateStatus(pending.id, pending.status);
+          }}
+      />
       {loading ? <Skeleton className="h-80" /> : purchases.length === 0 ? <EmptyState title="Nenhuma venda registrada" description="Registre vendas manuais ou aguarde integrações de pagamento." /> : (
-        <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Valor</TableHead><TableHead>Status</TableHead><TableHead>Transação</TableHead><TableHead>Data</TableHead></TableRow></TableHeader><TableBody>{purchases.map((purchase) => <TableRow key={purchase.id}><TableCell>{purchase.customer_name || "—"}<p className="text-xs text-muted-foreground">{purchase.customer_email}</p></TableCell><TableCell>{formatCurrency(purchase.amount)}</TableCell><TableCell><Select value={purchase.status} onValueChange={(value) => updateStatus(purchase.id, value)}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(statusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></TableCell><TableCell className="text-muted-foreground">{purchase.transaction_id || purchase.appmax_order_id || "—"}</TableCell><TableCell>{formatDate(purchase.created_at)}</TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
+        <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Valor</TableHead><TableHead>Status</TableHead><TableHead>Transação</TableHead><TableHead>Data</TableHead></TableRow></TableHeader><TableBody>{purchases.map((purchase) => <TableRow key={purchase.id}><TableCell>{purchase.customer_name || "—"}<p className="text-xs text-muted-foreground">{purchase.customer_email}</p></TableCell><TableCell>{formatCurrency(purchase.amount)}</TableCell><TableCell><Select value={purchase.status} onValueChange={(value) => requestStatusChange(purchase.id, value)}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(purchaseStatusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></TableCell><TableCell className="text-muted-foreground">{purchase.transaction_id || purchase.appmax_order_id || "—"}</TableCell><TableCell>{formatDate(purchase.created_at)}</TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
       )}
     </div>
   );

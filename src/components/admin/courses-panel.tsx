@@ -20,20 +20,25 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Eye, EyeOff, BookOpen, Upload } from "lucide-react";
+import { ErrorBox } from "@/components/admin/ui-kit";
 
 export function AdminCoursesListPanel() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [covers, setCovers] = useState<Record<string, string | null>>({});
   const [openNew, setOpenNew] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function reload() {
     setLoading(true);
+    setLoadError(null);
     try {
       const list = await listCoursesAdmin();
       setCourses(list);
       const entries = await Promise.all(list.map(async (c) => [c.id, await signedAsset(c.cover_path)] as const));
       setCovers(Object.fromEntries(entries));
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Erro inesperado");
     } finally {
       setLoading(false);
     }
@@ -75,6 +80,8 @@ export function AdminCoursesListPanel() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-52" />)}
         </div>
+      ) : loadError ? (
+        <ErrorBox message={loadError} onRetry={() => void reload()} />
       ) : courses.length === 0 ? (
         <Card><CardContent className="py-16 text-center space-y-3">
           <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
