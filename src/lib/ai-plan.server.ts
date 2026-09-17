@@ -308,3 +308,55 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
     return { ok: false, plans: 0, pdf: false, message };
   }
 }
+
+/**
+ * Rede de segurança: o aluno abriu a plataforma e ainda não tem treino.
+ * Procura a compra aprovada dele e gera o treino na hora.
+ */
+export async function ensureAiPlanForUser(userId: string): Promise<AiPlanResult> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: plans } = await supabaseAdmin
+      .from("student_plans")
+      .select("id")
+      .eq("student_id", userId)
+      .limit(1);
+    if (plans?.length) return { ok: true, plans: 0, pdf: false, message: "Aluno já possui treinos" };
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .maybeSingle();
+    const email = profile?.email?.trim().toLowerCase() ?? null;
+
+    let reference: string | null = null;
+    const { data: byUser } = await supabaseAdmin
+      .from("purchases")
+      .select("provider_reference, created_at")
+      .eq("user_id", userId)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    reference = byUser?.[0]?.provider_reference ?? null;
+
+    if (!reference && email) {
+      const { data: byEmail } = await supabaseAdmin
+        .from("purchases")
+        .select("provider_reference, created_at")
+        .eq("customer_email", email)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      reference = byEmail?.[0]?.provider_reference ?? null;
+    }
+
+    if (!reference) return { ok: false, plans: 0, pdf: false, message: "Nenhuma compra aprovada encontrada" };
+    return generateAiPlanForPurchase(reference);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("[ai-plan] erro ensure", message);
+    return { ok: false, plans: 0, pdf: false, message };
+  }
+}
