@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { updateStudentStatus } from "@/lib/admin.functions";
-import { DEFAULT_ORDER_BUMP, ORDER_BUMP_SECTION, formatBRL, parseOrderBump, type OrderBumpConfig } from "@/lib/order-bump";
+import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -92,46 +92,9 @@ export function AdminOrderBumpPanel() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Oferta no checkout</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-            <div>
-              <p className="font-medium">Mostrar no checkout</p>
-              <p className="text-xs text-muted-foreground">Quando desligado, o cliente não vê a oferta extra.</p>
-            </div>
-            <Switch checked={config.enabled} onCheckedChange={(v) => setConfig((c) => ({ ...c, enabled: v }))} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Título</Label>
-              <Input value={config.title} onChange={(e) => setConfig((c) => ({ ...c, title: e.target.value }))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Preço adicional (R$)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={config.price}
-                onChange={(e) => setConfig((c) => ({ ...c, price: Number(e.target.value) }))}
-              />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Descrição</Label>
-            <Textarea
-              rows={3}
-              value={config.description}
-              onChange={(e) => setConfig((c) => ({ ...c, description: e.target.value }))}
-            />
-          </div>
-          <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 text-sm">
-            <p className="font-semibold">Sim! Quero adicionar: {config.title} — +{formatBRL(config.price)}</p>
-            <p className="mt-1 text-muted-foreground text-xs">{config.description}</p>
-          </div>
-          <Button onClick={saveConfig} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar oferta
-          </Button>
+        <CardHeader><CardTitle>Ofertas no checkout</CardTitle></CardHeader>
+        <CardContent>
+          <OrderBumpEditor />
         </CardContent>
       </Card>
 
