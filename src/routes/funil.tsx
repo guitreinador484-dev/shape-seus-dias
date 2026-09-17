@@ -255,10 +255,8 @@ function FunnelPage() {
             // Dispara o treino da IA em paralelo (não bloqueia o redirecionamento).
             void generateAiPlan({ data: { reference: pix.reference } }).catch(() => {});
             if (active) setAccount(result);
-            if (result?.actionLink) {
-              window.location.href = result.actionLink;
-              return;
-            }
+            window.location.href = `/criar-senha?ref=${encodeURIComponent(pix.reference)}`;
+            return;
           } catch (e) {
             console.error("[funil] falha ao criar conta de acesso", e);
           } finally {
