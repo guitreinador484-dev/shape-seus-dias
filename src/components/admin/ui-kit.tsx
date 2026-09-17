@@ -74,7 +74,7 @@ export function StatusPill({ tone, children, className }: { tone: Tone; children
 /** Menu "Ações" das linhas de tabela — agrupa tudo, inclusive o que é destrutivo. */
 export function RowActions({ children, label = "Ações" }: { children: ReactNode; label?: string }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <MoreHorizontal className="h-4 w-4" />
