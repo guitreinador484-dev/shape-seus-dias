@@ -12,7 +12,6 @@ import {
   Dumbbell,
   ShoppingBag,
   Sparkles,
-  Settings,
   BookOpen,
   Apple,
   Flame,

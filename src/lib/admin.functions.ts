@@ -75,6 +75,9 @@ export const createStudent = createServerFn({ method: "POST" })
       },
     });
     if (createErr) {
+      if (/already|registered|exists|duplicate/i.test(createErr.message)) {
+        throw new Error("Este e-mail já está cadastrado. Edite o aluno existente em vez de criar outro.");
+      }
       const weakPassword = createErr.message.toLowerCase().includes("weak") || createErr.message.toLowerCase().includes("easy to guess");
       if (weakPassword) {
         throw new Error("Essa senha é muito comum. Use a senha forte sugerida ou crie outra com letras, números e símbolos.");
