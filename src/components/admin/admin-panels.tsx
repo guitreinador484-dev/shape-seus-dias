@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ConfirmDialog, MetricCard, StatusPill } from "@/components/admin/ui-kit";
+import { AdminPageHeader, ConfirmDialog, EmptyBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import {
   BadgeDollarSign,
   CheckCircle2,
@@ -40,12 +40,14 @@ import {
   ChevronRight,
   User,
   FileText,
+  Copy,
+  MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
+import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, duplicateTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
 import { saveWorkoutPdf, deleteWorkoutPdf, getWorkoutPdfUrl } from "@/lib/workout-pdf.functions";
 import { buildWorkoutPdf, fileToBase64 } from "@/lib/workout-pdf";
 import { useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
@@ -63,6 +65,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 type Profile = Tables<"profiles">;
 type Purchase = Tables<"purchases">;
@@ -1094,6 +1097,7 @@ export function AdminTrainingPanel() {
   const [planName, setPlanName] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [loading, setLoading] = useState(true);
+  const [newOpen, setNewOpen] = useState(false);
   const { byPlan: pdfByPlan, reload: reloadPdfs } = useWorkoutPdfs();
 
   async function load() {
@@ -1129,6 +1133,7 @@ export function AdminTrainingPanel() {
     }
     await createPlanFn({ data: { student_id: selectedStudent, day_of_week: Number(dayOfWeek), plan_name: planName || "Treino" } });
     setPlanName("");
+    setNewOpen(false);
     toast.success("Treino criado");
     await load();
   }
@@ -1146,25 +1151,24 @@ export function AdminTrainingPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader title="Treinos" description="Crie planos por aluno e adicione exercícios com séries, repetições e descanso." />
+      <AdminPageHeader
+        title="Treinos"
+        description="Crie, organize e entregue os treinos e PDFs de cada aluno."
+        action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Novo treino</Button>}
+      />
       <Card className="mb-6">
-        <CardHeader><CardTitle>Filtrar por aluno</CardTitle></CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button size="sm" variant={filterStudent === "all" ? "default" : "outline"} onClick={() => setFilterStudent("all")}>Todos ({plans.length})</Button>
-          {sortedStudents.map((student) => {
-            const count = plans.filter((plan) => plan.student_id === student.id).length;
-            if (count === 0) return null;
-            return (
-              <Button key={student.id} size="sm" variant={filterStudent === student.id ? "default" : "outline"} onClick={() => setFilterStudent(student.id)}>
-                {student.full_name || student.email} ({count})
-              </Button>
-            );
-          })}
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <Select value={filterStudent} onValueChange={setFilterStudent}>
+            <SelectTrigger><SelectValue placeholder="Filtrar por aluno" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">Todos os alunos ({plans.length})</SelectItem>{sortedStudents.map((student) => <SelectItem key={student.id} value={student.id}>{student.full_name || student.email} ({plans.filter((plan) => plan.student_id === student.id).length})</SelectItem>)}</SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">{filteredPlans.length} treino(s)</p>
         </CardContent>
       </Card>
-      <Card className="mb-6">
-        <CardHeader><CardTitle>Novo treino para aluno</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4">
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader><DialogTitle>Novo treino</DialogTitle><DialogDescription>Escolha o aluno, o nome e o dia deste treino.</DialogDescription></DialogHeader>
+          <div className="grid gap-4">
           <Select value={selectedStudent} onValueChange={setSelectedStudent}>
             <SelectTrigger><SelectValue placeholder="Selecione o aluno" /></SelectTrigger>
             <SelectContent>{students.map((student) => <SelectItem key={student.id} value={student.id}>{student.full_name || student.email}</SelectItem>)}</SelectContent>
@@ -1174,10 +1178,11 @@ export function AdminTrainingPanel() {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"].map((day, index) => <SelectItem key={day} value={String(index)}>{day}</SelectItem>)}</SelectContent>
           </Select>
-          <Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button>
-        </CardContent>
-      </Card>
-      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyState title="Nenhum treino encontrado" description={filterStudent === "all" ? "Selecione um aluno e crie o primeiro plano de treino." : "Este aluno ainda não possui treinos."} /> : (
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setNewOpen(false)}>Cancelar</Button><Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyBox title="Nenhum treino encontrado" description={filterStudent === "all" ? "Crie o primeiro treino e vincule a um aluno." : "Este aluno ainda não possui treinos."} action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Criar primeiro treino</Button>} /> : (
         <div className="space-y-4">
           {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
         </div>
@@ -1204,6 +1209,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   const deleteExerciseFn = useServerFn(deletePlanExercise);
   const savePdfFn = useServerFn(saveWorkoutPdf);
   const deletePdfFn = useServerFn(deleteWorkoutPdf);
+  const duplicatePlanFn = useServerFn(duplicateTrainingPlan);
   const pdfUrlFn = useServerFn(getWorkoutPdfUrl);
 
   async function confirmAddFromLibrary() {
@@ -1347,6 +1353,17 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
     }
   }
 
+  async function duplicatePlan() {
+    try {
+      setBusy("duplicate");
+      await duplicatePlanFn({ data: { planId: plan.id } });
+      toast.success("Treino duplicado");
+      await onReload();
+    } catch (error) {
+      toast.error("Não foi possível duplicar", { description: error instanceof Error ? error.message : undefined });
+    } finally { setBusy(null); }
+  }
+
 
   return (
     <Card>
@@ -1356,9 +1373,16 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
             <CardTitle>{plan.plan_name || "Treino"}</CardTitle>
             <p className="text-sm text-muted-foreground">{student?.full_name || student?.email || "Aluno"} · dia {plan.day_of_week}</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Biblioteca de exercícios</Button>
-            <Button variant="destructive" size="sm" onClick={() => onDelete(plan.id)}><Trash2 className="h-4 w-4" /> Excluir treino</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Adicionar exercícios</Button>
+            <RowActions>
+              <DropdownMenuItem onSelect={() => setLibraryOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Editar treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void duplicatePlan()}><Copy className="mr-2 h-4 w-4" /> Duplicar treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void generatePdf()}><FileText className="mr-2 h-4 w-4" /> {pdf ? "Gerar novo PDF" : "Gerar PDF"}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={(event) => { event.preventDefault(); document.getElementById(`delete-plan-${plan.id}`)?.click(); }}><Trash2 className="mr-2 h-4 w-4" /> Excluir treino</DropdownMenuItem>
+            </RowActions>
+            <ConfirmDialog trigger={<button id={`delete-plan-${plan.id}`} className="hidden" aria-hidden />} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
           </div>
         </div>
       </CardHeader>
@@ -1375,10 +1399,10 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
           </Button>
         </div>
         {plan.exercises.length === 0 ? <EmptyState title="Sem exercícios" description="Adicione os exercícios deste treino." /> : (
-          <Table>
+          <div className="overflow-x-auto"><Table className="min-w-[640px]">
             <TableHeader><TableRow><TableHead>Exercício</TableHead><TableHead>Séries</TableHead><TableHead>Reps</TableHead><TableHead>Carga</TableHead><TableHead>Descanso</TableHead><TableHead></TableHead></TableRow></TableHeader>
             <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" disabled={busy === exercise.id} onClick={() => deleteExercise(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
-          </Table>
+          </Table></div>
         )}
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1390,7 +1414,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
                   : "Nenhum PDF vinculado a este treino ainda."}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               <Button size="sm" onClick={generatePdf} disabled={busy === "pdf"}>
                 {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                 {pdf ? "Gerar novamente" : "Gerar PDF do treino"}
@@ -1402,7 +1426,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
                 <>
                   <Button size="sm" variant="outline" onClick={() => openPdf(false)} disabled={busy === "pdf"}>Visualizar</Button>
                   <Button size="sm" variant="outline" onClick={() => openPdf(true)} disabled={busy === "pdf"}>Baixar</Button>
-                  <Button size="sm" variant="destructive" onClick={removePdf} disabled={busy === "pdf"}><Trash2 className="h-4 w-4" /> Excluir PDF</Button>
+                   <ConfirmDialog trigger={<Button size="sm" variant="outline" disabled={busy === "pdf"}><Trash2 className="h-4 w-4" /> Excluir PDF</Button>} title="Excluir o PDF deste treino?" description="O treino continua salvo, mas o aluno perde o acesso a este arquivo." confirmLabel="Sim, excluir PDF" destructive onConfirm={removePdf} />
                 </>
               ) : null}
             </div>
