@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { loadOrderBump, DEFAULT_ORDER_BUMP, formatBRL, type OrderBumpConfig } from "@/lib/order-bump";
+import { loadOrderBumps, formatBRL, type OrderBumpConfig } from "@/lib/order-bump";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
