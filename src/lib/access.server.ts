@@ -136,6 +136,11 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     }
   }
 
+  await supabaseAdmin
+    .from("leads")
+    .update({ status: "aluno", student_id: userId, stage_updated_at: new Date().toISOString() })
+    .ilike("email", email);
+
   // Envia o e-mail para o cliente definir a senha de acesso (reserva)
   let emailSent = false;
   const { error: mailError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
