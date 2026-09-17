@@ -21,6 +21,7 @@ import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
 import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
 import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_authenticated/admin.plataforma'
+import { Route as AuthenticatedAdminOrderBumpRouteImport } from './routes/_authenticated/admin.order-bump'
 import { Route as AuthenticatedAdminNutricaoRouteImport } from './routes/_authenticated/admin.nutricao'
 import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_authenticated/admin.funil-vendas'
 import { Route as AuthenticatedAdminEngajamentoRouteImport } from './routes/_authenticated/admin.engajamento'
@@ -93,6 +94,12 @@ const AuthenticatedAdminPlataformaRoute =
   AuthenticatedAdminPlataformaRouteImport.update({
     id: '/plataforma',
     path: '/plataforma',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOrderBumpRoute =
+  AuthenticatedAdminOrderBumpRouteImport.update({
+    id: '/order-bump',
+    path: '/order-bump',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminNutricaoRoute =
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
+  '/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
@@ -191,6 +199,7 @@ export interface FileRoutesByTo {
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
+  '/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
   '/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/vendas': typeof AuthenticatedAdminVendasRoute
@@ -216,6 +225,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
   '/_authenticated/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/_authenticated/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
+  '/_authenticated/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
   '/_authenticated/admin/plataforma': typeof AuthenticatedAdminPlataformaRoute
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/vendas': typeof AuthenticatedAdminVendasRoute
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/admin/engajamento'
     | '/admin/funil-vendas'
     | '/admin/nutricao'
+    | '/admin/order-bump'
     | '/admin/plataforma'
     | '/admin/treinos'
     | '/admin/vendas'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin/engajamento'
     | '/admin/funil-vendas'
     | '/admin/nutricao'
+    | '/admin/order-bump'
     | '/admin/plataforma'
     | '/admin/treinos'
     | '/admin/vendas'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/engajamento'
     | '/_authenticated/admin/funil-vendas'
     | '/_authenticated/admin/nutricao'
+    | '/_authenticated/admin/order-bump'
     | '/_authenticated/admin/plataforma'
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/vendas'
@@ -392,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPlataformaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/order-bump': {
+      id: '/_authenticated/admin/order-bump'
+      path: '/order-bump'
+      fullPath: '/admin/order-bump'
+      preLoaderRoute: typeof AuthenticatedAdminOrderBumpRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/nutricao': {
       id: '/_authenticated/admin/nutricao'
       path: '/nutricao'
@@ -487,6 +507,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEngajamentoRoute: typeof AuthenticatedAdminEngajamentoRoute
   AuthenticatedAdminFunilVendasRoute: typeof AuthenticatedAdminFunilVendasRoute
   AuthenticatedAdminNutricaoRoute: typeof AuthenticatedAdminNutricaoRoute
+  AuthenticatedAdminOrderBumpRoute: typeof AuthenticatedAdminOrderBumpRoute
   AuthenticatedAdminPlataformaRoute: typeof AuthenticatedAdminPlataformaRoute
   AuthenticatedAdminTreinosRoute: typeof AuthenticatedAdminTreinosRoute
   AuthenticatedAdminVendasRoute: typeof AuthenticatedAdminVendasRoute
@@ -501,6 +522,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEngajamentoRoute: AuthenticatedAdminEngajamentoRoute,
   AuthenticatedAdminFunilVendasRoute: AuthenticatedAdminFunilVendasRoute,
   AuthenticatedAdminNutricaoRoute: AuthenticatedAdminNutricaoRoute,
+  AuthenticatedAdminOrderBumpRoute: AuthenticatedAdminOrderBumpRoute,
   AuthenticatedAdminPlataformaRoute: AuthenticatedAdminPlataformaRoute,
   AuthenticatedAdminTreinosRoute: AuthenticatedAdminTreinosRoute,
   AuthenticatedAdminVendasRoute: AuthenticatedAdminVendasRoute,
