@@ -31,12 +31,12 @@ export function AdminPageHeader({
 }) {
   return (
     <div className="mb-6 space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
         <div className="min-w-0">
           <h2 className="font-display text-3xl tracking-tight">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground max-w-2xl">{description}</p>
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? <div className="grid shrink-0 grid-cols-1 gap-2 [&>button]:w-full sm:block sm:[&>button]:w-auto">{action}</div> : null}
       </div>
       {children}
     </div>
@@ -113,7 +113,7 @@ export function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
-      <AlertDialogContent>
+      <AlertDialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

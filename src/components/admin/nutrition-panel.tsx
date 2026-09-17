@@ -110,7 +110,7 @@ export function AdminNutritionPanel() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-            <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-64"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os alunos</SelectItem>
               {sortedStudents.filter((s) => s.role !== "admin").map((s) => (
@@ -133,13 +133,13 @@ export function AdminNutritionPanel() {
             return (
               <Card key={plan.id}>
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
+                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2"><Apple className="h-4 w-4 text-primary" />{plan.plan_name || "Plano alimentar"}</CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">{student?.full_name || student?.email || "Aluno"}</p>
                       <p className="text-xs text-muted-foreground">{mealsCount} refeições · {itemsCount} alimentos · criado em {formatDate(plan.created_at)}</p>
                     </div>
-                    <div className="flex gap-2">
+                     <div className="flex flex-wrap gap-2">
                       <Button variant="outline" size="sm" onClick={() => setEditing(plan)}><Pencil className="h-4 w-4" /> Editar</Button>
                       <Button variant="destructive" size="sm" onClick={() => deletePlan(plan.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -233,7 +233,7 @@ function PlanEditor({ plan, onClose, onSaved }: { plan: PlanFull; onClose: () =>
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
+       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-4xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Apple className="h-4 w-4 text-primary" /> {planName || "Plano alimentar"}</DialogTitle>
         </DialogHeader>
@@ -252,7 +252,7 @@ function PlanEditor({ plan, onClose, onSaved }: { plan: PlanFull; onClose: () =>
                 </div>
                 <Input value={meal.notes} onChange={(e) => setMeals((prev) => prev.map((m, i) => (i === mi ? { ...m, notes: e.target.value } : m)))} placeholder="Observações da refeição" />
                 <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-[11px] font-medium text-muted-foreground px-1">
+                  <div className="hidden grid-cols-12 gap-2 px-1 text-[11px] font-medium text-muted-foreground sm:grid">
                     <span className="col-span-3">Alimento</span>
                     <span className="col-span-2">Quantidade</span>
                     <span className="col-span-1">kcal</span>
@@ -262,14 +262,14 @@ function PlanEditor({ plan, onClose, onSaved }: { plan: PlanFull; onClose: () =>
                     <span className="col-span-1" />
                   </div>
                   {meal.items.map((item, ii) => (
-                    <div key={ii} className="grid grid-cols-12 gap-2 items-center">
-                      <Input className="col-span-3" value={item.food} onChange={(e) => patchItem(mi, ii, { food: e.target.value })} placeholder="Arroz integral" />
-                      <Input className="col-span-2" value={item.amount} onChange={(e) => patchItem(mi, ii, { amount: e.target.value })} placeholder="200g" />
-                      <Input className="col-span-1" type="number" value={item.calories} onChange={(e) => patchItem(mi, ii, { calories: e.target.value })} />
-                      <Input className="col-span-1" type="number" value={item.protein} onChange={(e) => patchItem(mi, ii, { protein: e.target.value })} />
-                      <Input className="col-span-1" type="number" value={item.carbs} onChange={(e) => patchItem(mi, ii, { carbs: e.target.value })} />
-                      <Input className="col-span-1" type="number" value={item.fat} onChange={(e) => patchItem(mi, ii, { fat: e.target.value })} />
-                      <div className="col-span-1">
+                    <div key={ii} className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 sm:grid-cols-12 sm:items-center sm:border-0 sm:p-0">
+                      <Input className="col-span-2 sm:col-span-3" value={item.food} onChange={(e) => patchItem(mi, ii, { food: e.target.value })} placeholder="Alimento" aria-label="Alimento" />
+                      <Input className="sm:col-span-2" value={item.amount} onChange={(e) => patchItem(mi, ii, { amount: e.target.value })} placeholder="Quantidade" aria-label="Quantidade" />
+                      <Input className="sm:col-span-1" type="number" value={item.calories} onChange={(e) => patchItem(mi, ii, { calories: e.target.value })} placeholder="kcal" aria-label="Calorias" />
+                      <Input className="sm:col-span-1" type="number" value={item.protein} onChange={(e) => patchItem(mi, ii, { protein: e.target.value })} placeholder="Prot" aria-label="Proteína" />
+                      <Input className="sm:col-span-1" type="number" value={item.carbs} onChange={(e) => patchItem(mi, ii, { carbs: e.target.value })} placeholder="Carb" aria-label="Carboidratos" />
+                      <Input className="sm:col-span-1" type="number" value={item.fat} onChange={(e) => patchItem(mi, ii, { fat: e.target.value })} placeholder="Gord" aria-label="Gordura" />
+                      <div className="flex justify-end sm:col-span-1">
                         <Button variant="ghost" size="icon" onClick={() => removeItem(mi, ii)}><X className="h-4 w-4" /></Button>
                       </div>
                     </div>

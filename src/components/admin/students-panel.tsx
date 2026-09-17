@@ -201,7 +201,7 @@ export function AdminStudentsPanel() {
         title="Alunos"
         description="Gerencie alunos, acessos, planos, treinos e informações de cadastro."
         action={
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex">
             <Button variant="outline" onClick={() => void reload()}>
               <RefreshCw className="mr-2 h-4 w-4" /> Atualizar
             </Button>
@@ -273,7 +273,7 @@ export function AdminStudentsPanel() {
       ) : (
         <Card>
           <CardContent className="overflow-x-auto p-0">
-            <Table>
+            <Table className="min-w-[560px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Aluno</TableHead>
@@ -346,7 +346,7 @@ export function AdminStudentsPanel() {
         ) : (
           <Card>
             <CardContent className="overflow-x-auto p-0">
-              <Table>
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
@@ -518,14 +518,14 @@ export function ResetPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Redefinir senha de {student.full_name || student.email}</DialogTitle>
           <DialogDescription>Gere uma nova senha e envie para o aluno pelo WhatsApp ou e-mail.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Label>Nova senha</Label>
-          <div className="flex gap-2">
+           <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
             <Input value={password} onChange={(e) => setPassword(e.target.value)} />
             <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
               Gerar
@@ -602,7 +602,7 @@ export function EditStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Editar aluno</DialogTitle>
           <DialogDescription>{student.email}</DialogDescription>
@@ -763,7 +763,7 @@ export function CreateStudentDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
         {createdId ? (
           <>
             <DialogHeader>
@@ -819,7 +819,7 @@ export function CreateStudentDialog({
                 </div>
                 <div className="space-y-1">
                   <Label>Senha provisória</Label>
-                  <div className="flex gap-2">
+                   <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                     <Input value={password} onChange={(e) => setPassword(e.target.value)} />
                     <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
                       Gerar
@@ -929,7 +929,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
         </Link>
       </Button>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div className="flex items-center gap-4">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-xl font-semibold text-primary">
             {initials(student)}
@@ -1022,7 +1022,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Dumbbell className="h-4 w-4" /> Treinos
           </CardTitle>
