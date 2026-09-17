@@ -124,6 +124,16 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       .from("purchases")
       .update({ user_id: userId, updated_at: new Date().toISOString() })
       .eq("provider_reference", input.reference);
+
+    // Order bump comprado libera Dieta e Aulas em vídeo
+    const { data: purchaseRow } = await supabaseAdmin
+      .from("purchases")
+      .select("order_bump")
+      .eq("provider_reference", input.reference)
+      .maybeSingle();
+    if (purchaseRow?.order_bump) {
+      await supabaseAdmin.from("profiles").update({ has_order_bump: true }).eq("id", userId);
+    }
   }
 
   // Envia o e-mail para o cliente definir a senha de acesso (reserva)
