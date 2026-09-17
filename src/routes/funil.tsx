@@ -65,6 +65,7 @@ function FunnelPage() {
   const createPix = useServerFn(createPixPaymentFn);
   const getPaymentStatus = useServerFn(getPaymentStatusFn);
   const provisionAccess = useServerFn(provisionAccessFn);
+  const generateAiPlan = useServerFn(generateAiPlanFn);
 
   useEffect(() => {
     let cancelled = false;
