@@ -161,8 +161,12 @@ function FunnelPage() {
     const value = Number.parseFloat(cleaned);
     return Number.isFinite(value) ? value : 0;
   };
-  const withBump = bump.enabled && bumpChecked;
-  const totalPrice = selectedPlan ? parsePlanPrice(selectedPlan.price) + (withBump ? bump.price : 0) : 0;
+  const activeBumps = bumps.filter((b) => b.enabled);
+  const chosenBumps = activeBumps.filter((b) => bumpChecked[b.id]);
+  const withBump = chosenBumps.length > 0;
+  const bumpsTotal = chosenBumps.reduce((sum, b) => sum + b.price, 0);
+  const bumpsLabel = chosenBumps.map((b) => b.title).join(" + ");
+  const totalPrice = selectedPlan ? parsePlanPrice(selectedPlan.price) + bumpsTotal : 0;
 
   const handleFinish = async () => {
     if (!contact.email || !selectedPlan) return;
