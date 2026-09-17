@@ -264,6 +264,7 @@ function FunnelPage() {
     (async () => {
       try {
         const result = await provisionAccess({ data: { reference } });
+        void generateAiPlan({ data: { reference } }).catch(() => {});
         if (!active) return;
         setAccount(result);
         if (result?.actionLink) {
