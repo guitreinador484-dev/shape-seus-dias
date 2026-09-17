@@ -40,7 +40,15 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
 
   if (existingProfile?.id) {
     userId = existingProfile.id;
-  } else {
+  }
+
+  if (!userId) {
+    // Nunca cria uma segunda conta para o mesmo e-mail.
+    const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    userId = list?.users.find((u) => u.email?.toLowerCase() === email)?.id ?? null;
+  }
+
+  if (!userId) {
     const tempPassword = `${crypto.randomUUID()}Aa1!`;
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,

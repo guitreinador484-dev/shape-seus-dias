@@ -702,6 +702,7 @@ export type Database = {
           display_order: number
           exercise_name: string
           id: string
+          load_text: string | null
           notes: string | null
           plan_id: string
           reps: string | null
@@ -713,6 +714,7 @@ export type Database = {
           display_order?: number
           exercise_name: string
           id?: string
+          load_text?: string | null
           notes?: string | null
           plan_id: string
           reps?: string | null
@@ -724,6 +726,7 @@ export type Database = {
           display_order?: number
           exercise_name?: string
           id?: string
+          load_text?: string | null
           notes?: string | null
           plan_id?: string
           reps?: string | null
@@ -819,6 +822,53 @@ export type Database = {
             columns: ["workout_id"]
             isOneToOne: false
             referencedRelation: "workouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_pdfs: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_path: string
+          generated_at: string
+          id: string
+          plan_id: string
+          source: string
+          student_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_path: string
+          generated_at?: string
+          id?: string
+          plan_id: string
+          source?: string
+          student_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_path?: string
+          generated_at?: string
+          id?: string
+          plan_id?: string
+          source?: string
+          student_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_pdfs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: true
+            referencedRelation: "student_plans"
             referencedColumns: ["id"]
           },
         ]

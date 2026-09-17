@@ -254,6 +254,7 @@ type PlanExerciseInput = {
   exercise_name: string;
   sets?: string | null;
   reps?: string | null;
+  load_text?: string | null;
   rest_seconds?: number | null;
   notes?: string | null;
   display_order: number;
@@ -273,6 +274,7 @@ export const addPlanExercise = createServerFn({ method: "POST" })
       exercise_name: data.exercise_name,
       sets: data.sets ?? null,
       reps: data.reps ?? null,
+      load_text: data.load_text ?? null,
       rest_seconds: data.rest_seconds ?? 0,
       notes: data.notes ?? null,
       display_order: data.display_order,

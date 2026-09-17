@@ -17,6 +17,7 @@ import { EvolutionTab } from "@/components/platform/evolution-tab";
 import { CheckinCard } from "@/components/platform/checkin-card";
 import { AnamneseTab } from "@/components/platform/anamnese-tab";
 import { ReferralCard } from "@/components/platform/referral-card";
+import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
@@ -114,6 +115,7 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
   const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
   const [selectedDay, setSelectedDay] = useState<number>(initial);
   const [done, setDone] = useState<Set<string>>(new Set());
+  const { byPlan: pdfByPlan } = useWorkoutPdfs();
 
   useEffect(() => {
     if (!availableDays.includes(selectedDay) && availableDays.length > 0) {
@@ -262,6 +264,7 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
                 <p className="text-xs text-muted-foreground">{plan.exercises.length} exercícios</p>
               </div>
             </div>
+            {pdfByPlan[plan.id] ? <WorkoutPdfButton planId={plan.id} /> : null}
           </div>
           {plan.exercises.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
@@ -294,6 +297,11 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
                         {ex.rest_seconds ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
                             <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
+                          </span>
+                        ) : null}
+                        {ex.load_text ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
+                            Carga: {ex.load_text}
                           </span>
                         ) : null}
                       </div>
