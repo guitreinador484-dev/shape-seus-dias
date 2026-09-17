@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ConfirmDialog } from "@/components/admin/ui-kit";
+import { ConfirmDialog, EmptyBox, StatusPill } from "@/components/admin/ui-kit";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus } from "lucide-react";
+import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import {
   DEFAULT_FUNNEL,
@@ -16,8 +17,6 @@ import {
   type FunnelTrustBadge,
   loadFunnelLocal,
   saveFunnelLocal,
-  loadFunnelLeads,
-  type FunnelLead,
 } from "@/lib/funnel-store";
 import { publishFunnelFn, fetchPublicFunnel } from "@/lib/funnel.functions";
 import {
@@ -25,7 +24,7 @@ import {
   deleteFunnelImage,
   resolveFunnelUrl,
 } from "@/lib/funnel-assets";
-import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
+import { LEAD_STAGES, listLeadsFn, updateLeadStageFn, type LeadRow, type LeadStage } from "@/lib/leads.functions";
 import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { toast } from "sonner";
 
@@ -95,10 +94,12 @@ export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
 function AdminFunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [saving, setSaving] = useState(false);
-  const [leads, setLeads] = useState<FunnelLead[]>([]);
+  const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [movingLead, setMovingLead] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
   const publish = useServerFn(publishFunnelFn);
   const listLeads = useServerFn(listLeadsFn);
+  const updateLeadStage = useServerFn(updateLeadStageFn);
 
   const uploadImage = async (file: File, apply: (ref: string) => void, slot: string) => {
     setUploading(slot);
@@ -117,7 +118,6 @@ function AdminFunnelPage() {
     let cancelled = false;
     (async () => {
       const remote = await fetchPublicFunnel();
-      const local = loadFunnelLeads();
       let server: LeadRow[] = [];
       try {
         const res = await listLeads({ data: undefined });
@@ -125,29 +125,26 @@ function AdminFunnelPage() {
       } catch {}
       if (cancelled) return;
       setCfg(remote ?? loadFunnelLocal());
-      const serverLeads: FunnelLead[] = server.map((r) => ({
-        id: r.id,
-        createdAt: r.created_at,
-        answers: (r.answers ?? {}) as Record<string, unknown>,
-        planId: r.plan_id ?? undefined,
-        contact: { name: r.name ?? "", email: r.email ?? "", whatsapp: r.whatsapp ?? "" },
-      }));
-      const seen = new Set<string>();
-      setLeads(
-        [...serverLeads, ...local].filter((l) => {
-          const email = (l.contact?.email ?? "").toLowerCase();
-          const name = (l.contact?.name ?? "").toLowerCase();
-          const key = `${email}|${name}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }),
-      );
+      setLeads(server);
     })();
     return () => {
       cancelled = true;
     };
   }, [listLeads]);
+
+  async function moveLead(lead: LeadRow, stage: LeadStage) {
+    setMovingLead(lead.id);
+    try {
+      await updateLeadStage({ data: { leadId: lead.id, stage, origin: window.location.origin } });
+      const result = await listLeads({ data: undefined });
+      setLeads(result.leads);
+      toast.success(stage === "aluno" ? "Acesso do aluno criado e liberado." : `Contato movido para ${FUNNEL_STAGE_LABELS[stage]}.`);
+    } catch (error) {
+      toast.error("Não foi possível mover este contato", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setMovingLead(null);
+    }
+  }
 
   const update = <K extends keyof FunnelConfig>(key: K, value: FunnelConfig[K]) =>
     setCfg((c) => ({ ...c, [key]: value }));
@@ -239,14 +236,14 @@ function AdminFunnelPage() {
 
   return (
     <div className="funnel-admin-scope p-4 md:p-6 space-y-6 max-w-5xl">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Funil de Vendas</h1>
           <p className="text-sm text-muted-foreground">
             Configure o funil no estilo Nutri Inteligente para vender treinos.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
           <Button variant="outline" asChild>
             <a href="/funil" target="_blank" rel="noreferrer">
               <ExternalLink className="h-4 w-4 mr-2" /> Abrir funil
@@ -729,36 +726,37 @@ function AdminFunnelPage() {
         <OrderBumpEditor />
       </Section>
 
-      {/* Leads */}
-      <Section title={`Leads capturados (${leads.length})`}>
+      <Section title={`Funil comercial (${leads.length})`}>
         {leads.length === 0 ? (
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Users className="h-4 w-4" /> Nenhum lead ainda. Compartilhe seu funil para começar a captar.
-          </p>
+          <EmptyBox title="Nenhum contato no funil" description="Compartilhe o funil de vendas para captar o primeiro contato." />
         ) : (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="p-2">Data</th>
-                  <th className="p-2">Nome</th>
-                  <th className="p-2">Email</th>
-                  <th className="p-2">WhatsApp</th>
-                  <th className="p-2">Plano</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((l) => (
-                  <tr key={l.id} className="border-t border-border">
-                    <td className="p-2 text-xs">{new Date(l.createdAt).toLocaleString("pt-BR")}</td>
-                    <td className="p-2">{l.contact.name}</td>
-                    <td className="p-2">{l.contact.email}</td>
-                    <td className="p-2">{l.contact.whatsapp}</td>
-                    <td className="p-2">{l.planId}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-3 xl:grid-cols-6">
+            {LEAD_STAGES.map((stage) => {
+              const stageLeads = leads.filter((lead) => normalizeLeadStage(lead.status) === stage);
+              return (
+                <div key={stage} className="min-w-0 rounded-lg border border-border bg-muted/20 p-3">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold">{FUNNEL_STAGE_LABELS[stage]}</p>
+                    <StatusPill tone={FUNNEL_STAGE_TONES[stage]}>{stageLeads.length}</StatusPill>
+                  </div>
+                  {stageLeads.length === 0 ? <p className="py-4 text-center text-xs text-muted-foreground">Nenhum contato</p> : (
+                    <div className="space-y-2">
+                      {stageLeads.map((lead) => (
+                        <article key={lead.id} className="rounded-lg border border-border bg-card p-3">
+                          <p className="truncate text-sm font-medium">{lead.name || "Contato sem nome"}</p>
+                          <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{lead.email || "Sem e-mail"}</span></p>
+                          {lead.whatsapp ? <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><Phone className="h-3 w-3 shrink-0" />{lead.whatsapp}</p> : null}
+                          <Select value={stage} onValueChange={(value) => void moveLead(lead, value as LeadStage)} disabled={movingLead === lead.id}>
+                            <SelectTrigger className="mt-3 h-8 w-full text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>{LEAD_STAGES.map((option) => <SelectItem key={option} value={option}>{FUNNEL_STAGE_LABELS[option]}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </Section>
@@ -766,9 +764,19 @@ function AdminFunnelPage() {
   );
 }
 
+const FUNNEL_STAGE_LABELS: Record<LeadStage, string> = { lead: "Lead", contato: "Contato", interessado: "Interessado", oferta: "Oferta", compra: "Compra", aluno: "Aluno" };
+const FUNNEL_STAGE_TONES: Record<LeadStage, "gray" | "blue" | "amber" | "orange" | "green" | "purple"> = { lead: "gray", contato: "blue", interessado: "amber", oferta: "orange", compra: "green", aluno: "purple" };
+function normalizeLeadStage(status: string): LeadStage {
+  if (LEAD_STAGES.includes(status as LeadStage)) return status as LeadStage;
+  if (status === "em-contato") return "contato";
+  if (status === "convertido") return "aluno";
+  if (status === "qualificado") return "interessado";
+  return "lead";
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
+    <section className="rounded-lg border border-border bg-card p-4 space-y-3 sm:p-5">
       <h2 className="text-base font-bold">{title}</h2>
       {children}
     </section>
