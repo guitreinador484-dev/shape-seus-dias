@@ -21,6 +21,18 @@ import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 
+function LockedExtra({ title, description }: { title: string; description: string }) {
+  return (
+    <Card>
+      <CardContent className="py-12 text-center">
+        <Lock className="mx-auto h-8 w-8 text-muted-foreground" />
+        <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
 type Workout = Tables<"workouts">;
@@ -364,6 +376,7 @@ function PlataformaPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
+  const [hasOrderBump, setHasOrderBump] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(true);
   const [accessExpiresAt, setAccessExpiresAt] = useState<string | null>(null);
   const isExpired = accessExpiresAt !== null && new Date(accessExpiresAt).getTime() <= Date.now();
@@ -394,7 +407,7 @@ function PlataformaPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("has_class_access, is_active, access_expires_at")
+          .select("has_class_access, is_active, access_expires_at, has_order_bump")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
@@ -403,6 +416,7 @@ function PlataformaPage() {
           throw new Error(msg);
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
+        setHasOrderBump(Boolean(profile?.has_order_bump));
         setIsActive(profile?.is_active ?? true);
         setAccessExpiresAt(profile?.access_expires_at ?? null);
         const expiresAt = profile?.access_expires_at ? new Date(profile.access_expires_at).getTime() : null;
@@ -503,7 +517,9 @@ function PlataformaPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const showVideos = hasClassAccess && isActive;
+  // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
+  const isPremium = hasOrderBump || role === "presencial" || role === "admin" || isAdminEmail(user?.email);
+  const showVideos = hasClassAccess && isActive && isPremium;
   const isLight = config.theme === "light";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
@@ -603,7 +619,7 @@ function PlataformaPage() {
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
-              {showVideos && (
+              {(showVideos || (hasClassAccess && isActive)) && (
                 <TabsTrigger value="aulas" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                   <Video className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Aulas em vídeo</span>
                 </TabsTrigger>
@@ -720,7 +736,14 @@ function PlataformaPage() {
           </TabsContent>
 
           <TabsContent value="dieta" className="mt-0">
-            {user ? <NutritionTab userId={user.id} /> : null}
+            {!isPremium ? (
+              <LockedExtra
+                title="Dieta liberada com o adicional"
+                description="A área de Dieta faz parte do acompanhamento completo. Fale com o professor para liberar no seu plano."
+              />
+            ) : user ? (
+              <NutritionTab userId={user.id} />
+            ) : null}
           </TabsContent>
 
           <TabsContent value="evolucao" className="mt-0">
@@ -730,6 +753,15 @@ function PlataformaPage() {
           <TabsContent value="ficha" className="mt-0">
             {user ? <AnamneseTab userId={user.id} /> : null}
           </TabsContent>
+
+          {!isPremium && hasClassAccess && isActive && (
+            <TabsContent value="aulas" className="mt-0">
+              <LockedExtra
+                title="Aulas em vídeo liberadas com o adicional"
+                description="As aulas em vídeo fazem parte do acompanhamento completo. Fale com o professor para liberar no seu plano."
+              />
+            </TabsContent>
+          )}
 
           {showVideos && (
             <TabsContent value="aulas" className="mt-0 -mx-4 sm:-mx-4">
