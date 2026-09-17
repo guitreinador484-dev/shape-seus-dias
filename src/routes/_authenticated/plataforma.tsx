@@ -130,19 +130,7 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
   }, [plans]);
 
   if (loading) return <Skeleton className="h-64" />;
-  if (plans.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="py-16 text-center space-y-3">
-          <div className="mx-auto h-14 w-14 rounded-full bg-muted grid place-items-center">
-            <Dumbbell className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <p className="font-display text-xl">Sem treino cadastrado</p>
-          <p className="text-sm text-muted-foreground">Seu personal ainda não montou seu plano. Fale com ele para começar.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (plans.length === 0) return <EmptyTraining />;
 
   const dayPlans = plans.filter((p) => p.day_of_week === selectedDay);
   const totalEx = dayPlans.reduce((acc, p) => acc + p.exercises.length, 0);
