@@ -18,6 +18,8 @@ import { CheckinCard } from "@/components/platform/checkin-card";
 import { AnamneseTab } from "@/components/platform/anamnese-tab";
 import { ReferralCard } from "@/components/platform/referral-card";
 import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
+import { useServerFn } from "@tanstack/react-start";
+import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 
 type StudentPlan = Tables<"student_plans">;
 type StudentPlanExercise = Tables<"student_plan_exercises">;
