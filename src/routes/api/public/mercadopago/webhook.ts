@@ -87,6 +87,15 @@ async function handle(request: Request): Promise<Response> {
         console.error("[mercadopago] falha ao liberar acesso", e);
       }
     }
+
+    // Treino personalizado gerado por IA a partir das respostas do funil.
+    try {
+      const { generateAiPlanForPurchase } = await import("@/lib/ai-plan.server");
+      const result = await generateAiPlanForPurchase(reference);
+      if (!result.ok) console.error("[mercadopago] plano IA não gerado", result.message);
+    } catch (e) {
+      console.error("[mercadopago] falha ao gerar plano com IA", e);
+    }
   }
 
   return new Response("ok", { status: 200 });

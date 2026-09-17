@@ -1,4 +1,17 @@
-import jsPDF from "jspdf";
+import * as jspdfModule from "jspdf";
+
+// Interop: no navegador o default é o construtor; no servidor (SSR/Worker) o
+// módulo pode chegar como { jsPDF } ou { default: { jsPDF } }.
+type JsPdfCtor = typeof import("jspdf").jsPDF;
+const mod = jspdfModule as unknown as {
+  default?: JsPdfCtor | { jsPDF?: JsPdfCtor };
+  jsPDF?: JsPdfCtor;
+};
+const fromDefault =
+  typeof mod.default === "function"
+    ? mod.default
+    : (mod.default as { jsPDF?: JsPdfCtor } | undefined)?.jsPDF;
+const jsPDF: JsPdfCtor = (mod.jsPDF ?? fromDefault) as JsPdfCtor;
 
 export const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
