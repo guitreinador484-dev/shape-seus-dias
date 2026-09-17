@@ -30,6 +30,16 @@ export type WorkoutPdfInput = {
   dayOfWeek: number;
   professional?: string;
   exercises: WorkoutPdfExercise[];
+  /** Nome do plano comprado (ex.: "Plano Intermediário — Evolução"). */
+  tierLabel?: string | null;
+  /** Resumo do objetivo do aluno. */
+  summary?: string | null;
+  /** Metas de treino (planos Intermediário e Avançado). */
+  goals?: string[] | null;
+  /** Orientação de progressão de cargas (planos Intermediário e Avançado). */
+  progression?: string | null;
+  /** Ex.: "Atualização a cada 15 dias". */
+  updateNote?: string | null;
 };
 
 const BLUE: [number, number, number] = [37, 99, 235];
@@ -44,8 +54,9 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   let y = 0;
 
   // Cabeçalho
+  const headerHeight = input.tierLabel ? 110 : 92;
   doc.setFillColor(...BLUE);
-  doc.rect(0, 0, pageWidth, 92, "F");
+  doc.rect(0, 0, pageWidth, headerHeight, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
@@ -58,9 +69,46 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     marginX,
     80,
   );
+  if (input.tierLabel) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(
+      input.updateNote ? `${input.tierLabel} · ${input.updateNote}` : input.tierLabel,
+      marginX,
+      98,
+    );
+    doc.setFont("helvetica", "normal");
+  }
 
-  y = 128;
+  y = headerHeight + 36;
   doc.setTextColor(20, 20, 20);
+
+  const contentWidth = pageWidth - marginX * 2;
+
+  /** Bloco de texto simples (título + linhas), com quebra de página. */
+  function drawBlock(title: string, lines: string[]) {
+    if (!lines.length) return;
+    const wrapped = lines.flatMap((line) => doc.splitTextToSize(line, contentWidth) as string[]);
+    const blockHeight = 20 + wrapped.length * 13 + 12;
+    if (y + blockHeight > pageHeight - 56) {
+      doc.addPage();
+      y = 64;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...BLUE);
+    doc.text(title, marginX, y);
+    y += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(20, 20, 20);
+    doc.text(wrapped, marginX, y);
+    y += wrapped.length * 13 + 14;
+  }
+
+  if (input.summary) drawBlock("Seu objetivo", [input.summary]);
+  if (input.goals?.length) drawBlock("Metas do treino", input.goals.map((g) => `• ${g}`));
+  if (input.progression) drawBlock("Progressão de cargas", [input.progression]);
 
   const cols = [
     { label: "Exercício", x: marginX, w: 170 },

@@ -1,4 +1,5 @@
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
+import { PLAN_TIER_LIST } from "@/lib/plan-tiers";
 
 export type FunnelPlan = {
   id: string;
@@ -211,51 +212,20 @@ export const DEFAULT_FUNNEL: FunnelConfig = {
     days: 7,
   },
   urgencyText: "🔥 Oferta por tempo limitado — só hoje",
-  plans: [
-    {
-      id: "essencial",
-      name: "Plano Essencial",
-      price: "R$ 19,99",
-      features: [
-        "Treino personalizado",
-        "Divisão semanal completa",
-        "Acompanhe seu progresso",
-        "Suporte por email",
-      ],
-    },
-    {
-      id: "completo",
-      name: "Treino + Dieta",
-      price: "R$ 29,99",
-      badge: "Mais vendido",
-      highlighted: true,
-      features: [
-        "Treino personalizado",
-        "Dieta incluída",
-        "Treinos em vídeo",
-        "Suporte via WhatsApp",
-        "Ajustes semanais",
-      ],
-    },
-    {
-      id: "premium",
-      name: "Plano Premium",
-      price: "R$ 49,99",
-      badge: "Recomendado",
-      features: [
-        "Tudo do plano completo",
-        "Consulta com personal",
-        "Plataforma de aulas online",
-        "Lista de substituições",
-        "Suplementação recomendada",
-      ],
-    },
-  ],
+  plans: PLAN_TIER_LIST.map((tier) => ({
+    id: tier.id,
+    name: `${tier.emoji} ${tier.name}`,
+    price: tier.price,
+    badge: tier.badge,
+    highlighted: tier.highlighted,
+    features: tier.features,
+  })),
   paymentDestination: { whatsapp: "", email: "" },
   thankYou: "Recebemos suas respostas! Você será redirecionado ao pagamento.",
 };
 
-const LS_KEY = "funnel:config:v1";
+// v2: novos planos (Básico / Intermediário / Avançado)
+const LS_KEY = "funnel:config:v2";
 
 export function loadFunnelLocal(): FunnelConfig {
   if (typeof window === "undefined") return DEFAULT_FUNNEL;
