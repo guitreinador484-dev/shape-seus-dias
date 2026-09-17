@@ -51,7 +51,7 @@ export const createStudent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CreateStudentInput) => {
     if (!input?.email || !input?.password) throw new Error("Email e senha são obrigatórios");
-    if (input.password.length < 6) throw new Error("A senha deve ter pelo menos 6 caracteres");
+    if (input.password.length < 10) throw new Error("A senha deve ter pelo menos 10 caracteres");
     return input;
   })
   .handler(async ({ data, context }) => {
@@ -74,7 +74,13 @@ export const createStudent = createServerFn({ method: "POST" })
         role,
       },
     });
-    if (createErr) throw new Error(createErr.message);
+    if (createErr) {
+      const weakPassword = createErr.message.toLowerCase().includes("weak") || createErr.message.toLowerCase().includes("easy to guess");
+      if (weakPassword) {
+        throw new Error("Essa senha é muito comum. Use a senha forte sugerida ou crie outra com letras, números e símbolos.");
+      }
+      throw new Error(createErr.message);
+    }
     const userId = created.user?.id;
     if (!userId) throw new Error("Falha ao criar usuário");
 
