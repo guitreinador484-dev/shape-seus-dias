@@ -251,7 +251,7 @@ function FunnelPage() {
       active = false;
       clearInterval(timer);
     };
-  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess]);
+  }, [stage, pix, pixPaid, getPaymentStatus, provisionAccess, generateAiPlan]);
 
   // Volta do checkout de cartão: libera o acesso e leva direto para criar a senha.
   useEffect(() => {
