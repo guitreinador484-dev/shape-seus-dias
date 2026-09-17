@@ -586,6 +586,7 @@ export type Database = {
           email: string
           full_name: string | null
           has_class_access: boolean
+          has_order_bump: boolean
           id: string
           is_active: boolean
           referral_code: string
@@ -599,6 +600,7 @@ export type Database = {
           email: string
           full_name?: string | null
           has_class_access?: boolean
+          has_order_bump?: boolean
           id: string
           is_active?: boolean
           referral_code: string
@@ -612,6 +614,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           has_class_access?: boolean
+          has_order_bump?: boolean
           id?: string
           is_active?: boolean
           referral_code?: string
@@ -630,6 +633,7 @@ export type Database = {
           customer_name: string | null
           customer_whatsapp: string | null
           id: string
+          order_bump: boolean
           payment_method: string | null
           plan_id: string | null
           provider: string | null
@@ -647,6 +651,7 @@ export type Database = {
           customer_name?: string | null
           customer_whatsapp?: string | null
           id?: string
+          order_bump?: boolean
           payment_method?: string | null
           plan_id?: string | null
           provider?: string | null
@@ -664,6 +669,7 @@ export type Database = {
           customer_name?: string | null
           customer_whatsapp?: string | null
           id?: string
+          order_bump?: boolean
           payment_method?: string | null
           plan_id?: string | null
           provider?: string | null
