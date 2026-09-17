@@ -117,15 +117,17 @@ export async function listMyEnrollments(userId: string) {
 }
 
 export async function listAllProfiles() {
-  const { data } = await supabase.from("profiles").select("id, email, full_name").order("full_name");
+  const { data, error } = await supabase.from("profiles").select("id, email, full_name").order("full_name");
+  if (error) throw error;
   return data ?? [];
 }
 
 export async function listCourseEnrollments(courseId: string) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("course_enrollments")
     .select("user_id, enrolled_at")
     .eq("course_id", courseId);
+  if (error) throw error;
   return data ?? [];
 }
 

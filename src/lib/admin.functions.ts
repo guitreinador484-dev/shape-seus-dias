@@ -60,11 +60,12 @@ export const createStudent = createServerFn({ method: "POST" })
     // Verify caller is admin using service role (bypasses RLS quirks)
     await assertAdmin(supabaseAdmin, context.userId);
 
+    const email = data.email.trim().toLowerCase();
     const role = data.role ?? "online";
     const hasAccess = data.has_class_access ?? (role !== "presencial");
 
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
+      email,
       password: data.password,
       email_confirm: true,
       user_metadata: {
@@ -77,15 +78,23 @@ export const createStudent = createServerFn({ method: "POST" })
     const userId = created.user?.id;
     if (!userId) throw new Error("Falha ao criar usuário");
 
-    // The handle_new_user trigger seeds profile + role; ensure values match requested input.
-    await supabaseAdmin.from("profiles").update({
-      full_name: data.full_name ?? null,
-      whatsapp: data.whatsapp ?? null,
+    // Keep creation reliable even if the auth trigger is delayed or missing.
+    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
+      id: userId,
+      email,
+      full_name: data.full_name?.trim() || null,
+      whatsapp: data.whatsapp?.trim() || null,
       has_class_access: hasAccess,
-    }).eq("id", userId);
+    }, { onConflict: "id" });
+    if (profileError) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      throw new Error(`Não foi possível criar o perfil do aluno: ${profileError.message}`);
+    }
 
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-    await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
+    const { error: deleteRoleError } = await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+    if (deleteRoleError) throw new Error(`Aluno criado, mas não foi possível definir o tipo: ${deleteRoleError.message}`);
+    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
+    if (roleError) throw new Error(`Aluno criado, mas não foi possível definir o tipo: ${roleError.message}`);
 
     return { ok: true as const, user_id: userId };
   });
