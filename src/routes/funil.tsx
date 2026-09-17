@@ -724,26 +724,29 @@ function FunnelPage() {
                 </span>
                 <span className="text-lg font-bold text-blue-700">{formatBRL(totalPrice)}</span>
               </div>
-              {bump.enabled && (
+              {activeBumps.map((b) => (
                 <label
+                  key={b.id}
                   className={`mt-4 flex cursor-pointer gap-3 rounded-2xl border-2 border-dashed p-4 transition ${
-                    bumpChecked ? "border-blue-600 bg-blue-50" : "border-blue-300 bg-blue-50/40"
+                    bumpChecked[b.id] ? "border-blue-600 bg-blue-50" : "border-blue-300 bg-blue-50/40"
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={bumpChecked}
-                    onChange={(e) => setBumpChecked(e.target.checked)}
+                    checked={Boolean(bumpChecked[b.id])}
+                    onChange={(e) =>
+                      setBumpChecked((prev) => ({ ...prev, [b.id]: e.target.checked }))
+                    }
                     className="mt-1 h-5 w-5 accent-blue-600"
                   />
                   <span className="text-left">
                     <span className="block text-sm font-bold text-slate-900">
-                      Sim! Quero adicionar: {bump.title} — +{formatBRL(bump.price)}
+                      Sim! Quero adicionar: {b.title} — +{formatBRL(b.price)}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-600">{bump.description}</span>
+                    <span className="mt-1 block text-xs text-slate-600">{b.description}</span>
                   </span>
                 </label>
-              )}
+              ))}
               <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
                 {selectedPlan.features.slice(0, 3).map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
