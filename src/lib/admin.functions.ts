@@ -75,6 +75,9 @@ export const createStudent = createServerFn({ method: "POST" })
       },
     });
     if (createErr) {
+      if (/already|registered|exists|duplicate/i.test(createErr.message)) {
+        throw new Error("Este e-mail já está cadastrado. Edite o aluno existente em vez de criar outro.");
+      }
       const weakPassword = createErr.message.toLowerCase().includes("weak") || createErr.message.toLowerCase().includes("easy to guess");
       if (weakPassword) {
         throw new Error("Essa senha é muito comum. Use a senha forte sugerida ou crie outra com letras, números e símbolos.");
@@ -254,6 +257,7 @@ type PlanExerciseInput = {
   exercise_name: string;
   sets?: string | null;
   reps?: string | null;
+  load_text?: string | null;
   rest_seconds?: number | null;
   notes?: string | null;
   display_order: number;
@@ -273,6 +277,7 @@ export const addPlanExercise = createServerFn({ method: "POST" })
       exercise_name: data.exercise_name,
       sets: data.sets ?? null,
       reps: data.reps ?? null,
+      load_text: data.load_text ?? null,
       rest_seconds: data.rest_seconds ?? 0,
       notes: data.notes ?? null,
       display_order: data.display_order,

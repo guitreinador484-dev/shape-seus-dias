@@ -37,6 +37,10 @@ function ResetPasswordPage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (password.length < 10) {
+      toast.error("A senha precisa ter pelo menos 10 caracteres");
+      return;
+    }
     if (password !== confirm) {
       toast.error("As senhas não conferem");
       return;
@@ -64,11 +68,11 @@ function ResetPasswordPage() {
         <form onSubmit={onSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="pw">Nova senha</Label>
-            <Input id="pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input id="pw" type="password" required minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="pw2">Confirmar senha</Label>
-            <Input id="pw2" type="password" required minLength={6} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <Input id="pw2" type="password" required minLength={10} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </div>
           <Button type="submit" disabled={busy || !ready} className="w-full h-12 uppercase tracking-wider font-semibold">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar senha e entrar"}

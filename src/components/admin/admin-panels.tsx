@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -38,12 +38,16 @@ import {
   TrendingDown,
   ChevronRight,
   User,
+  FileText,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
+import { saveWorkoutPdf, deleteWorkoutPdf, getWorkoutPdfUrl } from "@/lib/workout-pdf.functions";
+import { buildWorkoutPdf, fileToBase64 } from "@/lib/workout-pdf";
+import { useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1452,6 +1456,7 @@ export function AdminTrainingPanel() {
   const [planName, setPlanName] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [loading, setLoading] = useState(true);
+  const { byPlan: pdfByPlan, reload: reloadPdfs } = useWorkoutPdfs();
 
   async function load() {
     setLoading(true);
@@ -1536,74 +1541,174 @@ export function AdminTrainingPanel() {
       </Card>
       {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyState title="Nenhum treino encontrado" description={filterStudent === "all" ? "Selecione um aluno e crie o primeiro plano de treino." : "Este aluno ainda não possui treinos."} /> : (
         <div className="space-y-4">
-          {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} />)}
+          {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
         </div>
       )}
     </div>
   );
 }
 
-function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercises; student?: Student; onReload: () => Promise<void>; onDelete: (id: string) => Promise<void> }) {
+function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { plan: PlanWithExercises; student?: Student; onReload: () => Promise<void>; onDelete: (id: string) => Promise<void>; pdf?: { version: number; file_name: string | null; generated_at: string; source: string }; onPdfReload: () => Promise<void> }) {
   const [exerciseName, setExerciseName] = useState("");
   const [sets, setSets] = useState("");
   const [reps, setReps] = useState("");
   const [rest, setRest] = useState("60");
+  const [load, setLoad] = useState("");
   const [notes, setNotes] = useState("");
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState(EXERCISE_GROUPS[0].key);
   const [librarySearch, setLibrarySearch] = useState("");
-  const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string } | null>(null);
+  const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string; load: string } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const uploadRef = useRef<HTMLInputElement | null>(null);
 
   const addExerciseFn = useServerFn(addPlanExercise);
   const deleteExerciseFn = useServerFn(deletePlanExercise);
+  const savePdfFn = useServerFn(saveWorkoutPdf);
+  const deletePdfFn = useServerFn(deleteWorkoutPdf);
+  const pdfUrlFn = useServerFn(getWorkoutPdfUrl);
 
   async function confirmAddFromLibrary() {
     if (!pending) return;
-    await addExerciseFn({
-      data: {
-        plan_id: plan.id,
-        exercise_name: pending.name,
-        sets: pending.sets,
-        reps: pending.reps,
-        rest_seconds: Number(pending.rest || 0),
-        notes: "",
-        display_order: plan.exercises.length + 1,
-      },
-    });
-    toast.success(`${pending.name} adicionado`);
-    setPending(null);
-    await onReload();
+    try {
+      setBusy("add");
+      await addExerciseFn({
+        data: {
+          plan_id: plan.id,
+          exercise_name: pending.name,
+          sets: pending.sets,
+          reps: pending.reps,
+          load_text: pending.load || null,
+          rest_seconds: Number(pending.rest || 0),
+          notes: "",
+          display_order: plan.exercises.length + 1,
+        },
+      });
+      toast.success(`${pending.name} adicionado`);
+      setPending(null);
+      await onReload();
+    } catch (error) {
+      toast.error("Não foi possível adicionar o exercício", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function addExercise() {
-    if (!exerciseName) {
+    if (!exerciseName.trim()) {
       toast.error("Informe o exercício.");
       return;
     }
-    await addExerciseFn({
-      data: {
-        plan_id: plan.id,
-        exercise_name: exerciseName,
-        sets: sets || null,
-        reps: reps || null,
-        rest_seconds: Number(rest || 0),
-        notes: notes || null,
-        display_order: plan.exercises.length + 1,
-      },
-    });
-    setExerciseName("");
-    setSets("");
-    setReps("");
-    setNotes("");
-    toast.success("Exercício adicionado");
-    await onReload();
+    try {
+      setBusy("add");
+      await addExerciseFn({
+        data: {
+          plan_id: plan.id,
+          exercise_name: exerciseName.trim(),
+          sets: sets || null,
+          reps: reps || null,
+          load_text: load || null,
+          rest_seconds: Number(rest || 0),
+          notes: notes || null,
+          display_order: plan.exercises.length + 1,
+        },
+      });
+      setExerciseName("");
+      setSets("");
+      setReps("");
+      setLoad("");
+      setNotes("");
+      toast.success("Exercício adicionado");
+      await onReload();
+    } catch (error) {
+      toast.error("Não foi possível adicionar o exercício", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function deleteExercise(id: string) {
-    await deleteExerciseFn({ data: { exerciseId: id } });
-    toast.success("Exercício removido");
-    await onReload();
+    if (!confirm("Remover este exercício do treino?")) return;
+    try {
+      setBusy(id);
+      await deleteExerciseFn({ data: { exerciseId: id } });
+      toast.success("Exercício removido");
+      await onReload();
+    } catch (error) {
+      toast.error("Não foi possível remover o exercício", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
   }
+
+  async function generatePdf() {
+    if (plan.exercises.length === 0) {
+      toast.error("Adicione exercícios antes de gerar o PDF.");
+      return;
+    }
+    try {
+      setBusy("pdf");
+      const { base64, fileName } = buildWorkoutPdf({
+        studentName: student?.full_name || student?.email || "Aluno",
+        planName: plan.plan_name || "Treino",
+        dayOfWeek: plan.day_of_week,
+        professional: "Gui Treinador",
+        exercises: plan.exercises,
+      });
+      await savePdfFn({ data: { planId: plan.id, studentId: plan.student_id, fileBase64: base64, fileName, source: "generated" } });
+      toast.success(pdf ? "Nova versão do PDF gerada" : "PDF gerado e vinculado ao aluno");
+      await onPdfReload();
+    } catch (error) {
+      toast.error("Não foi possível gerar o PDF", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function uploadPdf(file: File) {
+    if (file.type !== "application/pdf") {
+      toast.error("Envie um arquivo PDF.");
+      return;
+    }
+    try {
+      setBusy("pdf");
+      const base64 = await fileToBase64(file);
+      await savePdfFn({ data: { planId: plan.id, studentId: plan.student_id, fileBase64: base64, fileName: file.name, source: "upload" } });
+      toast.success("PDF enviado e vinculado ao treino");
+      await onPdfReload();
+    } catch (error) {
+      toast.error("Não foi possível enviar o PDF", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function openPdf(download: boolean) {
+    try {
+      setBusy("pdf");
+      const { url } = await pdfUrlFn({ data: { planId: plan.id, download } });
+      window.open(url, "_blank", "noopener");
+    } catch (error) {
+      toast.error("Não foi possível abrir o PDF", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function removePdf() {
+    if (!confirm("Excluir o PDF deste treino?")) return;
+    try {
+      setBusy("pdf");
+      await deletePdfFn({ data: { planId: plan.id } });
+      toast.success("PDF excluído");
+      await onPdfReload();
+    } catch (error) {
+      toast.error("Não foi possível excluir o PDF", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setBusy(null);
+    }
+  }
+
 
   return (
     <Card>
@@ -1624,16 +1729,58 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
           <Input className="md:col-span-2" value={exerciseName} onChange={(event) => setExerciseName(event.target.value)} placeholder="Exercício" />
           <Input value={sets} onChange={(event) => setSets(event.target.value)} placeholder="Séries" />
           <Input value={reps} onChange={(event) => setReps(event.target.value)} placeholder="Reps" />
+          <Input value={load} onChange={(event) => setLoad(event.target.value)} placeholder="Carga (ex: 20kg)" />
           <Input type="number" value={rest} onChange={(event) => setRest(event.target.value)} placeholder="Descanso" />
-          <Button onClick={addExercise}><Plus className="h-4 w-4" /> Adicionar</Button>
-          <Textarea className="md:col-span-6" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Observações" />
+          <Textarea className="md:col-span-5" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Observações" />
+          <Button onClick={addExercise} disabled={busy === "add"}>
+            {busy === "add" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Adicionar
+          </Button>
         </div>
         {plan.exercises.length === 0 ? <EmptyState title="Sem exercícios" description="Adicione os exercícios deste treino." /> : (
           <Table>
-            <TableHeader><TableRow><TableHead>Exercício</TableHead><TableHead>Séries</TableHead><TableHead>Reps</TableHead><TableHead>Descanso</TableHead><TableHead></TableHead></TableRow></TableHeader>
-            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => deleteExercise(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
+            <TableHeader><TableRow><TableHead>Exercício</TableHead><TableHead>Séries</TableHead><TableHead>Reps</TableHead><TableHead>Carga</TableHead><TableHead>Descanso</TableHead><TableHead></TableHead></TableRow></TableHeader>
+            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" disabled={busy === exercise.id} onClick={() => deleteExercise(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
           </Table>
         )}
+        <div className="rounded-lg border p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-medium text-sm">PDF do treino</p>
+              <p className="text-xs text-muted-foreground">
+                {pdf
+                  ? `Versão ${pdf.version} · ${pdf.source === "upload" ? "enviado manualmente" : "gerado automaticamente"} · ${new Date(pdf.generated_at).toLocaleDateString("pt-BR")}`
+                  : "Nenhum PDF vinculado a este treino ainda."}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={generatePdf} disabled={busy === "pdf"}>
+                {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {pdf ? "Gerar novamente" : "Gerar PDF do treino"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => uploadRef.current?.click()} disabled={busy === "pdf"}>
+                <Upload className="h-4 w-4" /> {pdf ? "Substituir por arquivo" : "Enviar PDF"}
+              </Button>
+              {pdf ? (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => openPdf(false)} disabled={busy === "pdf"}>Visualizar</Button>
+                  <Button size="sm" variant="outline" onClick={() => openPdf(true)} disabled={busy === "pdf"}>Baixar</Button>
+                  <Button size="sm" variant="destructive" onClick={removePdf} disabled={busy === "pdf"}><Trash2 className="h-4 w-4" /> Excluir PDF</Button>
+                </>
+              ) : null}
+            </div>
+          </div>
+          <input
+            ref={uploadRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void uploadPdf(file);
+            }}
+          />
+        </div>
       </CardContent>
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
@@ -1665,7 +1812,7 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
                     {filtered.map((ex) => (
                       <button
                         key={ex}
-                        onClick={() => setPending({ name: ex, sets: "3", reps: "10-12", rest: "60" })}
+                        onClick={() => setPending({ name: ex, sets: "3", reps: "10-12", rest: "60", load: "" })}
                         className="flex items-center justify-between gap-2 rounded-md border p-3 text-left text-sm hover:bg-accent transition"
                       >
                         <span>{ex}</span>
@@ -1689,7 +1836,7 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
             <DialogDescription>Defina séries, repetições e descanso.</DialogDescription>
           </DialogHeader>
           {pending && (
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Séries">
                 <Input value={pending.sets} onChange={(e) => setPending({ ...pending, sets: e.target.value })} placeholder="3" />
               </Field>
@@ -1698,6 +1845,9 @@ function PlanCard({ plan, student, onReload, onDelete }: { plan: PlanWithExercis
               </Field>
               <Field label="Descanso (s)">
                 <Input type="number" value={pending.rest} onChange={(e) => setPending({ ...pending, rest: e.target.value })} placeholder="60" />
+              </Field>
+              <Field label="Carga">
+                <Input value={pending.load} onChange={(e) => setPending({ ...pending, load: e.target.value })} placeholder="20kg / livre" />
               </Field>
             </div>
           )}
