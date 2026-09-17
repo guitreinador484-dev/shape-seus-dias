@@ -164,6 +164,7 @@ export const updateStudentStatus = createServerFn({ method: "POST" })
     if (data.full_name !== undefined) profilePatch.full_name = data.full_name;
     if (data.whatsapp !== undefined) profilePatch.whatsapp = data.whatsapp;
     if (data.has_class_access !== undefined) profilePatch.has_class_access = data.has_class_access;
+    if (data.has_order_bump !== undefined) profilePatch.has_order_bump = data.has_order_bump;
     if (data.is_active !== undefined) profilePatch.is_active = data.is_active;
     if (data.access_expires_at !== undefined) profilePatch.access_expires_at = data.access_expires_at;
     if (Object.keys(profilePatch).length > 0) {
