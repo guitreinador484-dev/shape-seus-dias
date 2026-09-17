@@ -63,7 +63,7 @@ export function AdminCoursesListPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div>
           <h2 className="font-display text-2xl">Cursos</h2>
           <p className="text-sm text-muted-foreground">Crie cursos com módulos e aulas, controle acesso e progresso dos alunos.</p>
@@ -173,7 +173,7 @@ function NewCourseDialog({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <DialogContent>
+    <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
       <DialogHeader><DialogTitle>Novo curso</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div><Label>Título</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Emagrecimento em 30 dias" /></div>

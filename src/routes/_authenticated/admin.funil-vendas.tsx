@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ConfirmDialog, EmptyBox, StatusPill } from "@/components/admin/ui-kit";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Save, ExternalLink, Loader2, Users, Trash2, ImagePlus, Mail, Phone } from "lucide-react";
+import { Save, ExternalLink, Loader2, Trash2, ImagePlus, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -235,8 +235,8 @@ function AdminFunnelPage() {
   };
 
   return (
-    <div className="funnel-admin-scope p-4 md:p-6 space-y-6 max-w-5xl">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+    <div className="funnel-admin-scope mx-auto max-w-7xl space-y-6">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <div>
           <h1 className="text-2xl font-bold">Funil de Vendas</h1>
           <p className="text-sm text-muted-foreground">
