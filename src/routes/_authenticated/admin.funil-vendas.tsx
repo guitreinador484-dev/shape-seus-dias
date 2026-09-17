@@ -25,6 +25,7 @@ import {
   resolveFunnelUrl,
 } from "@/lib/funnel-assets";
 import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
+import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { toast } from "sonner";
 
 /** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
