@@ -195,7 +195,7 @@ function FunnelPage() {
         const data = await createPix({
           data: {
             planId: selectedPlan.id,
-            planName: withBump ? `${selectedPlan.name} + ${bump.title}` : selectedPlan.name,
+            planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
             price: totalPrice,
             orderBump: withBump,
             method: "pix",
@@ -213,7 +213,7 @@ function FunnelPage() {
       const { checkoutUrl } = await createCheckout({
         data: {
           planId: selectedPlan.id,
-          planName: withBump ? `${selectedPlan.name} + ${bump.title}` : selectedPlan.name,
+          planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
           price: totalPrice,
           orderBump: withBump,
           method,
