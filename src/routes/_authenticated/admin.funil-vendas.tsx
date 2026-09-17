@@ -25,6 +25,7 @@ import {
   resolveFunnelUrl,
 } from "@/lib/funnel-assets";
 import { listLeadsFn, type LeadRow } from "@/lib/leads.functions";
+import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { toast } from "sonner";
 
 /** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
@@ -711,6 +712,11 @@ function AdminFunnelPage() {
         <Button variant="outline" size="sm" onClick={addPlan}>
           + Adicionar plano
         </Button>
+      </Section>
+
+      {/* Order bumps */}
+      <Section title="Ofertas extras no checkout (order bump)">
+        <OrderBumpEditor />
       </Section>
 
       {/* Leads */}

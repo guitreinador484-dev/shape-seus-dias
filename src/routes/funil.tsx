@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { loadOrderBump, DEFAULT_ORDER_BUMP, formatBRL, type OrderBumpConfig } from "@/lib/order-bump";
+import { loadOrderBumps, formatBRL, type OrderBumpConfig } from "@/lib/order-bump";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Check, Loader2, Lock, ShieldCheck, Sparkles, Star, Award } from "lucide-react";
@@ -106,11 +106,11 @@ function FunnelPage() {
   const [broad, setBroad] = useState<Record<string, string>>({});
   const [routine, setRoutine] = useState<Record<string, string>>({});
   const [selectedPlan, setSelectedPlan] = useState<FunnelPlan | null>(null);
-  const [bump, setBump] = useState<OrderBumpConfig>(DEFAULT_ORDER_BUMP);
-  const [bumpChecked, setBumpChecked] = useState(false);
+  const [bumps, setBumps] = useState<OrderBumpConfig[]>([]);
+  const [bumpChecked, setBumpChecked] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    loadOrderBump().then(setBump).catch(() => {});
+    loadOrderBumps().then(setBumps).catch(() => {});
   }, []);
   const [method, setMethod] = useState<"pix" | "card">("pix");
   const [contact, setContact] = useState({ name: "", email: "", whatsapp: "" });
@@ -161,8 +161,12 @@ function FunnelPage() {
     const value = Number.parseFloat(cleaned);
     return Number.isFinite(value) ? value : 0;
   };
-  const withBump = bump.enabled && bumpChecked;
-  const totalPrice = selectedPlan ? parsePlanPrice(selectedPlan.price) + (withBump ? bump.price : 0) : 0;
+  const activeBumps = bumps.filter((b) => b.enabled);
+  const chosenBumps = activeBumps.filter((b) => bumpChecked[b.id]);
+  const withBump = chosenBumps.length > 0;
+  const bumpsTotal = chosenBumps.reduce((sum, b) => sum + b.price, 0);
+  const bumpsLabel = chosenBumps.map((b) => b.title).join(" + ");
+  const totalPrice = selectedPlan ? parsePlanPrice(selectedPlan.price) + bumpsTotal : 0;
 
   const handleFinish = async () => {
     if (!contact.email || !selectedPlan) return;
@@ -191,7 +195,7 @@ function FunnelPage() {
         const data = await createPix({
           data: {
             planId: selectedPlan.id,
-            planName: withBump ? `${selectedPlan.name} + ${bump.title}` : selectedPlan.name,
+            planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
             price: totalPrice,
             orderBump: withBump,
             method: "pix",
@@ -209,7 +213,7 @@ function FunnelPage() {
       const { checkoutUrl } = await createCheckout({
         data: {
           planId: selectedPlan.id,
-          planName: withBump ? `${selectedPlan.name} + ${bump.title}` : selectedPlan.name,
+          planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
           price: totalPrice,
           orderBump: withBump,
           method,
@@ -720,26 +724,29 @@ function FunnelPage() {
                 </span>
                 <span className="text-lg font-bold text-blue-700">{formatBRL(totalPrice)}</span>
               </div>
-              {bump.enabled && (
+              {activeBumps.map((b) => (
                 <label
+                  key={b.id}
                   className={`mt-4 flex cursor-pointer gap-3 rounded-2xl border-2 border-dashed p-4 transition ${
-                    bumpChecked ? "border-blue-600 bg-blue-50" : "border-blue-300 bg-blue-50/40"
+                    bumpChecked[b.id] ? "border-blue-600 bg-blue-50" : "border-blue-300 bg-blue-50/40"
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={bumpChecked}
-                    onChange={(e) => setBumpChecked(e.target.checked)}
+                    checked={Boolean(bumpChecked[b.id])}
+                    onChange={(e) =>
+                      setBumpChecked((prev) => ({ ...prev, [b.id]: e.target.checked }))
+                    }
                     className="mt-1 h-5 w-5 accent-blue-600"
                   />
                   <span className="text-left">
                     <span className="block text-sm font-bold text-slate-900">
-                      Sim! Quero adicionar: {bump.title} — +{formatBRL(bump.price)}
+                      Sim! Quero adicionar: {b.title} — +{formatBRL(b.price)}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-600">{bump.description}</span>
+                    <span className="mt-1 block text-xs text-slate-600">{b.description}</span>
                   </span>
                 </label>
-              )}
+              ))}
               <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
                 {selectedPlan.features.slice(0, 3).map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
