@@ -713,6 +713,11 @@ function AdminFunnelPage() {
         </Button>
       </Section>
 
+      {/* Order bumps */}
+      <Section title="Ofertas extras no checkout (order bump)">
+        <OrderBumpEditor />
+      </Section>
+
       {/* Leads */}
       <Section title={`Leads capturados (${leads.length})`}>
         {leads.length === 0 ? (
