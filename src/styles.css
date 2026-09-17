@@ -312,6 +312,22 @@
   &::-webkit-scrollbar { display: none; }
 }
 
+@media (max-width: 639px) {
+  .admin-mobile [data-slot="dialog-footer"] {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-mobile [data-slot="dialog-footer"] > * {
+    width: 100%;
+  }
+
+  .admin-mobile h1,
+  .admin-mobile h2 {
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Gradient accent text */
 @utility text-gradient {
   background: linear-gradient(135deg, #7C5CFF 0%, #5B8CFF 100%);
@@ -494,4 +510,20 @@ body > div[style*="position: fixed"][style*="z-index"],
 body > a[style*="position: fixed"],
 body > div[style*="position:fixed"][style*="z-index"] {
   display: none !important;
+}
+
+@media (max-width: 639px) {
+  .admin-mobile [data-slot="dialog-footer"] {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-mobile [data-slot="dialog-footer"] > * {
+    width: 100%;
+  }
+
+  .admin-mobile h1,
+  .admin-mobile h2 {
+    overflow-wrap: anywhere;
+  }
 }

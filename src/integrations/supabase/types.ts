@@ -325,11 +325,14 @@ export type Database = {
           name: string | null
           plan_id: string | null
           profile: string | null
+          purchase_id: string | null
           quiz_slug: string | null
           quiz_title: string | null
           score: number | null
           source: string
+          stage_updated_at: string
           status: string
+          student_id: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -340,11 +343,14 @@ export type Database = {
           name?: string | null
           plan_id?: string | null
           profile?: string | null
+          purchase_id?: string | null
           quiz_slug?: string | null
           quiz_title?: string | null
           score?: number | null
           source?: string
+          stage_updated_at?: string
           status?: string
+          student_id?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -355,14 +361,25 @@ export type Database = {
           name?: string | null
           plan_id?: string | null
           profile?: string | null
+          purchase_id?: string | null
           quiz_slug?: string | null
           quiz_title?: string | null
           score?: number | null
           source?: string
+          stage_updated_at?: string
           status?: string
+          student_id?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_comments: {
         Row: {

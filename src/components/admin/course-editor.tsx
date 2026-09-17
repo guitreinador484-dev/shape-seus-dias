@@ -54,7 +54,7 @@ export function AdminCourseEditor({ courseId }: { courseId: string }) {
         <p className="text-sm text-muted-foreground">Slug: <code>{course.slug}</code></p>
       </div>
       <Tabs defaultValue="content">
-        <TabsList>
+        <TabsList className="h-auto w-full justify-start overflow-x-auto">
           <TabsTrigger value="content">Conteúdo</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
           <TabsTrigger value="enrollments"><Users className="h-3.5 w-3.5 mr-1.5" /> Alunos</TabsTrigger>
@@ -186,15 +186,12 @@ function ModulesEditor({ course, onChange }: { course: CourseFull; onChange: () 
         <Accordion type="multiple" className="space-y-2">
           {course.modules.map((m) => (
             <AccordionItem key={m.id} value={m.id} className="border rounded-lg px-3">
-              <div className="flex items-center gap-2 py-1">
+               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-1">
                 <AccordionTrigger className="flex-1 py-2 hover:no-underline">
                   <span className="font-medium">{m.title}</span>
                   <span className="text-xs text-muted-foreground ml-2">({m.lessons.length} aula{m.lessons.length !== 1 ? "s" : ""})</span>
                 </AccordionTrigger>
-                <Button size="icon" variant="ghost" onClick={() => moveModule(m, -1)}><ArrowUp className="h-4 w-4" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => moveModule(m, 1)}><ArrowDown className="h-4 w-4" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => renameModule(m)}><Pencil className="h-4 w-4" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => removeModule(m)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                 <div className="flex shrink-0"><Button size="icon" variant="ghost" onClick={() => moveModule(m, -1)}><ArrowUp className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => moveModule(m, 1)}><ArrowDown className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => renameModule(m)}><Pencil className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => removeModule(m)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button></div>
               </div>
               <AccordionContent className="pt-2 pb-4">
                 <LessonsEditor module={m} onChange={onChange} />
@@ -241,7 +238,7 @@ function LessonsEditor({ module, onChange }: { module: CourseModule & { lessons:
   return (
     <div className="space-y-2">
       {module.lessons.map((l) => (
-        <div key={l.id} className="flex items-center gap-2 p-2 rounded border bg-muted/30">
+        <div key={l.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-2 rounded border bg-muted/30 p-2 sm:flex sm:items-center">
           <Video className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm truncate">{l.title}</p>
@@ -249,10 +246,7 @@ function LessonsEditor({ module, onChange }: { module: CourseModule & { lessons:
               {l.video_path ? "Vídeo ✓" : "Sem vídeo"} · Libera em {l.release_days || 0}d
             </p>
           </div>
-          <Button size="icon" variant="ghost" onClick={() => moveLesson(l, -1)}><ArrowUp className="h-4 w-4" /></Button>
-          <Button size="icon" variant="ghost" onClick={() => moveLesson(l, 1)}><ArrowDown className="h-4 w-4" /></Button>
-          <Button size="sm" variant="secondary" onClick={() => setEditingId(l.id)}><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</Button>
-          <Button size="icon" variant="ghost" onClick={() => removeLesson(l)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+           <div className="col-span-2 flex flex-wrap justify-end gap-1 sm:contents"><Button size="icon" variant="ghost" onClick={() => moveLesson(l, -1)}><ArrowUp className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => moveLesson(l, 1)}><ArrowDown className="h-4 w-4" /></Button><Button size="sm" variant="secondary" onClick={() => setEditingId(l.id)}><Pencil className="h-3.5 w-3.5 mr-1" /> Editar</Button><Button size="icon" variant="ghost" onClick={() => removeLesson(l)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button></div>
         </div>
       ))}
       <Button size="sm" variant="outline" onClick={addLesson}><Plus className="h-4 w-4 mr-2" /> Nova aula</Button>
@@ -368,7 +362,7 @@ function LessonDialog({ lessonId, onClose }: { lessonId: string; onClose: () => 
   if (!lesson) return null;
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader><DialogTitle>Editar aula</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div><Label>Título</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>

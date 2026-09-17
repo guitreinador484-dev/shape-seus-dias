@@ -71,11 +71,11 @@ export function OrderBumpEditor() {
       <div className="space-y-4">
         {items.map((item, i) => (
           <div key={item.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <span className="text-xs font-semibold uppercase text-muted-foreground">
                 Oferta {i + 1}
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                 <div className="flex items-center gap-2">
                   <Label className="text-xs">Mostrar</Label>
                   <Switch

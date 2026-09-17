@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ConfirmDialog, MetricCard, StatusPill } from "@/components/admin/ui-kit";
+import { AdminPageHeader, ConfirmDialog, EmptyBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import {
   BadgeDollarSign,
   CheckCircle2,
@@ -40,12 +40,13 @@ import {
   ChevronRight,
   User,
   FileText,
+  Copy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
-import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
+import { createStudent, updateStudentStatus, savePurchase, createTrainingPlan, deleteTrainingPlan, duplicateTrainingPlan, addPlanExercise, deletePlanExercise } from "@/lib/admin.functions";
 import { saveWorkoutPdf, deleteWorkoutPdf, getWorkoutPdfUrl } from "@/lib/workout-pdf.functions";
 import { buildWorkoutPdf, fileToBase64 } from "@/lib/workout-pdf";
 import { useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
@@ -63,6 +64,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 type Profile = Tables<"profiles">;
 type Purchase = Tables<"purchases">;
@@ -374,9 +376,9 @@ export function AdminDashboardPanel() {
                 <li key={item.key}>
                   <Link
                     to={item.to}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60"
+                    className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-muted/30 px-3 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4"
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex min-w-0 items-start gap-2 sm:items-center">
                       <StatusPill tone={item.tone}>Atenção</StatusPill>
                       {item.text}
                     </span>
@@ -581,8 +583,8 @@ export function AdminDashboardPanel() {
                   )}
 
                   {/* Measurement table */}
-                  <div className="rounded-xl border border-white/10 overflow-hidden">
-                    <table className="w-full text-sm">
+                  <div className="overflow-x-auto rounded-xl border border-white/10">
+                    <table className="min-w-[720px] w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/[0.03]">
                           <th className="px-3 py-2.5 text-left text-[11px] text-muted-foreground font-medium">Data</th>
@@ -683,7 +685,7 @@ export function EvolutionDialog({ student, open, onOpenChange }: { student: Stud
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-3xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Evolução — {student.full_name || student.email}</DialogTitle>
           <DialogDescription>Medidas e fotos de progresso registradas pelo aluno.</DialogDescription>
@@ -692,7 +694,7 @@ export function EvolutionDialog({ student, open, onOpenChange }: { student: Stud
           <p className="text-sm text-muted-foreground">Nenhuma medição registrada ainda.</p>
         ) : (
           <div className="space-y-4">
-            <Table>
+            <Table className="min-w-[680px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
@@ -769,7 +771,7 @@ export function AnamneseDialog({ student, open, onOpenChange }: { student: Stude
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>Ficha de anamnese — {student.full_name || student.email}</DialogTitle>
           <DialogDescription>Informações preenchidas pelo aluno para montagem do programa.</DialogDescription>
@@ -1016,7 +1018,7 @@ function WorkoutDialog({ workout, open, onOpenChange, onSave }: { workout?: Work
       <DialogTrigger asChild>
         <Button size="sm" variant={workout ? "outline" : "default"}>{workout ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {workout ? "Editar" : "Nova aula"}</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>{workout ? "Editar aula" : "Nova aula"}</DialogTitle>
           <DialogDescription>Envie o vídeo direto pela plataforma — cada aluno acessa por link assinado individual.</DialogDescription>
@@ -1094,6 +1096,7 @@ export function AdminTrainingPanel() {
   const [planName, setPlanName] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [loading, setLoading] = useState(true);
+  const [newOpen, setNewOpen] = useState(false);
   const { byPlan: pdfByPlan, reload: reloadPdfs } = useWorkoutPdfs();
 
   async function load() {
@@ -1129,12 +1132,12 @@ export function AdminTrainingPanel() {
     }
     await createPlanFn({ data: { student_id: selectedStudent, day_of_week: Number(dayOfWeek), plan_name: planName || "Treino" } });
     setPlanName("");
+    setNewOpen(false);
     toast.success("Treino criado");
     await load();
   }
 
   async function deletePlan(id: string) {
-    if (!confirm("Excluir este treino e todos os seus exercícios?")) return;
     await deletePlanFn({ data: { planId: id } });
     toast.success("Treino removido");
     await load();
@@ -1146,25 +1149,24 @@ export function AdminTrainingPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader title="Treinos" description="Crie planos por aluno e adicione exercícios com séries, repetições e descanso." />
+      <AdminPageHeader
+        title="Treinos"
+        description="Crie, organize e entregue os treinos e PDFs de cada aluno."
+        action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Novo treino</Button>}
+      />
       <Card className="mb-6">
-        <CardHeader><CardTitle>Filtrar por aluno</CardTitle></CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button size="sm" variant={filterStudent === "all" ? "default" : "outline"} onClick={() => setFilterStudent("all")}>Todos ({plans.length})</Button>
-          {sortedStudents.map((student) => {
-            const count = plans.filter((plan) => plan.student_id === student.id).length;
-            if (count === 0) return null;
-            return (
-              <Button key={student.id} size="sm" variant={filterStudent === student.id ? "default" : "outline"} onClick={() => setFilterStudent(student.id)}>
-                {student.full_name || student.email} ({count})
-              </Button>
-            );
-          })}
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <Select value={filterStudent} onValueChange={setFilterStudent}>
+            <SelectTrigger><SelectValue placeholder="Filtrar por aluno" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">Todos os alunos ({plans.length})</SelectItem>{sortedStudents.map((student) => <SelectItem key={student.id} value={student.id}>{student.full_name || student.email} ({plans.filter((plan) => plan.student_id === student.id).length})</SelectItem>)}</SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">{filteredPlans.length} treino(s)</p>
         </CardContent>
       </Card>
-      <Card className="mb-6">
-        <CardHeader><CardTitle>Novo treino para aluno</CardTitle></CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4">
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader><DialogTitle>Novo treino</DialogTitle><DialogDescription>Escolha o aluno, o nome e o dia deste treino.</DialogDescription></DialogHeader>
+          <div className="grid gap-4">
           <Select value={selectedStudent} onValueChange={setSelectedStudent}>
             <SelectTrigger><SelectValue placeholder="Selecione o aluno" /></SelectTrigger>
             <SelectContent>{students.map((student) => <SelectItem key={student.id} value={student.id}>{student.full_name || student.email}</SelectItem>)}</SelectContent>
@@ -1174,10 +1176,11 @@ export function AdminTrainingPanel() {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"].map((day, index) => <SelectItem key={day} value={String(index)}>{day}</SelectItem>)}</SelectContent>
           </Select>
-          <Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button>
-        </CardContent>
-      </Card>
-      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyState title="Nenhum treino encontrado" description={filterStudent === "all" ? "Selecione um aluno e crie o primeiro plano de treino." : "Este aluno ainda não possui treinos."} /> : (
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setNewOpen(false)}>Cancelar</Button><Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyBox title="Nenhum treino encontrado" description={filterStudent === "all" ? "Crie o primeiro treino e vincule a um aluno." : "Este aluno ainda não possui treinos."} action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Criar primeiro treino</Button>} /> : (
         <div className="space-y-4">
           {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
         </div>
@@ -1198,12 +1201,15 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   const [librarySearch, setLibrarySearch] = useState("");
   const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string; load: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [deletePlanOpen, setDeletePlanOpen] = useState(false);
+  const [deleteExerciseId, setDeleteExerciseId] = useState<string | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
 
   const addExerciseFn = useServerFn(addPlanExercise);
   const deleteExerciseFn = useServerFn(deletePlanExercise);
   const savePdfFn = useServerFn(saveWorkoutPdf);
   const deletePdfFn = useServerFn(deleteWorkoutPdf);
+  const duplicatePlanFn = useServerFn(duplicateTrainingPlan);
   const pdfUrlFn = useServerFn(getWorkoutPdfUrl);
 
   async function confirmAddFromLibrary() {
@@ -1266,7 +1272,6 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   }
 
   async function deleteExercise(id: string) {
-    if (!confirm("Remover este exercício do treino?")) return;
     try {
       setBusy(id);
       await deleteExerciseFn({ data: { exerciseId: id } });
@@ -1334,7 +1339,6 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   }
 
   async function removePdf() {
-    if (!confirm("Excluir o PDF deste treino?")) return;
     try {
       setBusy("pdf");
       await deletePdfFn({ data: { planId: plan.id } });
@@ -1347,6 +1351,17 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
     }
   }
 
+  async function duplicatePlan() {
+    try {
+      setBusy("duplicate");
+      await duplicatePlanFn({ data: { planId: plan.id } });
+      toast.success("Treino duplicado");
+      await onReload();
+    } catch (error) {
+      toast.error("Não foi possível duplicar", { description: error instanceof Error ? error.message : undefined });
+    } finally { setBusy(null); }
+  }
+
 
   return (
     <Card>
@@ -1356,9 +1371,16 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
             <CardTitle>{plan.plan_name || "Treino"}</CardTitle>
             <p className="text-sm text-muted-foreground">{student?.full_name || student?.email || "Aluno"} · dia {plan.day_of_week}</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Biblioteca de exercícios</Button>
-            <Button variant="destructive" size="sm" onClick={() => onDelete(plan.id)}><Trash2 className="h-4 w-4" /> Excluir treino</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Adicionar exercícios</Button>
+            <RowActions>
+              <DropdownMenuItem onSelect={() => setLibraryOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Editar treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void duplicatePlan()}><Copy className="mr-2 h-4 w-4" /> Duplicar treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void generatePdf()}><FileText className="mr-2 h-4 w-4" /> {pdf ? "Gerar novo PDF" : "Gerar PDF"}</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeletePlanOpen(true)}><Trash2 className="mr-2 h-4 w-4" /> Excluir treino</DropdownMenuItem>
+            </RowActions>
+            <ConfirmDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
           </div>
         </div>
       </CardHeader>
@@ -1375,11 +1397,12 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
           </Button>
         </div>
         {plan.exercises.length === 0 ? <EmptyState title="Sem exercícios" description="Adicione os exercícios deste treino." /> : (
-          <Table>
+          <div className="overflow-x-auto"><Table className="min-w-[640px]">
             <TableHeader><TableRow><TableHead>Exercício</TableHead><TableHead>Séries</TableHead><TableHead>Reps</TableHead><TableHead>Carga</TableHead><TableHead>Descanso</TableHead><TableHead></TableHead></TableRow></TableHeader>
-            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" disabled={busy === exercise.id} onClick={() => deleteExercise(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
-          </Table>
+            <TableBody>{plan.exercises.map((exercise) => <TableRow key={exercise.id}><TableCell>{exercise.exercise_name}<p className="text-xs text-muted-foreground">{exercise.notes}</p></TableCell><TableCell>{exercise.sets}</TableCell><TableCell>{exercise.reps}</TableCell><TableCell>{exercise.load_text || "—"}</TableCell><TableCell>{exercise.rest_seconds}s</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" aria-label={`Excluir ${exercise.exercise_name}`} disabled={busy === exercise.id} onClick={() => setDeleteExerciseId(exercise.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody>
+          </Table></div>
         )}
+        <ConfirmDialog open={Boolean(deleteExerciseId)} onOpenChange={(open) => { if (!open) setDeleteExerciseId(null); }} title="Excluir este exercício?" description="O exercício será removido deste treino." confirmLabel="Sim, excluir exercício" destructive onConfirm={async () => { if (deleteExerciseId) await deleteExercise(deleteExerciseId); setDeleteExerciseId(null); }} />
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -1390,7 +1413,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
                   : "Nenhum PDF vinculado a este treino ainda."}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               <Button size="sm" onClick={generatePdf} disabled={busy === "pdf"}>
                 {busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                 {pdf ? "Gerar novamente" : "Gerar PDF do treino"}
@@ -1402,7 +1425,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
                 <>
                   <Button size="sm" variant="outline" onClick={() => openPdf(false)} disabled={busy === "pdf"}>Visualizar</Button>
                   <Button size="sm" variant="outline" onClick={() => openPdf(true)} disabled={busy === "pdf"}>Baixar</Button>
-                  <Button size="sm" variant="destructive" onClick={removePdf} disabled={busy === "pdf"}><Trash2 className="h-4 w-4" /> Excluir PDF</Button>
+                   <ConfirmDialog trigger={<Button size="sm" variant="outline" disabled={busy === "pdf"}><Trash2 className="h-4 w-4" /> Excluir PDF</Button>} title="Excluir o PDF deste treino?" description="O treino continua salvo, mas o aluno perde o acesso a este arquivo." confirmLabel="Sim, excluir PDF" destructive onConfirm={removePdf} />
                 </>
               ) : null}
             </div>
@@ -1421,7 +1444,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
         </div>
       </CardContent>
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-5xl overflow-hidden flex flex-col sm:w-full">
           <DialogHeader>
             <DialogTitle>Biblioteca de exercícios</DialogTitle>
             <DialogDescription>Clique em um exercício para definir séries, repetições e descanso antes de adicionar.</DialogDescription>
@@ -1468,7 +1491,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
         </DialogContent>
       </Dialog>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto sm:w-full">
           <DialogHeader>
             <DialogTitle>{pending?.name}</DialogTitle>
             <DialogDescription>Defina séries, repetições e descanso.</DialogDescription>
@@ -1613,7 +1636,7 @@ export function AdminSalesPanel() {
           }}
       />
       {loading ? <Skeleton className="h-80" /> : purchases.length === 0 ? <EmptyState title="Nenhuma venda registrada" description="Registre vendas manuais ou aguarde integrações de pagamento." /> : (
-        <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Valor</TableHead><TableHead>Status</TableHead><TableHead>Transação</TableHead><TableHead>Data</TableHead></TableRow></TableHeader><TableBody>{purchases.map((purchase) => <TableRow key={purchase.id}><TableCell>{purchase.customer_name || "—"}<p className="text-xs text-muted-foreground">{purchase.customer_email}</p></TableCell><TableCell>{formatCurrency(purchase.amount)}</TableCell><TableCell><Select value={purchase.status} onValueChange={(value) => requestStatusChange(purchase.id, value)}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(purchaseStatusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></TableCell><TableCell className="text-muted-foreground">{purchase.transaction_id || purchase.appmax_order_id || "—"}</TableCell><TableCell>{formatDate(purchase.created_at)}</TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
+        <Card><CardContent className="pt-6"><Table className="min-w-[680px]"><TableHeader><TableRow><TableHead>Cliente</TableHead><TableHead>Valor</TableHead><TableHead>Status</TableHead><TableHead>Transação</TableHead><TableHead>Data</TableHead></TableRow></TableHeader><TableBody>{purchases.map((purchase) => <TableRow key={purchase.id}><TableCell>{purchase.customer_name || "—"}<p className="text-xs text-muted-foreground">{purchase.customer_email}</p></TableCell><TableCell>{formatCurrency(purchase.amount)}</TableCell><TableCell><Select value={purchase.status} onValueChange={(value) => requestStatusChange(purchase.id, value)}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(purchaseStatusLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></TableCell><TableCell className="text-muted-foreground">{purchase.transaction_id || purchase.appmax_order_id || "—"}</TableCell><TableCell>{formatDate(purchase.created_at)}</TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
       )}
     </div>
   );

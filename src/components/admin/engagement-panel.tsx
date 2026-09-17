@@ -91,20 +91,20 @@ export function AdminEngagementPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+      <div className="grid grid-cols-1 items-end gap-3 mb-6 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div>
           <h2 className="font-display text-2xl tracking-wide">Engajamento</h2>
           <p className="text-sm text-muted-foreground">Quem está treinando com consistência e quem precisa de atenção.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="gap-1"><Flame className="h-3 w-3" /> {activeToday} check-in hoje</Badge>
           <Badge variant="secondary" className="gap-1 text-amber-500"><AlertTriangle className="h-3 w-3" /> {atRisk} sem contato há 7+ dias</Badge>
         </div>
       </div>
 
       <Card>
-        <CardContent className="pt-6">
-          <Table>
+        <CardContent className="overflow-x-auto pt-6">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Aluno</TableHead>

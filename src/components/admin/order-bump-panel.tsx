@@ -60,7 +60,7 @@ export function AdminOrderBumpPanel() {
 
       <Card>
         <CardHeader><CardTitle>Ofertas no checkout</CardTitle></CardHeader>
-        <CardContent>
+         <CardContent className="overflow-x-auto">
           <OrderBumpEditor />
         </CardContent>
       </Card>
@@ -80,7 +80,7 @@ export function AdminOrderBumpPanel() {
           {loading ? (
             <div className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>
           ) : (
-            <Table>
+            <Table className="min-w-[420px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Aluno</TableHead>

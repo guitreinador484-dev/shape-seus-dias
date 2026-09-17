@@ -254,6 +254,42 @@ export const deleteTrainingPlan = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+export const duplicateTrainingPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { planId: string }) => {
+    if (!input?.planId) throw new Error("Treino não informado");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await assertAdmin(supabaseAdmin, context.userId);
+    const { data: source, error: sourceError } = await supabaseAdmin
+      .from("student_plans").select("*").eq("id", data.planId).single();
+    if (sourceError || !source) throw new Error("Treino não encontrado");
+    const { data: copy, error: copyError } = await supabaseAdmin
+      .from("student_plans")
+      .insert({ student_id: source.student_id, day_of_week: source.day_of_week, plan_name: `${source.plan_name || "Treino"} (cópia)` })
+      .select("id").single();
+    if (copyError) throw new Error(copyError.message);
+    const { data: exercises, error: exerciseError } = await supabaseAdmin
+      .from("student_plan_exercises").select("*").eq("plan_id", data.planId).order("display_order");
+    if (exerciseError) throw new Error(exerciseError.message);
+    if (exercises?.length) {
+      const { error } = await supabaseAdmin.from("student_plan_exercises").insert(exercises.map((exercise) => ({
+        plan_id: copy.id,
+        exercise_name: exercise.exercise_name,
+        sets: exercise.sets,
+        reps: exercise.reps,
+        load_text: exercise.load_text,
+        rest_seconds: exercise.rest_seconds,
+        notes: exercise.notes,
+        display_order: exercise.display_order,
+      })));
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true as const, planId: copy.id };
+  });
+
 type PlanExerciseInput = {
   plan_id: string;
   exercise_name: string;
