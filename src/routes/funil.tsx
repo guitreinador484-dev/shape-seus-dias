@@ -230,6 +230,8 @@ function FunnelPage() {
           setAccountLoading(true);
           try {
             const result = await provisionAccess({ data: { reference: pix.reference } });
+            // Dispara o treino da IA em paralelo (não bloqueia o redirecionamento).
+            void generateAiPlan({ data: { reference: pix.reference } }).catch(() => {});
             if (active) setAccount(result);
             if (result?.actionLink) {
               window.location.href = result.actionLink;
