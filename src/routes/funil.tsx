@@ -255,10 +255,8 @@ function FunnelPage() {
             // Dispara o treino da IA em paralelo (não bloqueia o redirecionamento).
             void generateAiPlan({ data: { reference: pix.reference } }).catch(() => {});
             if (active) setAccount(result);
-            if (result?.actionLink) {
-              window.location.href = result.actionLink;
-              return;
-            }
+            window.location.href = `/criar-senha?ref=${encodeURIComponent(pix.reference)}`;
+            return;
           } catch (e) {
             console.error("[funil] falha ao criar conta de acesso", e);
           } finally {
@@ -289,10 +287,8 @@ function FunnelPage() {
         void generateAiPlan({ data: { reference } }).catch(() => {});
         if (!active) return;
         setAccount(result);
-        if (result?.actionLink) {
-          window.location.href = result.actionLink;
-          return;
-        }
+        window.location.href = `/criar-senha?ref=${encodeURIComponent(reference)}`;
+        return;
       } catch (e) {
         console.error("[funil] falha ao liberar acesso após o cartão", e);
       } finally {
@@ -889,16 +885,14 @@ function FunnelPage() {
                   {account.created ? "Sua conta foi criada!" : "Seu acesso foi liberado!"}
                 </p>
                 <p className="mt-2 text-sm text-slate-700">
-                  {account.actionLink
-                    ? "Vamos te levar agora para criar a sua senha de acesso."
-                    : "Enviamos um e-mail com o link para você criar a sua senha e entrar na plataforma."}{" "}
-                  Também enviamos uma cópia para <b>{contact.email}</b>.
+                  Agora é só criar a sua senha para entrar na plataforma. Também enviamos uma cópia para{" "}
+                  <b>{contact.email}</b>.
                 </p>
                 <a
-                  href={account.actionLink || "/auth"}
+                  href={pix?.reference ? `/criar-senha?ref=${encodeURIComponent(pix.reference)}` : "/auth"}
                   className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800"
                 >
-                  {account.actionLink ? "Criar minha senha" : "Ir para a plataforma"}
+                  Criar minha senha
                 </a>
                 {!account.emailSent && (
                   <p className="mt-3 text-xs text-amber-700">

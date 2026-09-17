@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as FunilRouteImport } from './routes/funil'
+import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -41,6 +42,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const FunilRoute = FunilRouteImport.update({
   id: '/funil',
   path: '/funil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriarSenhaRoute = CriarSenhaRouteImport.update({
+  id: '/criar-senha',
+  path: '/criar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -165,6 +171,7 @@ const AuthenticatedAdminCursosIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
   '/reset-password': typeof ResetPasswordRoute
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/criar-senha'
     | '/funil'
     | '/reset-password'
     | '/admin'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/criar-senha'
     | '/funil'
     | '/reset-password'
     | '/plataforma'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/criar-senha'
     | '/funil'
     | '/reset-password'
     | '/_authenticated/admin'
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CriarSenhaRoute: typeof CriarSenhaRoute
   FunilRoute: typeof FunilRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
@@ -333,6 +346,13 @@ declare module '@tanstack/react-router' {
       path: '/funil'
       fullPath: '/funil'
       preLoaderRoute: typeof FunilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criar-senha': {
+      id: '/criar-senha'
+      path: '/criar-senha'
+      fullPath: '/criar-senha'
+      preLoaderRoute: typeof CriarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -579,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CriarSenhaRoute: CriarSenhaRoute,
   FunilRoute: FunilRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
