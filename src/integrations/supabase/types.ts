@@ -316,6 +316,111 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_videos: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          gym_id: string | null
+          id: string
+          notes: string | null
+          thumbnail_path: string | null
+          title: string | null
+          updated_at: string
+          video_path: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          gym_id?: string | null
+          id?: string
+          notes?: string | null
+          thumbnail_path?: string | null
+          title?: string | null
+          updated_at?: string
+          video_path: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          gym_id?: string | null
+          id?: string
+          notes?: string | null
+          thumbnail_path?: string | null
+          title?: string | null
+          updated_at?: string
+          video_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_videos_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_videos_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercises: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          muscle_group: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          muscle_group?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          muscle_group?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gyms: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          neighborhood: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          neighborhood?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          neighborhood?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           answers: Json
@@ -723,6 +828,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           display_order: number
+          exercise_id: string | null
           exercise_name: string
           id: string
           load_text: string | null
@@ -735,6 +841,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           display_order?: number
+          exercise_id?: string | null
           exercise_name: string
           id?: string
           load_text?: string | null
@@ -747,6 +854,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           display_order?: number
+          exercise_id?: string | null
           exercise_name?: string
           id?: string
           load_text?: string | null
@@ -757,6 +865,13 @@ export type Database = {
           sets?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "student_plan_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_plan_exercises_plan_id_fkey"
             columns: ["plan_id"]
@@ -792,6 +907,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_gym_preference: {
+        Row: {
+          created_at: string
+          gym_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gym_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gym_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gym_preference_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -994,7 +1138,7 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "online" | "presencial"
+      app_role: "admin" | "online" | "presencial" | "aluno_mentoria"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1122,7 +1266,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "online", "presencial"],
+      app_role: ["admin", "online", "presencial", "aluno_mentoria"],
     },
   },
 } as const
