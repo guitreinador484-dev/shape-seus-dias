@@ -505,13 +505,6 @@ iframe[src*="lovable"] {
   z-index: -9999 !important;
 }
 
-/* Hide floating badge-like fixed elements injected at bottom-right */
-body > div[style*="position: fixed"][style*="z-index"],
-body > a[style*="position: fixed"],
-body > div[style*="position:fixed"][style*="z-index"] {
-  display: none !important;
-}
-
 @media (max-width: 639px) {
   .admin-mobile [data-slot="dialog-footer"] {
     display: grid;
