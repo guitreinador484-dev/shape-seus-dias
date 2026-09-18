@@ -40,7 +40,7 @@ type CreateStudentInput = {
   password: string;
   full_name?: string;
   whatsapp?: string;
-  role?: "online" | "presencial" | "admin";
+  role?: AppRole;
   has_class_access?: boolean;
 };
 
