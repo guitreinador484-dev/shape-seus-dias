@@ -564,6 +564,8 @@ export function EditStudentDialog({
   const [classAccess, setClassAccess] = useState(student.has_class_access);
   const [orderBump, setOrderBump] = useState(student.has_order_bump);
   const [expiresAt, setExpiresAt] = useState(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
+  const [mentoria, setMentoria] = useState(false);
+  const [initialMentoria, setInitialMentoria] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -574,7 +576,23 @@ export function EditStudentDialog({
     setClassAccess(student.has_class_access);
     setOrderBump(student.has_order_bump);
     setExpiresAt(student.access_expires_at ? student.access_expires_at.slice(0, 10) : "");
+    let alive = true;
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", student.id)
+      .eq("role", "aluno_mentoria")
+      .then(({ data }) => {
+        if (!alive) return;
+        const has = (data ?? []).length > 0;
+        setMentoria(has);
+        setInitialMentoria(has);
+      });
+    return () => {
+      alive = false;
+    };
   }, [open, student]);
+
 
   async function submit() {
     setBusy(true);
@@ -588,6 +606,7 @@ export function EditStudentDialog({
           has_order_bump: orderBump,
           access_expires_at: expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : null,
           role: role !== student.role ? role : undefined,
+          is_mentoria: mentoria !== initialMentoria ? mentoria : undefined,
         },
       });
       toast.success("Aluno atualizado com sucesso.");
@@ -646,6 +665,12 @@ export function EditStudentDialog({
               hint="Oferta extra comprada no checkout."
               checked={orderBump}
               onChange={setOrderBump}
+            />
+            <ToggleRow
+              title="Aluno da mentoria"
+              hint="Libera a área Mentoria com a biblioteca de exercícios em vídeo."
+              checked={mentoria}
+              onChange={setMentoria}
             />
           </FormSection>
         </div>

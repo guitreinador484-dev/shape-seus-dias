@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList, Library } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
@@ -20,6 +20,9 @@ import { ReferralCard } from "@/components/platform/referral-card";
 import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
+import { MentoriaTab } from "@/components/platform/mentoria-tab";
+import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
+import { useGymPreference } from "@/hooks/use-gym-preference";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -169,12 +172,26 @@ function EmptyTraining() {
   );
 }
 
-function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
+function TreinoPanel({
+  plans,
+  loading,
+  light,
+  showVideos = false,
+  gymId = null,
+}: {
+  plans: PlanWithExercises[];
+  loading: boolean;
+  light: boolean;
+  /** Aluno da mentoria: exercícios abrem o vídeo de execução. */
+  showVideos?: boolean;
+  gymId?: string | null;
+}) {
   const today = new Date().getDay();
   const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
   const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
   const [selectedDay, setSelectedDay] = useState<number>(initial);
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [videoFor, setVideoFor] = useState<StudentPlanExercise | null>(null);
   const { byPlan: pdfByPlan } = useWorkoutPdfs();
 
   useEffect(() => {
@@ -334,7 +351,18 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
                       {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
+                      {showVideos ? (
+                        <button
+                          type="button"
+                          onClick={() => setVideoFor(ex)}
+                          className={`group/ex flex items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}
+                        >
+                          <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
+                          <Play className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        </button>
+                      ) : (
+                        <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
+                      )}
                       {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
                       <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
@@ -361,6 +389,15 @@ function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; lo
           )}
         </div>
       ))}
+
+      <ExerciseVideoDialog
+        open={!!videoFor}
+        onOpenChange={(v) => !v && setVideoFor(null)}
+        exerciseName={videoFor?.exercise_name ?? ""}
+        exerciseId={videoFor?.exercise_id ?? null}
+        planNotes={videoFor?.notes ?? null}
+        gymId={gymId}
+      />
     </div>
   );
 }
@@ -370,7 +407,8 @@ export const Route = createFileRoute("/_authenticated/plataforma")({
 });
 
 function PlataformaPage() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, isMentoria } = useAuth();
+  const { gymId } = useGymPreference(isMentoria ? (user?.id ?? null) : null);
   const navigate = useNavigate();
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -633,6 +671,11 @@ function PlataformaPage() {
               <TabsTrigger value="ficha" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <ClipboardList className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Ficha</span>
               </TabsTrigger>
+              {isMentoria && (
+                <TabsTrigger value="mentoria" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
+                  <Library className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Mentoria</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
@@ -732,7 +775,13 @@ function PlataformaPage() {
           <TabsContent value="treino" className="mt-0">
             {user ? <CheckinCard userId={user.id} /> : null}
             {user && showVideos && !isExpired ? <ReferralCard userId={user.id} /> : null}
-            <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
+            <TreinoPanel
+              plans={plans}
+              loading={dataLoading}
+              light={config.theme === "light"}
+              showVideos={isMentoria}
+              gymId={gymId}
+            />
           </TabsContent>
 
           <TabsContent value="dieta" className="mt-0">
@@ -753,6 +802,12 @@ function PlataformaPage() {
           <TabsContent value="ficha" className="mt-0">
             {user ? <AnamneseTab userId={user.id} /> : null}
           </TabsContent>
+
+          {isMentoria && user ? (
+            <TabsContent value="mentoria" className="mt-0">
+              <MentoriaTab userId={user.id} />
+            </TabsContent>
+          ) : null}
 
           {!isPremium && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">

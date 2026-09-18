@@ -28,6 +28,7 @@ import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminEngajamentoRouteImport } from './routes/_authenticated/admin.engajamento'
 import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenticated/admin.cursos'
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
+import { Route as AuthenticatedAdminBibliotecaRouteImport } from './routes/_authenticated/admin.biblioteca'
 import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
 import { Route as AuthenticatedAdminAlunosIndexRouteImport } from './routes/_authenticated/admin.alunos.index'
@@ -140,6 +141,12 @@ const AuthenticatedAdminConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminBibliotecaRoute =
+  AuthenticatedAdminBibliotecaRouteImport.update({
+    id: '/biblioteca',
+    path: '/biblioteca',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAulasRoute = AuthenticatedAdminAulasRouteImport.update({
   id: '/aulas',
   path: '/aulas',
@@ -192,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/admin/alunos': typeof AuthenticatedAdminAlunosRouteWithChildren
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
+  '/admin/biblioteca': typeof AuthenticatedAdminBibliotecaRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/admin/aulas': typeof AuthenticatedAdminAulasRoute
+  '/admin/biblioteca': typeof AuthenticatedAdminBibliotecaRoute
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
@@ -246,6 +255,7 @@ export interface FileRoutesById {
   '/_authenticated/plataforma': typeof AuthenticatedPlataformaRouteWithChildren
   '/_authenticated/admin/alunos': typeof AuthenticatedAdminAlunosRouteWithChildren
   '/_authenticated/admin/aulas': typeof AuthenticatedAdminAulasRoute
+  '/_authenticated/admin/biblioteca': typeof AuthenticatedAdminBibliotecaRoute
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/_authenticated/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/plataforma'
     | '/admin/alunos'
     | '/admin/aulas'
+    | '/admin/biblioteca'
     | '/admin/configuracoes'
     | '/admin/cursos'
     | '/admin/engajamento'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/plataforma'
     | '/admin/aulas'
+    | '/admin/biblioteca'
     | '/admin/configuracoes'
     | '/admin/cursos'
     | '/admin/engajamento'
@@ -328,6 +340,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plataforma'
     | '/_authenticated/admin/alunos'
     | '/_authenticated/admin/aulas'
+    | '/_authenticated/admin/biblioteca'
     | '/_authenticated/admin/configuracoes'
     | '/_authenticated/admin/cursos'
     | '/_authenticated/admin/engajamento'
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/biblioteca': {
+      id: '/_authenticated/admin/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/admin/biblioteca'
+      preLoaderRoute: typeof AuthenticatedAdminBibliotecaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/aulas': {
       id: '/_authenticated/admin/aulas'
       path: '/aulas'
@@ -576,6 +596,7 @@ const AuthenticatedAdminCursosRouteWithChildren =
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAlunosRoute: typeof AuthenticatedAdminAlunosRouteWithChildren
   AuthenticatedAdminAulasRoute: typeof AuthenticatedAdminAulasRoute
+  AuthenticatedAdminBibliotecaRoute: typeof AuthenticatedAdminBibliotecaRoute
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRouteWithChildren
   AuthenticatedAdminEngajamentoRoute: typeof AuthenticatedAdminEngajamentoRoute
@@ -591,6 +612,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAlunosRoute: AuthenticatedAdminAlunosRouteWithChildren,
   AuthenticatedAdminAulasRoute: AuthenticatedAdminAulasRoute,
+  AuthenticatedAdminBibliotecaRoute: AuthenticatedAdminBibliotecaRoute,
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRouteWithChildren,
   AuthenticatedAdminEngajamentoRoute: AuthenticatedAdminEngajamentoRoute,

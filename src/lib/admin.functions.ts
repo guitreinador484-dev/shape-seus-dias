@@ -40,7 +40,7 @@ type CreateStudentInput = {
   password: string;
   full_name?: string;
   whatsapp?: string;
-  role?: "online" | "presencial" | "admin";
+  role?: AppRole;
   has_class_access?: boolean;
 };
 
@@ -131,6 +131,8 @@ type UpdateStudentStatusInput = {
   is_active?: boolean;
   access_expires_at?: string | null;
   role?: AppRole;
+  /** Marca/desmarca o aluno como aluno da mentoria (papel extra). */
+  is_mentoria?: boolean;
 };
 
 /**
@@ -154,11 +156,27 @@ export const updateStudentStatus = createServerFn({ method: "POST" })
       if (isAdmin && data.role !== "admin") {
         throw new Error("Este email precisa continuar como administrador.");
       }
-      const { error: delErr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+      // Mantém o papel extra de mentoria ao trocar o tipo principal do aluno.
+      const { error: delErr } = await supabaseAdmin
+        .from("user_roles").delete().eq("user_id", data.userId).neq("role", "aluno_mentoria");
       if (delErr) throw new Error(delErr.message);
       const { error: insErr } = await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
       if (insErr) throw new Error(insErr.message);
     }
+
+    if (data.is_mentoria !== undefined) {
+      if (data.is_mentoria) {
+        const { error } = await supabaseAdmin
+          .from("user_roles")
+          .upsert({ user_id: data.userId, role: "aluno_mentoria" }, { onConflict: "user_id,role" });
+        if (error) throw new Error(error.message);
+      } else {
+        const { error } = await supabaseAdmin
+          .from("user_roles").delete().eq("user_id", data.userId).eq("role", "aluno_mentoria");
+        if (error) throw new Error(error.message);
+      }
+    }
+
 
     const profilePatch: Database["public"]["Tables"]["profiles"]["Update"] = {};
     if (data.full_name !== undefined) profilePatch.full_name = data.full_name;
