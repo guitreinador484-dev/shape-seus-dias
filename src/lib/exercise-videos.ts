@@ -36,9 +36,56 @@ export async function listExercises(): Promise<Exercise[]> {
 }
 
 export async function createExercise(input: { name: string; muscle_group: string; description?: string | null }) {
-  const { data, error } = await supabase.from("exercises").insert(input).select("*").single();
+  const { data, error } = await supabase
+    .from("exercises")
+    .insert({ ...input, name: tidyName(input.name), name_normalized: normalizeName(input.name) })
+    .select("*")
+    .single();
   if (error) throw error;
   return data;
+}
+
+/** Remove espaços extras e deixa a primeira letra maiúscula. */
+export function tidyName(value: string) {
+  const clean = value.replace(/\s+/g, " ").trim();
+  return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : clean;
+}
+
+/**
+ * Procura o exercício pelo nome (ignorando acentos, maiúsculas e espaços)
+ * e cria um novo quando ainda não existe. Tudo em uma única operação.
+ */
+export async function findOrCreateExercise(
+  name: string,
+  muscleGroup?: string | null,
+): Promise<{ exercise: Exercise; created: boolean }> {
+  const norm = normalizeName(name);
+  if (!norm) throw new Error("Informe o nome do exercício.");
+
+  const { data: existing } = await supabase
+    .from("exercises")
+    .select("*")
+    .eq("name_normalized", norm)
+    .maybeSingle();
+  if (existing) return { exercise: existing as Exercise, created: false };
+
+  const { data, error } = await supabase.rpc("find_or_create_exercise", {
+    _name: name,
+    _muscle_group: muscleGroup ?? undefined,
+  });
+  if (error) throw error;
+  return { exercise: data as unknown as Exercise, created: true };
+}
+
+/** Junta dois exercícios repetidos: vídeos e treinos passam para o que fica. */
+export async function mergeExercises(fromId: string, keepId: string) {
+  if (fromId === keepId) return;
+  const v = await supabase.from("exercise_videos").update({ exercise_id: keepId }).eq("exercise_id", fromId);
+  if (v.error) throw v.error;
+  const s = await supabase.from("student_plan_exercises").update({ exercise_id: keepId }).eq("exercise_id", fromId);
+  if (s.error) throw s.error;
+  const d = await supabase.from("exercises").delete().eq("id", fromId);
+  if (d.error) throw d.error;
 }
 
 export async function updateExercise(id: string, input: { name?: string; muscle_group?: string; description?: string | null }) {

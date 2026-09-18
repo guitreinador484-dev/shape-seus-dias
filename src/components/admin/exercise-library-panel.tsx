@@ -27,6 +27,9 @@ import { cn } from "@/lib/utils";
 import {
   createExercise,
   createGym,
+  findOrCreateExercise,
+  mergeExercises,
+  tidyName,
   createVideo,
   deleteExercise,
   deleteGym,
@@ -294,6 +297,8 @@ function VideoDialog({
 }) {
   const [exerciseId, setExerciseId] = useState<string>("");
   const [gymId, setGymId] = useState<string>("geral");
+  const [exerciseName, setExerciseName] = useState("");
+  const [newGroup, setNewGroup] = useState("depois");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -305,12 +310,14 @@ function VideoDialog({
   useEffect(() => {
     if (!open) return;
     setExerciseId(video?.exercise_id ?? "");
+    setExerciseName(video ? (exercises.find((e) => e.id === video.exercise_id)?.name ?? "") : "");
+    setNewGroup("depois");
     setGymId(video?.gym_id ?? "geral");
     setTitle(video?.title ?? "");
     setNotes(video?.notes ?? "");
     setFile(null);
     setProgress(0);
-  }, [open, video]);
+  }, [open, video, exercises]);
 
   function acceptFile(f: File | null | undefined) {
     if (!f) return;
@@ -322,8 +329,8 @@ function VideoDialog({
   }
 
   async function submit() {
-    if (!exerciseId) {
-      toast.error("Escolha a qual exercício o vídeo pertence.");
+    if (!exerciseId && !exerciseName.trim()) {
+      toast.error("Digite o nome do exercício.");
       return;
     }
     if (!video && !file) {
@@ -332,10 +339,18 @@ function VideoDialog({
     }
     setBusy(true);
     try {
+      let resolvedId = exerciseId;
+      let created = false;
+      if (!resolvedId) {
+        const res = await findOrCreateExercise(exerciseName, newGroup === "depois" ? null : newGroup);
+        resolvedId = res.exercise.id;
+        created = res.created;
+      }
+
       let path = video?.video_path;
       if (file) path = await uploadVideoFile(file, setProgress);
       const payload = {
-        exercise_id: exerciseId,
+        exercise_id: resolvedId,
         gym_id: gymId === "geral" ? null : gymId,
         title: title.trim() || null,
         notes: notes.trim() || null,
@@ -343,7 +358,7 @@ function VideoDialog({
       };
       if (video) await updateVideo(video.id, payload);
       else await createVideo(payload);
-      toast.success(video ? "Vídeo atualizado." : "Vídeo adicionado.");
+      toast.success(created ? "Exercício criado e vídeo vinculado" : "Vídeo vinculado ao exercício existente");
       onOpenChange(false);
       onSaved();
     } catch (e) {
@@ -400,7 +415,15 @@ function VideoDialog({
 
           <div className="space-y-1">
             <Label>Exercício</Label>
-            <ExerciseCombobox exercises={exercises} value={exerciseId} onChange={setExerciseId} />
+            <ExerciseField
+              exercises={exercises}
+              name={exerciseName}
+              onNameChange={setExerciseName}
+              exerciseId={exerciseId}
+              onPick={setExerciseId}
+              group={newGroup}
+              onGroupChange={setNewGroup}
+            />
           </div>
 
           <div className="space-y-1">
@@ -440,122 +463,134 @@ function VideoDialog({
   );
 }
 
-/** Seletor de exercício com busca e criação rápida. */
-function ExerciseCombobox({
+/** Campo de digitação com sugestões: usa um exercício existente ou cria na hora. */
+function ExerciseField({
   exercises,
-  value,
-  onChange,
+  name,
+  onNameChange,
+  exerciseId,
+  onPick,
+  group,
+  onGroupChange,
 }: {
   exercises: Exercise[];
-  value: string;
-  onChange: (id: string) => void;
+  name: string;
+  onNameChange: (value: string) => void;
+  exerciseId: string;
+  onPick: (id: string) => void;
+  group: string;
+  onGroupChange: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [term, setTerm] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [newOpen, setNewOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newGroup, setNewGroup] = useState<string>(MUSCLE_GROUPS[0]);
 
-  const selected = exercises.find((e) => e.id === value);
-  const filtered = useMemo(() => {
-    const t = normalizeName(term);
-    return t ? exercises.filter((e) => normalizeName(e.name).includes(t)) : exercises;
-  }, [exercises, term]);
+  const norm = normalizeName(name);
+  const exact = useMemo(() => exercises.find((e) => normalizeName(e.name) === norm) ?? null, [exercises, norm]);
+  const suggestions = useMemo(() => {
+    if (!norm) return exercises.slice(0, 20);
+    return exercises.filter((e) => normalizeName(e.name).includes(norm)).slice(0, 20);
+  }, [exercises, norm]);
 
-  async function createNow() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    try {
-      const created = await createExercise({ name: newName.trim(), muscle_group: newGroup });
-      onChange(created.id);
-      toast.success("Exercício criado.");
-      setNewOpen(false);
-      setNewName("");
-    } catch (e) {
-      toast.error("Não foi possível criar", { description: e instanceof Error ? e.message : undefined });
-    } finally {
-      setCreating(false);
-    }
+  const selected = exercises.find((e) => e.id === exerciseId) ?? null;
+  const willCreate = !!norm && !exact;
+
+  function choose(ex: Exercise) {
+    onPick(ex.id);
+    onNameChange(ex.name);
+    setOpen(false);
   }
 
   return (
-    <>
+    <div className="space-y-2">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-            <span className="truncate">{selected ? selected.name : "Escolher exercício"}</span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          <div className="relative">
+            <Input
+              value={name}
+              placeholder="Digite o nome do exercício (ex.: leg press)"
+              onFocus={() => setOpen(true)}
+              onChange={(e) => {
+                onNameChange(e.target.value);
+                if (exerciseId) onPick("");
+                setOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (exact) choose(exact);
+                  else setOpen(false);
+                }
+              }}
+            />
+            <ChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50" />
+          </div>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(22rem,calc(100vw-3rem))] p-0" align="start">
+        <PopoverContent
+          className="w-[min(22rem,calc(100vw-3rem))] p-0"
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <Command shouldFilter={false}>
-            <CommandInput placeholder="Buscar exercício..." value={term} onValueChange={setTerm} />
             <CommandList>
-              <CommandEmpty>Nenhum exercício com esse nome.</CommandEmpty>
-              <CommandGroup>
-                {filtered.map((e) => (
-                  <CommandItem
-                    key={e.id}
-                    value={e.id}
-                    onSelect={() => {
-                      onChange(e.id);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check className={cn("mr-2 h-4 w-4", value === e.id ? "opacity-100" : "opacity-0")} />
-                    <span className="truncate">{e.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{e.muscle_group}</span>
+              {suggestions.length === 0 && !willCreate ? (
+                <CommandEmpty>Nenhum exercício cadastrado ainda.</CommandEmpty>
+              ) : null}
+              {suggestions.length > 0 ? (
+                <CommandGroup heading="Exercícios já cadastrados">
+                  {suggestions.map((e) => (
+                    <CommandItem key={e.id} value={e.id} onSelect={() => choose(e)}>
+                      <Check className={cn("mr-2 h-4 w-4", exerciseId === e.id ? "opacity-100" : "opacity-0")} />
+                      <span className="truncate">{e.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{e.muscle_group}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : null}
+              {willCreate ? (
+                <CommandGroup heading="Novo">
+                  <CommandItem value="__criar" onSelect={() => setOpen(false)} className="text-primary">
+                    <Plus className="mr-2 h-4 w-4" /> Criar &quot;{tidyName(name)}&quot;
                   </CommandItem>
-                ))}
-              </CommandGroup>
-              <CommandGroup>
-                <CommandItem
-                  value="__novo"
-                  onSelect={() => {
-                    setNewName(term);
-                    setOpen(false);
-                    setNewOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Criar novo exercício
-                </CommandItem>
-              </CommandGroup>
+                </CommandGroup>
+              ) : null}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
 
-      <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Criar exercício</DialogTitle>
-            <DialogDescription>Ele já fica selecionado para o vídeo que você está enviando.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nome</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Leg press 45°" />
-            </div>
-            <div className="space-y-1">
-              <Label>Grupo muscular</Label>
-              <Select value={newGroup} onValueChange={setNewGroup}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MUSCLE_GROUPS.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {exact && !selected ? (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          Já existe um exercício com esse nome.{" "}
+          <button type="button" className="underline" onClick={() => choose(exact)}>
+            Usar &quot;{exact.name}&quot;
+          </button>
+        </p>
+      ) : null}
+
+      {selected ? (
+        <p className="text-xs text-muted-foreground">
+          Vídeo será ligado a <span className="font-medium text-foreground">{selected.name}</span> ({selected.muscle_group}).
+        </p>
+      ) : null}
+
+      {willCreate ? (
+        <div className="space-y-1 rounded-lg border border-dashed p-3">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary/15 text-primary hover:bg-primary/15">Novo</Badge>
+            <span className="text-xs text-muted-foreground">Vamos criar &quot;{tidyName(name)}&quot; ao salvar.</span>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)} disabled={creating}>Cancelar</Button>
-            <Button onClick={() => void createNow()} disabled={creating}>Criar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          <Label className="text-xs">Grupo muscular (opcional)</Label>
+          <Select value={group} onValueChange={onGroupChange}>
+            <SelectTrigger><SelectValue placeholder="Escolher depois" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="depois">Escolher depois</SelectItem>
+              {MUSCLE_GROUPS.map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -567,6 +602,9 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
   const [editing, setEditing] = useState<Exercise | null>(null);
   const [open, setOpen] = useState(false);
   const [removing, setRemoving] = useState<Exercise | null>(null);
+  const [merging, setMerging] = useState<Exercise | null>(null);
+  const [mergeTarget, setMergeTarget] = useState("");
+  const [mergeBusy, setMergeBusy] = useState(false);
 
   const [name, setName] = useState("");
   const [muscle, setMuscle] = useState<string>(MUSCLE_GROUPS[0]);
@@ -656,6 +694,14 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
                   >
                     <Pencil className="mr-2 h-4 w-4" /> Editar
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setMergeTarget("");
+                      setMerging(e);
+                    }}
+                  >
+                    <Check className="mr-2 h-4 w-4" /> Mesclar com outro
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive" onClick={() => setRemoving(e)}>
                     <Trash2 className="mr-2 h-4 w-4" /> Excluir
                   </DropdownMenuItem>
@@ -696,6 +742,52 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>Cancelar</Button>
             <Button onClick={() => void save()} disabled={busy}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!merging} onOpenChange={(o) => !o && setMerging(null)}>
+        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mesclar exercícios repetidos</DialogTitle>
+            <DialogDescription>
+              Os vídeos e treinos de &quot;{merging?.name}&quot; passam para o exercício escolhido, e o repetido é removido.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1">
+            <Label>Manter este exercício</Label>
+            <Select value={mergeTarget} onValueChange={setMergeTarget}>
+              <SelectTrigger><SelectValue placeholder="Escolher exercício" /></SelectTrigger>
+              <SelectContent>
+                {exercises
+                  .filter((e) => e.id !== merging?.id)
+                  .map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMerging(null)} disabled={mergeBusy}>Cancelar</Button>
+            <Button
+              disabled={mergeBusy || !mergeTarget}
+              onClick={async () => {
+                if (!merging || !mergeTarget) return;
+                setMergeBusy(true);
+                try {
+                  await mergeExercises(merging.id, mergeTarget);
+                  toast.success("Exercícios mesclados.");
+                  setMerging(null);
+                  onChanged();
+                } catch (e) {
+                  toast.error("Não foi possível mesclar", { description: e instanceof Error ? e.message : undefined });
+                } finally {
+                  setMergeBusy(false);
+                }
+              }}
+            >
+              {mergeBusy ? "Mesclando..." : "Mesclar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
