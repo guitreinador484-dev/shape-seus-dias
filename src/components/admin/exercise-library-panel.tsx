@@ -310,12 +310,14 @@ function VideoDialog({
   useEffect(() => {
     if (!open) return;
     setExerciseId(video?.exercise_id ?? "");
+    setExerciseName(video ? (exercises.find((e) => e.id === video.exercise_id)?.name ?? "") : "");
+    setNewGroup("depois");
     setGymId(video?.gym_id ?? "geral");
     setTitle(video?.title ?? "");
     setNotes(video?.notes ?? "");
     setFile(null);
     setProgress(0);
-  }, [open, video]);
+  }, [open, video, exercises]);
 
   function acceptFile(f: File | null | undefined) {
     if (!f) return;
