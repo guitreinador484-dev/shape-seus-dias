@@ -746,6 +746,52 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!merging} onOpenChange={(o) => !o && setMerging(null)}>
+        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mesclar exercícios repetidos</DialogTitle>
+            <DialogDescription>
+              Os vídeos e treinos de &quot;{merging?.name}&quot; passam para o exercício escolhido, e o repetido é removido.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1">
+            <Label>Manter este exercício</Label>
+            <Select value={mergeTarget} onValueChange={setMergeTarget}>
+              <SelectTrigger><SelectValue placeholder="Escolher exercício" /></SelectTrigger>
+              <SelectContent>
+                {exercises
+                  .filter((e) => e.id !== merging?.id)
+                  .map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMerging(null)} disabled={mergeBusy}>Cancelar</Button>
+            <Button
+              disabled={mergeBusy || !mergeTarget}
+              onClick={async () => {
+                if (!merging || !mergeTarget) return;
+                setMergeBusy(true);
+                try {
+                  await mergeExercises(merging.id, mergeTarget);
+                  toast.success("Exercícios mesclados.");
+                  setMerging(null);
+                  onChanged();
+                } catch (e) {
+                  toast.error("Não foi possível mesclar", { description: e instanceof Error ? e.message : undefined });
+                } finally {
+                  setMergeBusy(false);
+                }
+              }}
+            >
+              {mergeBusy ? "Mesclando..." : "Mesclar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmDialog
         open={!!removing}
         onOpenChange={(o) => !o && setRemoving(null)}
