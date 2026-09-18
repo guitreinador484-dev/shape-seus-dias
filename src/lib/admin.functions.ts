@@ -131,6 +131,8 @@ type UpdateStudentStatusInput = {
   is_active?: boolean;
   access_expires_at?: string | null;
   role?: AppRole;
+  /** Marca/desmarca o aluno como aluno da mentoria (papel extra). */
+  is_mentoria?: boolean;
 };
 
 /**
