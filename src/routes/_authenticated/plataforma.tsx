@@ -20,6 +20,9 @@ import { ReferralCard } from "@/components/platform/referral-card";
 import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
+import { MentoriaTab } from "@/components/platform/mentoria-tab";
+import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
+import { useGymPreference } from "@/hooks/use-gym-preference";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
