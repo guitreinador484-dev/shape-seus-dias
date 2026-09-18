@@ -16,6 +16,7 @@ import {
   Apple,
   Flame,
   LayoutGrid,
+  Library,
   Tag,
 } from "lucide-react";
 import {
