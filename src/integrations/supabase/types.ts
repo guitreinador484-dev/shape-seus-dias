@@ -383,7 +383,7 @@ export type Database = {
           id?: string
           muscle_group?: string
           name: string
-          name_normalized: string
+          name_normalized?: string
           updated_at?: string
         }
         Update: {
