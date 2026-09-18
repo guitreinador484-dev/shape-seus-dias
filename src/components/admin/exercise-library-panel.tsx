@@ -329,8 +329,8 @@ function VideoDialog({
   }
 
   async function submit() {
-    if (!exerciseId) {
-      toast.error("Escolha a qual exercício o vídeo pertence.");
+    if (!exerciseId && !exerciseName.trim()) {
+      toast.error("Digite o nome do exercício.");
       return;
     }
     if (!video && !file) {
@@ -339,10 +339,18 @@ function VideoDialog({
     }
     setBusy(true);
     try {
+      let resolvedId = exerciseId;
+      let created = false;
+      if (!resolvedId) {
+        const res = await findOrCreateExercise(exerciseName, newGroup === "depois" ? null : newGroup);
+        resolvedId = res.exercise.id;
+        created = res.created;
+      }
+
       let path = video?.video_path;
       if (file) path = await uploadVideoFile(file, setProgress);
       const payload = {
-        exercise_id: exerciseId,
+        exercise_id: resolvedId,
         gym_id: gymId === "geral" ? null : gymId,
         title: title.trim() || null,
         notes: notes.trim() || null,
@@ -350,7 +358,7 @@ function VideoDialog({
       };
       if (video) await updateVideo(video.id, payload);
       else await createVideo(payload);
-      toast.success(video ? "Vídeo atualizado." : "Vídeo adicionado.");
+      toast.success(created ? "Exercício criado e vídeo vinculado" : "Vídeo vinculado ao exercício existente");
       onOpenChange(false);
       onSaved();
     } catch (e) {
