@@ -71,7 +71,7 @@ export async function findOrCreateExercise(
 
   const { data, error } = await supabase.rpc("find_or_create_exercise", {
     _name: name,
-    _muscle_group: muscleGroup ?? null,
+    _muscle_group: muscleGroup ?? undefined,
   });
   if (error) throw error;
   return { exercise: data as unknown as Exercise, created: true };
