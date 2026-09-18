@@ -14,6 +14,9 @@ export interface AuthState {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  /** Todos os papéis do usuário (um aluno pode ser online e da mentoria ao mesmo tempo). */
+  roles: AppRole[];
+  isMentoria: boolean;
   loading: boolean;
 }
 
@@ -21,6 +24,7 @@ export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
