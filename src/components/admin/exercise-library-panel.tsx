@@ -403,7 +403,15 @@ function VideoDialog({
 
           <div className="space-y-1">
             <Label>Exercício</Label>
-            <ExerciseCombobox exercises={exercises} value={exerciseId} onChange={setExerciseId} />
+            <ExerciseField
+              exercises={exercises}
+              name={exerciseName}
+              onNameChange={setExerciseName}
+              exerciseId={exerciseId}
+              onPick={setExerciseId}
+              group={newGroup}
+              onGroupChange={setNewGroup}
+            />
           </div>
 
           <div className="space-y-1">
