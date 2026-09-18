@@ -602,6 +602,9 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
   const [editing, setEditing] = useState<Exercise | null>(null);
   const [open, setOpen] = useState(false);
   const [removing, setRemoving] = useState<Exercise | null>(null);
+  const [merging, setMerging] = useState<Exercise | null>(null);
+  const [mergeTarget, setMergeTarget] = useState("");
+  const [mergeBusy, setMergeBusy] = useState(false);
 
   const [name, setName] = useState("");
   const [muscle, setMuscle] = useState<string>(MUSCLE_GROUPS[0]);
