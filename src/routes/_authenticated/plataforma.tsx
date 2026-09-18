@@ -172,12 +172,26 @@ function EmptyTraining() {
   );
 }
 
-function TreinoPanel({ plans, loading, light }: { plans: PlanWithExercises[]; loading: boolean; light: boolean }) {
+function TreinoPanel({
+  plans,
+  loading,
+  light,
+  showVideos = false,
+  gymId = null,
+}: {
+  plans: PlanWithExercises[];
+  loading: boolean;
+  light: boolean;
+  /** Aluno da mentoria: exercícios abrem o vídeo de execução. */
+  showVideos?: boolean;
+  gymId?: string | null;
+}) {
   const today = new Date().getDay();
   const availableDays = Array.from(new Set(plans.map((p) => p.day_of_week))).sort();
   const initial = availableDays.includes(today) ? today : availableDays[0] ?? today;
   const [selectedDay, setSelectedDay] = useState<number>(initial);
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [videoFor, setVideoFor] = useState<StudentPlanExercise | null>(null);
   const { byPlan: pdfByPlan } = useWorkoutPdfs();
 
   useEffect(() => {
