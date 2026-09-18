@@ -407,7 +407,8 @@ export const Route = createFileRoute("/_authenticated/plataforma")({
 });
 
 function PlataformaPage() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, isMentoria } = useAuth();
+  const { gymId } = useGymPreference(isMentoria ? (user?.id ?? null) : null);
   const navigate = useNavigate();
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
