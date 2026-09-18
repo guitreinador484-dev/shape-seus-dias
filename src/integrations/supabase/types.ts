@@ -374,6 +374,7 @@ export type Database = {
           id: string
           muscle_group: string
           name: string
+          name_normalized: string
           updated_at: string
         }
         Insert: {
@@ -382,6 +383,7 @@ export type Database = {
           id?: string
           muscle_group?: string
           name: string
+          name_normalized: string
           updated_at?: string
         }
         Update: {
@@ -390,6 +392,7 @@ export type Database = {
           id?: string
           muscle_group?: string
           name?: string
+          name_normalized?: string
           updated_at?: string
         }
         Relationships: []
@@ -1128,6 +1131,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_or_create_exercise: {
+        Args: { _muscle_group?: string; _name: string }
+        Returns: {
+          created_at: string
+          description: string | null
+          id: string
+          muscle_group: string
+          name: string
+          name_normalized: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exercises"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1135,7 +1156,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      initcap_first: { Args: { _txt: string }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      normalize_exercise_name: { Args: { _name: string }; Returns: string }
+      unaccent_safe: { Args: { _txt: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "online" | "presencial" | "aluno_mentoria"
