@@ -797,6 +797,12 @@ function PlataformaPage() {
             {user ? <AnamneseTab userId={user.id} /> : null}
           </TabsContent>
 
+          {isMentoria && user ? (
+            <TabsContent value="mentoria" className="mt-0">
+              <MentoriaTab userId={user.id} />
+            </TabsContent>
+          ) : null}
+
           {!isPremium && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">
               <LockedExtra
