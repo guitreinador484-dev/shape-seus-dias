@@ -666,6 +666,12 @@ export function EditStudentDialog({
               checked={orderBump}
               onChange={setOrderBump}
             />
+            <ToggleRow
+              title="Aluno da mentoria"
+              hint="Libera a área Mentoria com a biblioteca de exercícios em vídeo."
+              checked={mentoria}
+              onChange={setMentoria}
+            />
           </FormSection>
         </div>
         <DialogFooter>
