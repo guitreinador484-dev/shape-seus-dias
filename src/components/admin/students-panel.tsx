@@ -606,6 +606,7 @@ export function EditStudentDialog({
           has_order_bump: orderBump,
           access_expires_at: expiresAt ? new Date(`${expiresAt}T23:59:59`).toISOString() : null,
           role: role !== student.role ? role : undefined,
+          is_mentoria: mentoria !== initialMentoria ? mentoria : undefined,
         },
       });
       toast.success("Aluno atualizado com sucesso.");
