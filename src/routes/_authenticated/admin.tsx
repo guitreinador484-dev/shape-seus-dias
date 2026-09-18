@@ -62,6 +62,7 @@ export const navGroups: NavGroup[] = [
     label: "Conteúdo",
     items: [
       { title: "Treinos", url: "/admin/treinos", icon: Dumbbell },
+      { title: "Biblioteca de exercícios", url: "/admin/biblioteca", icon: Library },
       { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
       { title: "Cursos", url: "/admin/cursos", icon: BookOpen },
       { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
