@@ -122,6 +122,7 @@ const roleLabels: Record<AppRole, string> = {
   admin: "Administrador",
   online: "Aluno online",
   presencial: "Aluno presencial",
+  aluno_mentoria: "Aluno da mentoria",
 };
 
 export const purchaseStatusLabels: Record<string, string> = {
