@@ -27,6 +27,9 @@ import { cn } from "@/lib/utils";
 import {
   createExercise,
   createGym,
+  findOrCreateExercise,
+  mergeExercises,
+  tidyName,
   createVideo,
   deleteExercise,
   deleteGym,
