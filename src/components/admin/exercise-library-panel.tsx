@@ -440,122 +440,134 @@ function VideoDialog({
   );
 }
 
-/** Seletor de exercício com busca e criação rápida. */
-function ExerciseCombobox({
+/** Campo de digitação com sugestões: usa um exercício existente ou cria na hora. */
+function ExerciseField({
   exercises,
-  value,
-  onChange,
+  name,
+  onNameChange,
+  exerciseId,
+  onPick,
+  group,
+  onGroupChange,
 }: {
   exercises: Exercise[];
-  value: string;
-  onChange: (id: string) => void;
+  name: string;
+  onNameChange: (value: string) => void;
+  exerciseId: string;
+  onPick: (id: string) => void;
+  group: string;
+  onGroupChange: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [term, setTerm] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [newOpen, setNewOpen] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newGroup, setNewGroup] = useState<string>(MUSCLE_GROUPS[0]);
 
-  const selected = exercises.find((e) => e.id === value);
-  const filtered = useMemo(() => {
-    const t = normalizeName(term);
-    return t ? exercises.filter((e) => normalizeName(e.name).includes(t)) : exercises;
-  }, [exercises, term]);
+  const norm = normalizeName(name);
+  const exact = useMemo(() => exercises.find((e) => normalizeName(e.name) === norm) ?? null, [exercises, norm]);
+  const suggestions = useMemo(() => {
+    if (!norm) return exercises.slice(0, 20);
+    return exercises.filter((e) => normalizeName(e.name).includes(norm)).slice(0, 20);
+  }, [exercises, norm]);
 
-  async function createNow() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    try {
-      const created = await createExercise({ name: newName.trim(), muscle_group: newGroup });
-      onChange(created.id);
-      toast.success("Exercício criado.");
-      setNewOpen(false);
-      setNewName("");
-    } catch (e) {
-      toast.error("Não foi possível criar", { description: e instanceof Error ? e.message : undefined });
-    } finally {
-      setCreating(false);
-    }
+  const selected = exercises.find((e) => e.id === exerciseId) ?? null;
+  const willCreate = !!norm && !exact;
+
+  function choose(ex: Exercise) {
+    onPick(ex.id);
+    onNameChange(ex.name);
+    setOpen(false);
   }
 
   return (
-    <>
+    <div className="space-y-2">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-            <span className="truncate">{selected ? selected.name : "Escolher exercício"}</span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+          <div className="relative">
+            <Input
+              value={name}
+              placeholder="Digite o nome do exercício (ex.: leg press)"
+              onFocus={() => setOpen(true)}
+              onChange={(e) => {
+                onNameChange(e.target.value);
+                if (exerciseId) onPick("");
+                setOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (exact) choose(exact);
+                  else setOpen(false);
+                }
+              }}
+            />
+            <ChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50" />
+          </div>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(22rem,calc(100vw-3rem))] p-0" align="start">
+        <PopoverContent
+          className="w-[min(22rem,calc(100vw-3rem))] p-0"
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <Command shouldFilter={false}>
-            <CommandInput placeholder="Buscar exercício..." value={term} onValueChange={setTerm} />
             <CommandList>
-              <CommandEmpty>Nenhum exercício com esse nome.</CommandEmpty>
-              <CommandGroup>
-                {filtered.map((e) => (
-                  <CommandItem
-                    key={e.id}
-                    value={e.id}
-                    onSelect={() => {
-                      onChange(e.id);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check className={cn("mr-2 h-4 w-4", value === e.id ? "opacity-100" : "opacity-0")} />
-                    <span className="truncate">{e.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{e.muscle_group}</span>
+              {suggestions.length === 0 && !willCreate ? (
+                <CommandEmpty>Nenhum exercício cadastrado ainda.</CommandEmpty>
+              ) : null}
+              {suggestions.length > 0 ? (
+                <CommandGroup heading="Exercícios já cadastrados">
+                  {suggestions.map((e) => (
+                    <CommandItem key={e.id} value={e.id} onSelect={() => choose(e)}>
+                      <Check className={cn("mr-2 h-4 w-4", exerciseId === e.id ? "opacity-100" : "opacity-0")} />
+                      <span className="truncate">{e.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{e.muscle_group}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ) : null}
+              {willCreate ? (
+                <CommandGroup heading="Novo">
+                  <CommandItem value="__criar" onSelect={() => setOpen(false)} className="text-primary">
+                    <Plus className="mr-2 h-4 w-4" /> Criar &quot;{tidyName(name)}&quot;
                   </CommandItem>
-                ))}
-              </CommandGroup>
-              <CommandGroup>
-                <CommandItem
-                  value="__novo"
-                  onSelect={() => {
-                    setNewName(term);
-                    setOpen(false);
-                    setNewOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Criar novo exercício
-                </CommandItem>
-              </CommandGroup>
+                </CommandGroup>
+              ) : null}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
 
-      <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Criar exercício</DialogTitle>
-            <DialogDescription>Ele já fica selecionado para o vídeo que você está enviando.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label>Nome</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Leg press 45°" />
-            </div>
-            <div className="space-y-1">
-              <Label>Grupo muscular</Label>
-              <Select value={newGroup} onValueChange={setNewGroup}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MUSCLE_GROUPS.map((g) => (
-                    <SelectItem key={g} value={g}>{g}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      {exact && !selected ? (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          Já existe um exercício com esse nome.{" "}
+          <button type="button" className="underline" onClick={() => choose(exact)}>
+            Usar &quot;{exact.name}&quot;
+          </button>
+        </p>
+      ) : null}
+
+      {selected ? (
+        <p className="text-xs text-muted-foreground">
+          Vídeo será ligado a <span className="font-medium text-foreground">{selected.name}</span> ({selected.muscle_group}).
+        </p>
+      ) : null}
+
+      {willCreate ? (
+        <div className="space-y-1 rounded-lg border border-dashed p-3">
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary/15 text-primary hover:bg-primary/15">Novo</Badge>
+            <span className="text-xs text-muted-foreground">Vamos criar &quot;{tidyName(name)}&quot; ao salvar.</span>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)} disabled={creating}>Cancelar</Button>
-            <Button onClick={() => void createNow()} disabled={creating}>Criar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+          <Label className="text-xs">Grupo muscular (opcional)</Label>
+          <Select value={group} onValueChange={onGroupChange}>
+            <SelectTrigger><SelectValue placeholder="Escolher depois" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="depois">Escolher depois</SelectItem>
+              {MUSCLE_GROUPS.map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
