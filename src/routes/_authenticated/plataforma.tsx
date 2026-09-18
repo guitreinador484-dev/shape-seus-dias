@@ -775,7 +775,13 @@ function PlataformaPage() {
           <TabsContent value="treino" className="mt-0">
             {user ? <CheckinCard userId={user.id} /> : null}
             {user && showVideos && !isExpired ? <ReferralCard userId={user.id} /> : null}
-            <TreinoPanel plans={plans} loading={dataLoading} light={config.theme === "light"} />
+            <TreinoPanel
+              plans={plans}
+              loading={dataLoading}
+              light={config.theme === "light"}
+              showVideos={isMentoria}
+              gymId={gymId}
+            />
           </TabsContent>
 
           <TabsContent value="dieta" className="mt-0">
