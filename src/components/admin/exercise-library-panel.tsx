@@ -297,6 +297,8 @@ function VideoDialog({
 }) {
   const [exerciseId, setExerciseId] = useState<string>("");
   const [gymId, setGymId] = useState<string>("geral");
+  const [exerciseName, setExerciseName] = useState("");
+  const [newGroup, setNewGroup] = useState("depois");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
