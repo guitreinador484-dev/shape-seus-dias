@@ -671,6 +671,11 @@ function PlataformaPage() {
               <TabsTrigger value="ficha" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <ClipboardList className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Ficha</span>
               </TabsTrigger>
+              {isMentoria && (
+                <TabsTrigger value="mentoria" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
+                  <Library className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Mentoria</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
