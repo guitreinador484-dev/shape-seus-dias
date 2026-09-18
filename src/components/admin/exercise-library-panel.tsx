@@ -302,6 +302,7 @@ function VideoDialog({
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -318,6 +319,16 @@ function VideoDialog({
     setFile(null);
     setProgress(0);
   }, [open, video, exercises]);
+
+  useEffect(() => {
+    if (!file) {
+      setFilePreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
 
   function acceptFile(f: File | null | undefined) {
     if (!f) return;
@@ -380,38 +391,73 @@ function VideoDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              acceptFile(e.dataTransfer.files?.[0]);
-            }}
-            className={cn(
-              "rounded-xl border border-dashed p-6 text-center transition",
-              dragging ? "border-primary bg-primary/5" : "border-border",
-            )}
-          >
-            <Upload className="mx-auto h-5 w-5 text-muted-foreground" />
-            <p className="mt-2 text-sm font-medium">{file ? file.name : "Arraste o vídeo aqui"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">MP4, MOV ou WEBM — até {MAX_VIDEO_MB} MB</p>
-            <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => inputRef.current?.click()}>
-              Escolher arquivo
-            </Button>
-            <input
-              ref={inputRef}
-              type="file"
-              accept={VIDEO_ACCEPT}
-              className="hidden"
-              onChange={(e) => acceptFile(e.target.files?.[0])}
-            />
-            {busy && file ? <Progress value={progress} className="mt-4" /> : null}
-            {video && !file ? <p className="mt-3 text-xs text-muted-foreground">Já existe um vídeo enviado. Escolha um arquivo só se quiser trocar.</p> : null}
-          </div>
+          {file && filePreviewUrl ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-muted/30">
+              <div className="relative aspect-video bg-background">
+                <video
+                  src={filePreviewUrl}
+                  preload="metadata"
+                  playsInline
+                  muted
+                  className="h-full w-full object-cover"
+                  aria-label={`Prévia de ${file.name}`}
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute right-2 top-2"
+                  onClick={() => {
+                    setFile(null);
+                    if (inputRef.current) inputRef.current.value = "";
+                  }}
+                  disabled={busy}
+                  aria-label="Remover vídeo selecionado"
+                  title="Remover vídeo selecionado"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex min-w-0 items-center gap-2 px-3 py-2">
+                <Video className="h-4 w-4 shrink-0 text-primary" />
+                <p className="min-w-0 flex-1 truncate text-sm font-medium">{file.name}</p>
+                <Badge variant="secondary">Vídeo pronto</Badge>
+              </div>
+              {busy ? <Progress value={progress} className="rounded-none" /> : null}
+            </div>
+          ) : (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                acceptFile(e.dataTransfer.files?.[0]);
+              }}
+              className={cn(
+                "rounded-xl border border-dashed p-6 text-center transition",
+                dragging ? "border-primary bg-primary/5" : "border-border",
+              )}
+            >
+              <Upload className="mx-auto h-5 w-5 text-muted-foreground" />
+              <p className="mt-2 text-sm font-medium">Arraste o vídeo aqui</p>
+              <p className="mt-1 text-xs text-muted-foreground">MP4, MOV ou WEBM — até {MAX_VIDEO_MB} MB</p>
+              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => inputRef.current?.click()}>
+                Escolher arquivo
+              </Button>
+              {video ? <p className="mt-3 text-xs text-muted-foreground">Já existe um vídeo enviado. Escolha um arquivo só se quiser trocar.</p> : null}
+            </div>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept={VIDEO_ACCEPT}
+            className="hidden"
+            onChange={(e) => acceptFile(e.target.files?.[0])}
+          />
 
           <div className="space-y-1">
             <Label>Exercício</Label>
