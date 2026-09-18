@@ -389,6 +389,15 @@ function TreinoPanel({
           )}
         </div>
       ))}
+
+      <ExerciseVideoDialog
+        open={!!videoFor}
+        onOpenChange={(v) => !v && setVideoFor(null)}
+        exerciseName={videoFor?.exercise_name ?? ""}
+        exerciseId={videoFor?.exercise_id ?? null}
+        planNotes={videoFor?.notes ?? null}
+        gymId={gymId}
+      />
     </div>
   );
 }
