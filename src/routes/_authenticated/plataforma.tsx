@@ -351,7 +351,18 @@ function TreinoPanel({
                       {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
+                      {showVideos ? (
+                        <button
+                          type="button"
+                          onClick={() => setVideoFor(ex)}
+                          className={`group/ex flex items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}
+                        >
+                          <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
+                          <Play className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        </button>
+                      ) : (
+                        <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
+                      )}
                       {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
                       <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
