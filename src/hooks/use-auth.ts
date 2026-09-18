@@ -30,20 +30,23 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let mounted = true;
 
-    async function loadRole(uid: string): Promise<AppRole | null> {
+    async function loadRoles(uid: string): Promise<AppRole[]> {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", uid);
       if (error) {
         console.error("Erro ao carregar papel do usuário", error);
-        return null;
+        return [];
       }
-      const roles = (data ?? []).map((r) => r.role as AppRole);
+      return (data ?? []).map((r) => r.role as AppRole);
+    }
+
+    function pickMain(list: AppRole[]): AppRole | null {
       return (
-        roles.find((r) => r === "admin") ??
-        roles.find((r) => r === "online") ??
-        roles.find((r) => r === "presencial") ??
+        list.find((r) => r === "admin") ??
+        list.find((r) => r === "online") ??
+        list.find((r) => r === "presencial") ??
         null
       );
     }
@@ -53,16 +56,19 @@ export function useAuth(): AuthState {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        const list = await loadRoles(s.user.id);
+        if (!mounted) return;
         if (isAdminEmail(s.user.email)) {
+          setRoles(list.includes("admin") ? list : [...list, "admin"]);
           setRole("admin");
           if (mounted) setLoading(false);
           return;
         }
-        const nextRole = await loadRole(s.user.id);
-        if (!mounted) return;
-        setRole(nextRole);
+        setRoles(list);
+        setRole(pickMain(list));
       } else {
         setRole(null);
+        setRoles([]);
       }
       if (mounted) setLoading(false);
     }
