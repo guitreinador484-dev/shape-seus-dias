@@ -92,7 +92,14 @@ export function useAuth(): AuthState {
     };
   }, []);
 
-  return { user, session, role, loading };
+  return {
+    user,
+    session,
+    role,
+    roles,
+    isMentoria: roles.includes("aluno_mentoria") || roles.includes("admin"),
+    loading,
+  };
 }
 
 export function roleHomePath(role: AppRole | null, email?: string | null): string {
