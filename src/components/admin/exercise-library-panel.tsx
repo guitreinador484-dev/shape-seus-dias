@@ -694,6 +694,14 @@ function ExercisesSection({ exercises, onChanged }: { exercises: Exercise[]; onC
                   >
                     <Pencil className="mr-2 h-4 w-4" /> Editar
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setMergeTarget("");
+                      setMerging(e);
+                    }}
+                  >
+                    <Check className="mr-2 h-4 w-4" /> Mesclar com outro
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive" onClick={() => setRemoving(e)}>
                     <Trash2 className="mr-2 h-4 w-4" /> Excluir
                   </DropdownMenuItem>
