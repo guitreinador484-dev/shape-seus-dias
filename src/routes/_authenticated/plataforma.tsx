@@ -457,8 +457,8 @@ function PlataformaPage() {
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
         setHasOrderBump(Boolean(profile?.has_order_bump));
-        setHasNutritionAccess(Boolean(profile?.has_nutrition_access || profile?.has_order_bump));
-        setHasVideoAccess(Boolean(profile?.has_video_access || profile?.has_order_bump));
+        setHasNutritionAccess(Boolean(profile?.has_nutrition_access));
+        setHasVideoAccess(Boolean(profile?.has_video_access));
         setIsActive(profile?.is_active ?? true);
         setAccessExpiresAt(profile?.access_expires_at ?? null);
         const expiresAt = profile?.access_expires_at ? new Date(profile.access_expires_at).getTime() : null;
@@ -561,8 +561,8 @@ function PlataformaPage() {
 
   // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
   const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
-  const canSeeNutrition = hasNutritionAccess || hasOrderBump || privileged;
-  const canSeeVideos = hasVideoAccess || hasOrderBump || privileged;
+  const canSeeNutrition = hasNutritionAccess || privileged;
+  const canSeeVideos = hasVideoAccess || privileged;
   const showVideos = hasClassAccess && isActive && canSeeVideos;
   const isLight = config.theme === "light";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];

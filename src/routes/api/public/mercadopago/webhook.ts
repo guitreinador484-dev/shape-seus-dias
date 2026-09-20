@@ -69,7 +69,7 @@ async function handle(request: Request): Promise<Response> {
   if (status === "approved") {
     const { data: purchase } = await supabaseAdmin
       .from("purchases")
-      .select("customer_email, customer_name, customer_whatsapp, user_id")
+      .select("customer_email, customer_name, customer_whatsapp, user_id, order_bump, order_bump_ids, unlock_nutrition, unlock_videos")
       .eq("provider_reference", reference)
       .maybeSingle();
 
@@ -86,6 +86,15 @@ async function handle(request: Request): Promise<Response> {
       } catch (e) {
         console.error("[mercadopago] falha ao liberar acesso", e);
       }
+    }
+
+    if (purchase?.user_id && purchase.order_bump) {
+      const legacyAccess = purchase.order_bump_ids.length === 0;
+      await supabaseAdmin.from("profiles").update({
+        has_order_bump: true,
+        has_nutrition_access: purchase.unlock_nutrition || legacyAccess,
+        has_video_access: purchase.unlock_videos || legacyAccess,
+      }).eq("id", purchase.user_id);
     }
 
     // Treino personalizado gerado por IA a partir das respostas do funil.
