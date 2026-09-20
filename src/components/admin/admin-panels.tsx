@@ -41,6 +41,8 @@ import {
   User,
   FileText,
   Copy,
+  CalendarDays,
+  ChevronDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
@@ -1182,7 +1184,7 @@ export function AdminTrainingPanel() {
         </DialogContent>
       </Dialog>
       {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyBox title="Nenhum treino encontrado" description={filterStudent === "all" ? "Crie o primeiro treino e vincule a um aluno." : "Este aluno ainda não possui treinos."} action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Criar primeiro treino</Button>} /> : (
-        <div className="space-y-4">
+        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
         </div>
       )}
@@ -1202,6 +1204,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   const [librarySearch, setLibrarySearch] = useState("");
   const [pending, setPending] = useState<{ name: string; sets: string; reps: string; rest: string; load: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [deletePlanOpen, setDeletePlanOpen] = useState(false);
   const [deleteExerciseId, setDeleteExerciseId] = useState<string | null>(null);
   const uploadRef = useRef<HTMLInputElement | null>(null);
@@ -1364,28 +1367,59 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
   }
 
 
+  const dayLabel = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][plan.day_of_week] ?? `Dia ${plan.day_of_week}`;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>{plan.plan_name || "Treino"}</CardTitle>
-            <p className="text-sm text-muted-foreground">{student?.full_name || student?.email || "Aluno"} · dia {plan.day_of_week}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Adicionar exercícios</Button>
+    <>
+      <Card className="flex min-h-64 flex-col overflow-hidden">
+        <CardHeader className="space-y-4 p-5">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <div className="min-w-0">
+              <CardTitle className="truncate text-lg">{plan.plan_name || "Treino"}</CardTitle>
+              <p className="mt-1 truncate text-sm text-muted-foreground" title={student?.full_name || student?.email || "Aluno"}>
+                {student?.full_name || student?.email || "Aluno"}
+              </p>
+            </div>
             <RowActions>
-              <DropdownMenuItem onSelect={() => setLibraryOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Editar treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setDetailsOpen(true)}><Eye className="mr-2 h-4 w-4" /> Ver treino</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLibraryOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Adicionar exercícios</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void duplicatePlan()}><Copy className="mr-2 h-4 w-4" /> Duplicar treino</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => void generatePdf()}><FileText className="mr-2 h-4 w-4" /> {pdf ? "Gerar novo PDF" : "Gerar PDF"}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeletePlanOpen(true)}><Trash2 className="mr-2 h-4 w-4" /> Excluir treino</DropdownMenuItem>
             </RowActions>
-            <ConfirmDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> Dia</span>
+              <strong className="mt-1 block font-medium">{dayLabel}</strong>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Dumbbell className="h-3.5 w-3.5" /> Exercícios</span>
+              <strong className="mt-1 block font-medium">{plan.exercises.length}</strong>
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <StatusPill tone={pdf ? "green" : "gray"}>{pdf ? `PDF versão ${pdf.version}` : "PDF pendente"}</StatusPill>
+          </div>
+        </CardHeader>
+        <CardContent className="mt-auto grid grid-cols-2 gap-2 p-5 pt-0">
+          <Button variant="outline" size="sm" onClick={() => setLibraryOpen(true)}><Plus className="h-4 w-4" /> Exercício</Button>
+          <Button size="sm" onClick={() => setDetailsOpen(true)}>Ver treino <ChevronDown className="h-4 w-4" /></Button>
+        </CardContent>
+      </Card>
+      <ConfirmDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen} title="Excluir este treino?" description="O treino, seus exercícios e o PDF vinculado serão removidos." confirmLabel="Sim, excluir treino" destructive onConfirm={() => onDelete(plan.id)} />
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="flex max-h-[92vh] w-[calc(100%-1rem)] max-w-6xl flex-col overflow-hidden p-0 sm:w-full">
+          <DialogHeader className="border-b border-border px-5 py-4 sm:px-6">
+            <DialogTitle>{plan.plan_name || "Treino"}</DialogTitle>
+            <DialogDescription>{student?.full_name || student?.email || "Aluno"} · {dayLabel} · {plan.exercises.length} exercício(s)</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-medium">Exercícios do treino</p>
+              <Button size="sm" onClick={() => setLibraryOpen(true)}><Dumbbell className="h-4 w-4" /> Abrir biblioteca</Button>
+            </div>
         <div className="grid gap-3 md:grid-cols-6">
           <Input className="md:col-span-2" value={exerciseName} onChange={(event) => setExerciseName(event.target.value)} placeholder="Exercício" />
           <Input value={sets} onChange={(event) => setSets(event.target.value)} placeholder="Séries" />
@@ -1443,7 +1477,9 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
             }}
           />
         </div>
-      </CardContent>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog open={libraryOpen} onOpenChange={setLibraryOpen}>
         <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-5xl overflow-hidden flex flex-col sm:w-full">
           <DialogHeader>
@@ -1519,7 +1555,7 @@ function PlanCard({ plan, student, onReload, onDelete, pdf, onPdfReload }: { pla
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 }
 
