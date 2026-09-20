@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { getNutritionPdf, getNutritionPdfUrl } from "@/lib/nutrition-pdf.functions";
 import type { Tables } from "@/integrations/supabase/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Apple, UtensilsCrossed } from "lucide-react";
+import { Apple, Download, ExternalLink, FileText, Loader2, UtensilsCrossed } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type NutritionMeal = Tables<"nutrition_meals">;
 type NutritionItem = Tables<"nutrition_items">;
@@ -16,6 +20,10 @@ function num(v: number | null): number {
 export function NutritionTab({ userId }: { userId: string }) {
   const [plans, setPlans] = useState<PlanFull[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pdf, setPdf] = useState<Awaited<ReturnType<typeof getNutritionPdf>>>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const loadPdf = useServerFn(getNutritionPdf);
+  const pdfUrl = useServerFn(getNutritionPdfUrl);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,20 +37,34 @@ export function NutritionTab({ userId }: { userId: string }) {
       const { data: itemsRes } = mealIds.length
         ? await supabase.from("nutrition_items").select("*").in("meal_id", mealIds).order("display_order", { ascending: true })
         : { data: [] as NutritionItem[] };
+      const fixedPdf = await loadPdf().catch(() => null);
       if (cancelled) return;
       const itemsByMeal = new Map<string, NutritionItem[]>();
       (itemsRes ?? []).forEach((item) => itemsByMeal.set(item.meal_id, [...(itemsByMeal.get(item.meal_id) ?? []), item]));
       const mealsByPlan = new Map<string, (NutritionMeal & { items: NutritionItem[] })[]>();
       (mealsRes ?? []).forEach((meal) => mealsByPlan.set(meal.plan_id, [...(mealsByPlan.get(meal.plan_id) ?? []), { ...meal, items: itemsByMeal.get(meal.id) ?? [] }]));
       setPlans((plansRes ?? []).map((p) => ({ ...p, meals: mealsByPlan.get(p.id) ?? [] })));
+      setPdf(fixedPdf);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, loadPdf]);
+
+  async function openPdf(download: boolean) {
+    setPdfBusy(true);
+    try {
+      const { url } = await pdfUrl({ data: { download } });
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      toast.error("Não foi possível abrir o PDF", { description: error instanceof Error ? error.message : undefined });
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   if (loading) return <Skeleton className="h-64" />;
 
-  if (plans.length === 0) {
+  if (plans.length === 0 && !pdf) {
     return (
       <Card><CardContent className="py-12 text-center">
         <Apple className="h-8 w-8 text-primary/60 mx-auto mb-3" />
@@ -54,6 +76,28 @@ export function NutritionTab({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
+      {pdf && (
+        <Card className="overflow-hidden border-primary/30 bg-primary/5">
+          <CardContent className="grid gap-4 p-5 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+            <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <FileText className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase text-primary">Seu material de alimentação</p>
+              <h3 className="truncate text-lg font-semibold">{pdf.title}</h3>
+              <p className="text-xs text-muted-foreground">PDF atualizado · versão {pdf.version}</p>
+            </div>
+            <div className="flex flex-col gap-2 xs:flex-row">
+              <Button onClick={() => void openPdf(false)} disabled={pdfBusy}>
+                {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />} Abrir PDF
+              </Button>
+              <Button variant="outline" onClick={() => void openPdf(true)} disabled={pdfBusy}>
+                <Download className="h-4 w-4" /> Baixar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {plans.map((plan) => {
         const totals = plan.meals.reduce((acc, meal) => {
           const t = meal.items.reduce((a, item) => ({

@@ -44,30 +44,42 @@ export type WorkoutPdfInput = {
 
 const BLUE: [number, number, number] = [37, 99, 235];
 const GRAY: [number, number, number] = [110, 116, 128];
+const INK: [number, number, number] = [17, 24, 39];
+const PALE: [number, number, number] = [239, 246, 255];
 
 /** Gera o PDF do treino e devolve o conteúdo em base64 (sem prefixo data:). */
 export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileName: string } {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const marginX = 42;
+  const marginX = 36;
   let y = 0;
 
   // Cabeçalho
-  const headerHeight = input.tierLabel ? 110 : 92;
-  doc.setFillColor(...BLUE);
+  const headerHeight = input.tierLabel ? 126 : 108;
+  doc.setFillColor(...INK);
   doc.rect(0, 0, pageWidth, headerHeight, "F");
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 0, 9, headerHeight, "F");
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(1);
+  doc.circle(pageWidth - 60, 42, 22, "S");
+  doc.setFontSize(8);
+  doc.text("GT", pageWidth - 60, 45, { align: "center" });
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text(input.professional || "Plano de Treino", marginX, 42);
+  doc.setFontSize(9);
+  doc.text((input.professional || "GUI TREINADOR").toUpperCase(), marginX, 28);
+  doc.setFontSize(22);
+  doc.text("PLANO DE TREINO", marginX, 55);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
-  doc.text(`Aluno: ${input.studentName}`, marginX, 64);
+  doc.setTextColor(210, 218, 230);
+  doc.text(`Aluno: ${input.studentName}`, marginX, 78);
   doc.text(
     `${input.planName || "Treino"} · ${DAY_NAMES[input.dayOfWeek] ?? ""} · ${new Date().toLocaleDateString("pt-BR")}`,
     marginX,
-    80,
+    96,
   );
   if (input.tierLabel) {
     doc.setFont("helvetica", "bold");
@@ -75,13 +87,13 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.text(
       input.updateNote ? `${input.tierLabel} · ${input.updateNote}` : input.tierLabel,
       marginX,
-      98,
+      115,
     );
     doc.setFont("helvetica", "normal");
   }
 
-  y = headerHeight + 36;
-  doc.setTextColor(20, 20, 20);
+  y = headerHeight + 28;
+  doc.setTextColor(...INK);
 
   const contentWidth = pageWidth - marginX * 2;
 
@@ -89,41 +101,44 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   function drawBlock(title: string, lines: string[]) {
     if (!lines.length) return;
     const wrapped = lines.flatMap((line) => doc.splitTextToSize(line, contentWidth) as string[]);
-    const blockHeight = 20 + wrapped.length * 13 + 12;
+    const blockHeight = 30 + wrapped.length * 14 + 10;
     if (y + blockHeight > pageHeight - 56) {
       doc.addPage();
       y = 64;
     }
+    doc.setFillColor(...PALE);
+    doc.roundedRect(marginX, y - 14, contentWidth, blockHeight, 5, 5, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...BLUE);
-    doc.text(title, marginX, y);
+    doc.text(title.toUpperCase(), marginX + 12, y + 2);
     y += 16;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.setTextColor(20, 20, 20);
-    doc.text(wrapped, marginX, y);
-    y += wrapped.length * 13 + 14;
+    doc.setTextColor(...INK);
+    doc.text(wrapped, marginX + 12, y);
+    y += wrapped.length * 14 + 26;
   }
 
   if (input.summary) drawBlock("Seu objetivo", [input.summary]);
-  if (input.goals?.length) drawBlock("Metas do treino", input.goals.map((g) => `• ${g}`));
+  if (input.goals?.length) drawBlock("Metas do treino", input.goals.map((g) => `- ${g}`));
   if (input.progression) drawBlock("Progressão de cargas", [input.progression]);
 
   const cols = [
-    { label: "Exercício", x: marginX, w: 170 },
-    { label: "Séries", x: marginX + 176, w: 52 },
-    { label: "Reps", x: marginX + 232, w: 56 },
-    { label: "Carga", x: marginX + 292, w: 70 },
-    { label: "Descanso", x: marginX + 366, w: 70 },
+    { label: "Exercício", x: marginX + 8, w: 156 },
+    { label: "Séries", x: marginX + 170, w: 43 },
+    { label: "Reps", x: marginX + 218, w: 48 },
+    { label: "Carga", x: marginX + 272, w: 74 },
+    { label: "Pausa", x: marginX + 352, w: 52 },
+    { label: "Feito", x: marginX + 420, w: 42 },
   ];
 
   function drawHeader() {
-    doc.setFillColor(238, 242, 255);
-    doc.rect(marginX - 8, y - 14, pageWidth - (marginX - 8) * 2, 24, "F");
+    doc.setFillColor(...INK);
+    doc.roundedRect(marginX, y - 15, contentWidth, 25, 4, 4, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.setTextColor(...BLUE);
+    doc.setTextColor(255, 255, 255);
     cols.forEach((col) => doc.text(col.label, col.x, y + 2));
     doc.setTextColor(20, 20, 20);
     y += 26;
@@ -141,7 +156,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   input.exercises.forEach((exercise, index) => {
     const nameLines = doc.splitTextToSize(exercise.exercise_name || "-", cols[0]!.w);
     const noteLines = exercise.notes ? doc.splitTextToSize(`Obs.: ${exercise.notes}`, pageWidth - marginX * 2) : [];
-    const rowHeight = Math.max(nameLines.length, 1) * 13 + noteLines.length * 12 + 12;
+    const rowHeight = Math.max(nameLines.length, 1) * 14 + noteLines.length * 12 + 18;
 
     if (y + rowHeight > pageHeight - 56) {
       doc.addPage();
@@ -152,18 +167,23 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     }
 
     if (index % 2 === 1) {
-      doc.setFillColor(249, 250, 251);
-      doc.rect(marginX - 8, y - 12, pageWidth - (marginX - 8) * 2, rowHeight, "F");
+      doc.setFillColor(247, 249, 252);
+      doc.rect(marginX, y - 12, contentWidth, rowHeight, "F");
     }
 
-    doc.setTextColor(20, 20, 20);
+    doc.setTextColor(...INK);
+    doc.setFont("helvetica", "bold");
     doc.text(nameLines, cols[0]!.x, y);
+    doc.setFont("helvetica", "normal");
     doc.text(exercise.sets || "-", cols[1]!.x, y);
     doc.text(exercise.reps || "-", cols[2]!.x, y);
     doc.text(exercise.load_text || "-", cols[3]!.x, y);
     doc.text(exercise.rest_seconds ? `${exercise.rest_seconds}s` : "-", cols[4]!.x, y);
+    doc.setDrawColor(150, 160, 175);
+    doc.rect(cols[5]!.x + 5, y - 8, 10, 10, "S");
 
-    let innerY = y + Math.max(nameLines.length, 1) * 13;
+    const rowStart = y;
+    let innerY = y + Math.max(nameLines.length, 1) * 14;
     if (noteLines.length) {
       doc.setTextColor(...GRAY);
       doc.setFontSize(9);
@@ -171,8 +191,17 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
       innerY += noteLines.length * 12;
       doc.setFontSize(10);
     }
-    y = innerY + 12;
+    y = rowStart + rowHeight;
   });
+
+  if (input.exercises.length > 0 && y + 48 < pageHeight - 44) {
+    y += 8;
+    doc.setDrawColor(215, 220, 228);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    doc.text("Anote suas cargas e marque cada exercício concluído. Priorize a técnica antes de aumentar o peso.", marginX, y + 18);
+  }
 
   // Rodapé
   const pages = doc.getNumberOfPages();
@@ -181,7 +210,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFontSize(8);
     doc.setTextColor(...GRAY);
     doc.text(
-      `${input.professional || "Plano de treino"} · gerado em ${new Date().toLocaleDateString("pt-BR")}`,
+      `${input.professional || "Plano de treino"}  |  Atualizado em ${new Date().toLocaleDateString("pt-BR")}`,
       marginX,
       pageHeight - 28,
     );

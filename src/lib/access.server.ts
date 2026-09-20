@@ -128,11 +128,16 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     // Order bump comprado libera Dieta e Aulas em vídeo
     const { data: purchaseRow } = await supabaseAdmin
       .from("purchases")
-      .select("order_bump")
+      .select("order_bump, order_bump_ids, unlock_nutrition, unlock_videos")
       .eq("provider_reference", input.reference)
       .maybeSingle();
     if (purchaseRow?.order_bump) {
-      await supabaseAdmin.from("profiles").update({ has_order_bump: true }).eq("id", userId);
+      const legacyAccess = purchaseRow.order_bump_ids.length === 0;
+      await supabaseAdmin.from("profiles").update({
+        has_order_bump: true,
+        has_nutrition_access: purchaseRow.unlock_nutrition || legacyAccess,
+        has_video_access: purchaseRow.unlock_videos || legacyAccess,
+      }).eq("id", userId);
     }
   }
 

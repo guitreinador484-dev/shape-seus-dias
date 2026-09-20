@@ -414,7 +414,8 @@ function PlataformaPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
-  const [hasOrderBump, setHasOrderBump] = useState<boolean>(false);
+  const [hasNutritionAccess, setHasNutritionAccess] = useState<boolean>(false);
+  const [hasVideoAccess, setHasVideoAccess] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(true);
   const [accessExpiresAt, setAccessExpiresAt] = useState<string | null>(null);
   const isExpired = accessExpiresAt !== null && new Date(accessExpiresAt).getTime() <= Date.now();
@@ -445,7 +446,7 @@ function PlataformaPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("has_class_access, is_active, access_expires_at, has_order_bump")
+          .select("has_class_access, is_active, access_expires_at, has_order_bump, has_nutrition_access, has_video_access")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
@@ -454,7 +455,8 @@ function PlataformaPage() {
           throw new Error(msg);
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
-        setHasOrderBump(Boolean(profile?.has_order_bump));
+        setHasNutritionAccess(Boolean(profile?.has_nutrition_access));
+        setHasVideoAccess(Boolean(profile?.has_video_access));
         setIsActive(profile?.is_active ?? true);
         setAccessExpiresAt(profile?.access_expires_at ?? null);
         const expiresAt = profile?.access_expires_at ? new Date(profile.access_expires_at).getTime() : null;
@@ -556,8 +558,10 @@ function PlataformaPage() {
   }
 
   // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
-  const isPremium = hasOrderBump || role === "presencial" || role === "admin" || isAdminEmail(user?.email);
-  const showVideos = hasClassAccess && isActive && isPremium;
+  const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
+  const canSeeNutrition = hasNutritionAccess || privileged;
+  const canSeeVideos = hasVideoAccess || privileged;
+  const showVideos = hasClassAccess && isActive && canSeeVideos;
   const isLight = config.theme === "light";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
@@ -785,7 +789,7 @@ function PlataformaPage() {
           </TabsContent>
 
           <TabsContent value="dieta" className="mt-0">
-            {!isPremium ? (
+            {!canSeeNutrition ? (
               <LockedExtra
                 title="Dieta liberada com o adicional"
                 description="A área de Dieta faz parte do acompanhamento completo. Fale com o professor para liberar no seu plano."
@@ -809,7 +813,7 @@ function PlataformaPage() {
             </TabsContent>
           ) : null}
 
-          {!isPremium && hasClassAccess && isActive && (
+          {!canSeeVideos && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">
               <LockedExtra
                 title="Aulas em vídeo liberadas com o adicional"

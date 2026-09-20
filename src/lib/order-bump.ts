@@ -6,6 +6,8 @@ export type OrderBumpConfig = {
   title: string;
   description: string;
   price: number;
+  unlockNutrition: boolean;
+  unlockVideos: boolean;
 };
 
 export const DEFAULT_ORDER_BUMP: OrderBumpConfig = {
@@ -14,6 +16,8 @@ export const DEFAULT_ORDER_BUMP: OrderBumpConfig = {
   title: "Acompanhamento completo",
   description: "Libere a aba de Dieta e todas as Aulas em vídeo dentro da plataforma.",
   price: 19.9,
+  unlockNutrition: true,
+  unlockVideos: true,
 };
 
 export const ORDER_BUMP_SECTION = "order_bump";
@@ -31,6 +35,8 @@ function parseOne(raw: Partial<OrderBumpConfig>, index: number): OrderBumpConfig
       Number.isFinite(Number(raw.price)) && Number(raw.price) > 0
         ? Number(raw.price)
         : DEFAULT_ORDER_BUMP.price,
+    unlockNutrition: typeof raw.unlockNutrition === "boolean" ? raw.unlockNutrition : true,
+    unlockVideos: typeof raw.unlockVideos === "boolean" ? raw.unlockVideos : true,
   };
 }
 
@@ -90,6 +96,8 @@ export function newOrderBump(): OrderBumpConfig {
     title: "Nova oferta",
     description: "Descreva o que o aluno recebe ao adicionar essa oferta.",
     price: 19.9,
+    unlockNutrition: true,
+    unlockVideos: false,
   };
 }
 

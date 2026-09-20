@@ -164,6 +164,8 @@ function FunnelPage() {
   const activeBumps = bumps.filter((b) => b.enabled);
   const chosenBumps = activeBumps.filter((b) => bumpChecked[b.id]);
   const withBump = chosenBumps.length > 0;
+  const unlockNutrition = chosenBumps.some((b) => b.unlockNutrition);
+  const unlockVideos = chosenBumps.some((b) => b.unlockVideos);
   const bumpsTotal = chosenBumps.reduce((sum, b) => sum + b.price, 0);
   const bumpsLabel = chosenBumps.map((b) => b.title).join(" + ");
   const totalPrice = selectedPlan ? parsePlanPrice(selectedPlan.price) + bumpsTotal : 0;
@@ -198,6 +200,9 @@ function FunnelPage() {
             planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
             price: totalPrice,
             orderBump: withBump,
+            orderBumpIds: chosenBumps.map((b) => b.id),
+            unlockNutrition,
+            unlockVideos,
             method: "pix",
             name: contact.name,
             email: contact.email,
@@ -216,6 +221,9 @@ function FunnelPage() {
           planName: withBump ? `${selectedPlan.name} + ${bumpsLabel}` : selectedPlan.name,
           price: totalPrice,
           orderBump: withBump,
+          orderBumpIds: chosenBumps.map((b) => b.id),
+          unlockNutrition,
+          unlockVideos,
           method,
           name: contact.name,
           email: contact.email,
