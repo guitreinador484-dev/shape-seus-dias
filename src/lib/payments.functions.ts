@@ -10,6 +10,9 @@ type CheckoutInput = {
   email?: string;
   whatsapp?: string;
   orderBump?: boolean;
+  orderBumpIds?: string[];
+  unlockNutrition?: boolean;
+  unlockVideos?: boolean;
 };
 
 function parsePrice(price: string | number): number {
@@ -47,6 +50,9 @@ export const createMercadoPagoCheckoutFn = createServerFn({ method: "POST" })
       plan_id: data.planId,
       payment_method: data.method ?? null,
       order_bump: Boolean(data.orderBump),
+      order_bump_ids: data.orderBumpIds ?? [],
+      unlock_nutrition: Boolean(data.unlockNutrition),
+      unlock_videos: Boolean(data.unlockVideos),
       customer_email: data.email ?? null,
       customer_name: data.name ?? null,
       customer_whatsapp: data.whatsapp ?? null,
@@ -131,6 +137,9 @@ export const createPixPaymentFn = createServerFn({ method: "POST" })
       plan_id: data.planId,
       payment_method: "pix",
       order_bump: Boolean(data.orderBump),
+      order_bump_ids: data.orderBumpIds ?? [],
+      unlock_nutrition: Boolean(data.unlockNutrition),
+      unlock_videos: Boolean(data.unlockVideos),
       customer_email: data.email ?? null,
       customer_name: data.name ?? null,
       customer_whatsapp: data.whatsapp ?? null,

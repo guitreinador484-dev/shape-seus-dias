@@ -58,8 +58,7 @@ export function OrderBumpEditor() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Ofertas extras que aparecem no checkout do funil. Quem marcar qualquer uma delas ganha acesso à
-        Dieta e às Aulas em vídeo.
+        Ofertas extras que aparecem no checkout. Escolha abaixo o que cada oferta libera.
       </p>
 
       {items.length === 0 && (
@@ -122,11 +121,30 @@ export function OrderBumpEditor() {
                 onChange={(e) => update(i, { description: e.target.value })}
               />
             </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border p-3">
+                <span>
+                  <span className="block text-sm font-medium">Liberar alimentação</span>
+                  <span className="block text-xs text-muted-foreground">Dieta e PDF alimentar</span>
+                </span>
+                <Switch checked={item.unlockNutrition} onCheckedChange={(value) => update(i, { unlockNutrition: value })} />
+              </label>
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border p-3">
+                <span>
+                  <span className="block text-sm font-medium">Liberar aulas em vídeo</span>
+                  <span className="block text-xs text-muted-foreground">Biblioteca de aulas do aluno</span>
+                </span>
+                <Switch checked={item.unlockVideos} onCheckedChange={(value) => update(i, { unlockVideos: value })} />
+              </label>
+            </div>
             <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 text-sm">
               <p className="font-semibold">
                 Sim! Quero adicionar: {item.title} — +{formatBRL(item.price)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
+              <p className="mt-2 text-xs font-medium text-primary">
+                Libera: {[item.unlockNutrition && "Alimentação", item.unlockVideos && "Aulas em vídeo"].filter(Boolean).join(" + ") || "Nenhum conteúdo"}
+              </p>
             </div>
           </div>
         ))}
