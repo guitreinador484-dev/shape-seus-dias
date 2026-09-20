@@ -680,6 +680,39 @@ export type Database = {
           },
         ]
       }
+      nutrition_pdfs: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       nutrition_plans: {
         Row: {
           created_at: string
@@ -711,7 +744,9 @@ export type Database = {
           email: string
           full_name: string | null
           has_class_access: boolean
+          has_nutrition_access: boolean
           has_order_bump: boolean
+          has_video_access: boolean
           id: string
           is_active: boolean
           referral_code: string
@@ -725,7 +760,9 @@ export type Database = {
           email: string
           full_name?: string | null
           has_class_access?: boolean
+          has_nutrition_access?: boolean
           has_order_bump?: boolean
+          has_video_access?: boolean
           id: string
           is_active?: boolean
           referral_code: string
@@ -739,7 +776,9 @@ export type Database = {
           email?: string
           full_name?: string | null
           has_class_access?: boolean
+          has_nutrition_access?: boolean
           has_order_bump?: boolean
+          has_video_access?: boolean
           id?: string
           is_active?: boolean
           referral_code?: string
@@ -759,12 +798,15 @@ export type Database = {
           customer_whatsapp: string | null
           id: string
           order_bump: boolean
+          order_bump_ids: string[]
           payment_method: string | null
           plan_id: string | null
           provider: string | null
           provider_reference: string | null
           status: string
           transaction_id: string | null
+          unlock_nutrition: boolean
+          unlock_videos: boolean
           updated_at: string
           user_id: string | null
         }
@@ -777,12 +819,15 @@ export type Database = {
           customer_whatsapp?: string | null
           id?: string
           order_bump?: boolean
+          order_bump_ids?: string[]
           payment_method?: string | null
           plan_id?: string | null
           provider?: string | null
           provider_reference?: string | null
           status?: string
           transaction_id?: string | null
+          unlock_nutrition?: boolean
+          unlock_videos?: boolean
           updated_at?: string
           user_id?: string | null
         }
@@ -795,12 +840,15 @@ export type Database = {
           customer_whatsapp?: string | null
           id?: string
           order_bump?: boolean
+          order_bump_ids?: string[]
           payment_method?: string | null
           plan_id?: string | null
           provider?: string | null
           provider_reference?: string | null
           status?: string
           transaction_id?: string | null
+          unlock_nutrition?: boolean
+          unlock_videos?: boolean
           updated_at?: string
           user_id?: string | null
         }
