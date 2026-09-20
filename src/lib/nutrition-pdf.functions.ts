@@ -41,11 +41,11 @@ export const getNutritionPdfUrl = createServerFn({ method: "POST" })
     if (!admin) {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("has_class_access, is_active, access_expires_at, has_nutrition_access")
+        .select("has_class_access, is_active, access_expires_at, has_nutrition_access, has_order_bump")
         .eq("id", context.userId)
         .maybeSingle();
       const expired = profile?.access_expires_at && new Date(profile.access_expires_at).getTime() <= Date.now();
-      if (!profile?.has_class_access || !profile.is_active || expired || !profile.has_nutrition_access) {
+      if (!profile?.has_class_access || !profile.is_active || expired || !(profile.has_nutrition_access || profile.has_order_bump)) {
         throw new Error("Este PDF não está liberado no seu acesso.");
       }
     }

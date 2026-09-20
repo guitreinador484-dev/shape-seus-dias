@@ -414,7 +414,6 @@ function PlataformaPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [hasClassAccess, setHasClassAccess] = useState<boolean>(false);
-  const [hasOrderBump, setHasOrderBump] = useState<boolean>(false);
   const [hasNutritionAccess, setHasNutritionAccess] = useState<boolean>(false);
   const [hasVideoAccess, setHasVideoAccess] = useState<boolean>(false);
   const [isActive, setIsActive] = useState<boolean>(true);
@@ -456,7 +455,6 @@ function PlataformaPage() {
           throw new Error(msg);
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
-        setHasOrderBump(Boolean(profile?.has_order_bump));
         setHasNutritionAccess(Boolean(profile?.has_nutrition_access));
         setHasVideoAccess(Boolean(profile?.has_video_access));
         setIsActive(profile?.is_active ?? true);
