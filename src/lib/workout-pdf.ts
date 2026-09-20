@@ -117,7 +117,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFontSize(10);
     doc.setTextColor(...INK);
     doc.text(wrapped, marginX + 12, y);
-    y += wrapped.length * 14 + 20;
+    y += wrapped.length * 14 + 26;
   }
 
   if (input.summary) drawBlock("Seu objetivo", [input.summary]);
@@ -182,7 +182,8 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setDrawColor(150, 160, 175);
     doc.rect(cols[5]!.x + 5, y - 8, 10, 10, "S");
 
-    let innerY = y + Math.max(nameLines.length, 1) * 13;
+    const rowStart = y;
+    let innerY = y + Math.max(nameLines.length, 1) * 14;
     if (noteLines.length) {
       doc.setTextColor(...GRAY);
       doc.setFontSize(9);
@@ -190,7 +191,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
       innerY += noteLines.length * 12;
       doc.setFontSize(10);
     }
-    y = innerY + 12;
+    y = rowStart + rowHeight;
   });
 
   if (input.exercises.length > 0 && y + 48 < pageHeight - 44) {
