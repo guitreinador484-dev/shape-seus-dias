@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { createNutritionPlan, deleteNutritionPlan, saveNutritionPlan } from "@/lib/admin.functions";
+import { countNutritionAccess, deleteNutritionPdf, getNutritionPdf, getNutritionPdfUrl, saveNutritionPdf } from "@/lib/nutrition-pdf.functions";
+import { fileToBase64 } from "@/lib/workout-pdf";
 import type { AppRole } from "@/hooks/use-auth";
 import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Save, Pencil, Loader2, Apple, X } from "lucide-react";
+import { Plus, Trash2, Save, Pencil, Loader2, Apple, X, FileText, Upload, ExternalLink, Download, Users } from "lucide-react";
 
 type NutritionPlan = Tables<"nutrition_plans">;
 type NutritionMeal = Tables<"nutrition_meals">;
@@ -40,18 +42,30 @@ export function AdminNutritionPanel() {
   const [selectedStudent, setSelectedStudent] = useState("all");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<PlanFull | null>(null);
+  const [fixedPdf, setFixedPdf] = useState<Awaited<ReturnType<typeof getNutritionPdf>>>(null);
+  const [pdfTitle, setPdfTitle] = useState("Guia de alimentação");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [eligibleStudents, setEligibleStudents] = useState(0);
 
   const createPlanFn = useServerFn(createNutritionPlan);
   const deletePlanFn = useServerFn(deleteNutritionPlan);
+  const loadPdfFn = useServerFn(getNutritionPdf);
+  const savePdfFn = useServerFn(saveNutritionPdf);
+  const deletePdfFn = useServerFn(deleteNutritionPdf);
+  const pdfUrlFn = useServerFn(getNutritionPdfUrl);
+  const countAccessFn = useServerFn(countNutritionAccess);
 
   async function load() {
     setLoading(true);
-    const [{ data: profiles }, { data: roles }, plansRes, mealsRes, itemsRes] = await Promise.all([
+    const [{ data: profiles }, { data: roles }, plansRes, mealsRes, itemsRes, pdfRes, accessRes] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("nutrition_plans").select("*").order("created_at", { ascending: false }),
       supabase.from("nutrition_meals").select("*").order("meal_order", { ascending: true }),
       supabase.from("nutrition_items").select("*").order("display_order", { ascending: true }),
+      loadPdfFn().catch(() => null),
+      countAccessFn().catch(() => ({ count: 0 })),
     ]);
     const roleByUser = new Map((roles ?? []).map((r) => [r.user_id, r.role as AppRole]));
     setStudents((profiles ?? []).map((p) => ({ ...p, role: roleByUser.get(p.id) ?? null })));
@@ -60,7 +74,37 @@ export function AdminNutritionPanel() {
     const byPlan = new Map<string, (NutritionMeal & { items: NutritionItem[] })[]>();
     (mealsRes.data ?? []).forEach((meal) => byPlan.set(meal.plan_id, [...(byPlan.get(meal.plan_id) ?? []), { ...meal, items: byMeal.get(meal.id) ?? [] }]));
     setPlans((plansRes.data ?? []).map((plan) => ({ ...plan, meals: byPlan.get(plan.id) ?? [] })));
+    setFixedPdf(pdfRes);
+    if (pdfRes?.title) setPdfTitle(pdfRes.title);
+    setEligibleStudents(accessRes.count);
     setLoading(false);
+  }
+
+  async function saveFixedPdf() {
+    if (!pdfFile) { toast.error("Escolha um arquivo PDF."); return; }
+    if (pdfFile.type !== "application/pdf" || pdfFile.size > 20 * 1024 * 1024) { toast.error("Envie um PDF de até 20 MB."); return; }
+    setPdfBusy(true);
+    try {
+      const result = await savePdfFn({ data: { title: pdfTitle, fileName: pdfFile.name, fileBase64: await fileToBase64(pdfFile) } });
+      toast.success(`PDF alimentar liberado para ${result.eligibleStudents} aluno(s)`);
+      setPdfFile(null);
+      await load();
+    } catch (error) { toast.error("Não foi possível enviar o PDF", { description: error instanceof Error ? error.message : undefined }); }
+    finally { setPdfBusy(false); }
+  }
+
+  async function openFixedPdf(download: boolean) {
+    setPdfBusy(true);
+    try { const { url } = await pdfUrlFn({ data: { download } }); window.open(url, "_blank", "noopener,noreferrer"); }
+    catch (error) { toast.error("Não foi possível abrir o PDF", { description: error instanceof Error ? error.message : undefined }); }
+    finally { setPdfBusy(false); }
+  }
+
+  async function removeFixedPdf() {
+    setPdfBusy(true);
+    try { await deletePdfFn(); toast.success("PDF alimentar excluído"); setPdfFile(null); await load(); }
+    catch (error) { toast.error("Não foi possível excluir o PDF", { description: error instanceof Error ? error.message : undefined }); }
+    finally { setPdfBusy(false); }
   }
 
   useEffect(() => {
@@ -121,6 +165,29 @@ export function AdminNutritionPanel() {
           <Button onClick={createPlan}><Plus className="h-4 w-4" /> Novo plano</Button>
         </div>
       </div>
+
+      <Card className="mb-6 border-primary/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> PDF alimentar para compradores</CardTitle>
+          <p className="text-sm text-muted-foreground">Um único arquivo liberado automaticamente para ofertas marcadas com acesso à alimentação.</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-3 text-sm"><Users className="h-4 w-4 text-primary" /><strong>{eligibleStudents}</strong> aluno(s) com acesso à alimentação</div>
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="space-y-1.5"><Label htmlFor="nutrition-pdf-title">Título do material</Label><Input id="nutrition-pdf-title" value={pdfTitle} onChange={(event) => setPdfTitle(event.target.value)} /></div>
+            <div className="space-y-1.5">
+              <Label htmlFor="nutrition-pdf-file">Arquivo PDF</Label>
+              <Input id="nutrition-pdf-file" type="file" accept="application/pdf,.pdf" onChange={(event) => setPdfFile(event.target.files?.[0] ?? null)} />
+            </div>
+          </div>
+          {pdfFile && <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3"><FileText className="h-5 w-5 text-primary" /><div className="min-w-0"><p className="truncate text-sm font-medium">{pdfFile.name}</p><p className="text-xs text-muted-foreground">Pronto para enviar</p></div></div>}
+          {fixedPdf && <div className="rounded-lg border p-3"><p className="font-medium">{fixedPdf.title}</p><p className="text-xs text-muted-foreground">{fixedPdf.file_name} · versão {fixedPdf.version}</p></div>}
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <Button onClick={() => void saveFixedPdf()} disabled={!pdfFile || pdfBusy}>{pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}{fixedPdf ? "Substituir PDF" : "Enviar e liberar PDF"}</Button>
+            {fixedPdf && <><Button variant="outline" onClick={() => void openFixedPdf(false)} disabled={pdfBusy}><ExternalLink className="h-4 w-4" /> Abrir</Button><Button variant="outline" onClick={() => void openFixedPdf(true)} disabled={pdfBusy}><Download className="h-4 w-4" /> Baixar</Button><Button variant="destructive" onClick={() => void removeFixedPdf()} disabled={pdfBusy}><Trash2 className="h-4 w-4" /> Excluir</Button></>}
+          </div>
+        </CardContent>
+      </Card>
 
       {loading ? <Skeleton className="h-64" /> : filteredPlans.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Nenhum plano alimentar. Selecione um aluno e crie o primeiro.</CardContent></Card>
