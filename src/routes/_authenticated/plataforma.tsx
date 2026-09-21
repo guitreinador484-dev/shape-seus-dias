@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
@@ -421,9 +421,14 @@ function TreinoPanel({
 }
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
-  component: PlataformaPage,
+  component: PlatformRoute,
   head: () => ({ meta: [{ title: "Minha plataforma — Gui Treinador" }, { name: "description", content: "Treinos, evolução e acompanhamento personalizado." }] }),
 });
+
+function PlatformRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname === "/plataforma" ? <PlataformaPage /> : <Outlet />;
+}
 
 function PlataformaPage() {
   const { user, role, loading, isMentoria } = useAuth();
