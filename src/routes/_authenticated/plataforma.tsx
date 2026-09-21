@@ -667,7 +667,7 @@ function PlataformaPage() {
   if (user && !welcomeReady && !isPreview && role !== "admin" && !isAdminEmail(user.email)) return <WelcomeGate onReady={finishWelcome} />;
 
   return (
-    <div className={`relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
+    <div className={`relative min-h-dvh bg-background text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
       {/* Background ambient light orbs for real glass refraction */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px]" />
@@ -675,7 +675,7 @@ function PlataformaPage() {
         <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex flex-col min-h-screen w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex min-h-dvh w-full flex-col">
         <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
@@ -729,7 +729,7 @@ function PlataformaPage() {
         )}
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
-          <main className="flex-1 pb-32 lg:pb-8 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+          <main className="mx-auto w-full max-w-7xl flex-1 space-y-6 px-3 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:pb-8">
             {dataError ? (
               <Card className="border-red-500/30 bg-red-500/5">
                 <CardContent className="py-12 text-center space-y-3">

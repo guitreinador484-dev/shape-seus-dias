@@ -45,21 +45,20 @@ export default function LeftSidebar({ mobile = false, onNavigate, onRequestLogou
       <div className="px-6 py-4 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div
-            className="h-9 w-9 rounded-full grid place-items-center font-display text-sm text-white shrink-0"
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary font-display text-sm text-primary-foreground"
           >
             {firstName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">{firstName}</p>
-            <p className="text-[11px] text-white/35 truncate">{user?.email}</p>
+            <p className="truncate text-sm font-medium text-sidebar-foreground">{firstName}</p>
+            <p className="truncate text-[11px] text-muted-foreground">{user?.email}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/25 font-medium">Navegação</p>
+        <p className="px-3 py-2 text-[10px] uppercase text-muted-foreground font-medium">Navegação</p>
         {navItems.map(({ to, label, icon: Icon, exact }) => {
           const active = exact ? pathname === to : pathname.startsWith(to);
           return (
