@@ -398,18 +398,6 @@ function TreinoPanel({
                         ) : null}
                       </div>
                     </div>
-                        {ex.rest_seconds ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
-                            <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
-                          </span>
-                        ) : null}
-                        {ex.load_text ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
-                            Carga: {ex.load_text}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
                   </li>
                 );
               })}
