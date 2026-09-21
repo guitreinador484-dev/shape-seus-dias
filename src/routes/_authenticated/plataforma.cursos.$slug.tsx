@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VideoPlayer } from "@/components/platform/video-player";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
-  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip, ListVideo,
+  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip, ListVideo, Home,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")({
@@ -233,10 +233,17 @@ function CourseDetailPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-        <Button asChild size="sm" variant="ghost" className="-ml-2 w-fit text-foreground/60 hover:text-foreground">
-          <Link to="/plataforma/cursos"><ArrowLeft className="mr-2 h-4 w-4" /> Meus cursos</Link>
-        </Button>
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:px-6">
+          <Button asChild variant="ghost" className="min-w-0 justify-start px-2 text-muted-foreground hover:text-foreground">
+            <Link to="/plataforma/cursos"><ArrowLeft className="h-4 w-4 shrink-0" /> <span className="truncate">Meus cursos</span></Link>
+          </Button>
+          <Button asChild variant="outline" className="h-11 shrink-0 px-3">
+            <Link to="/plataforma"><Home className="h-4 w-4" /> <span className="hidden sm:inline">Plataforma</span></Link>
+          </Button>
+        </div>
+      </header>
+      <div className="mx-auto max-w-7xl space-y-6 p-3 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-6">
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div className="min-w-0 space-y-5">
@@ -687,7 +694,14 @@ function LessonComments({ lessonId, userId }: { lessonId: string; userId: string
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-foreground/45">{new Date(c.created_at).toLocaleString("pt-BR")}</span>
                   {c.user_id === userId && (
-                    <button onClick={() => remove(c.id)} className="text-[10px] text-destructive hover:underline">excluir</button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => remove(c.id)}
+                      className="h-11 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Excluir comentário"
+                    >Excluir</Button>
                   )}
                 </div>
               </div>
@@ -695,9 +709,9 @@ function LessonComments({ lessonId, userId }: { lessonId: string; userId: string
             </div>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
           <Textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="Escreva um comentário..." />
-          <Button onClick={send} disabled={sending || !text.trim()} className="rounded-full"><Send className="h-4 w-4" /></Button>
+          <Button onClick={send} disabled={sending || !text.trim()} size="icon" className="h-11 w-11" aria-label="Enviar comentário"><Send className="h-4 w-4" /></Button>
         </div>
       </CardContent>
     </Card>

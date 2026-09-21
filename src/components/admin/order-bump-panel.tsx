@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { EmptyBox } from "@/components/admin/ui-kit";
 
 type StudentRow = {
   id: string;
@@ -70,8 +72,8 @@ export function AdminOrderBumpPanel() {
         <CardContent>
           <div className="mb-4 flex items-center gap-2 rounded-lg border border-border px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              className="flex-1 bg-transparent text-sm outline-none"
+            <Input
+              className="h-11 flex-1 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
               placeholder="Buscar por nome ou email"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -79,8 +81,18 @@ export function AdminOrderBumpPanel() {
           </div>
           {loading ? (
             <div className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>
-          ) : (
-            <Table className="min-w-[420px]">
+          ) : filtered.length === 0 ? (
+            <EmptyBox title="Nenhum aluno encontrado" description="Tente buscar por outro nome ou e-mail." />
+          ) : (<>
+            <div className="grid gap-3 sm:hidden">
+              {filtered.map((student) => (
+                <div key={student.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-4">
+                  <div className="min-w-0"><p className="truncate font-medium">{student.full_name || "Sem nome"}</p><p className="truncate text-xs text-muted-foreground">{student.email}</p></div>
+                  <Switch checked={student.has_order_bump} onCheckedChange={(v) => void toggleStudent(student, v)} aria-label={`Alterar adicional de ${student.full_name || student.email}`} />
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto sm:block"><Table className="min-w-[420px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Aluno</TableHead>
@@ -102,14 +114,9 @@ export function AdminOrderBumpPanel() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {filtered.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={2} className="text-center text-muted-foreground py-8">Nenhum aluno encontrado.</TableCell>
-                  </TableRow>
-                )}
               </TableBody>
-            </Table>
-          )}
+            </Table></div>
+          </>)}
         </CardContent>
       </Card>
     </div>
