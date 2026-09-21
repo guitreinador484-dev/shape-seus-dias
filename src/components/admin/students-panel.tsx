@@ -91,9 +91,9 @@ function initials(student: Student) {
 }
 
 function generateTemporaryPassword() {
-  const bytes = new Uint32Array(14);
+  const bytes = new Uint32Array(8);
   crypto.getRandomValues(bytes);
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
   return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
 }
 
@@ -547,13 +547,13 @@ export function ResetPasswordDialog({
               <Copy className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Use de 10 a 72 caracteres, com letras, números e símbolos.</p>
+          <p className="text-xs text-muted-foreground">Use de 6 a 72 caracteres. Pode ser uma senha simples.</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancelar
           </Button>
-          <Button onClick={() => void submit()} disabled={busy || password.length < 10 || password.length > 72 || password !== confirmation}>
+          <Button onClick={() => void submit()} disabled={busy || password.length < 6 || password.length > 72 || password !== confirmation}>
             {busy ? "Salvando..." : "Salvar nova senha"}
           </Button>
         </DialogFooter>
