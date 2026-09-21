@@ -546,6 +546,7 @@ function PlataformaPage() {
     };
   }, [config.theme]);
 
+  const finishWelcome = useCallback(() => setWelcomeReady(true), []);
   const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview");
   if (loading) {
     return (
@@ -561,8 +562,6 @@ function PlataformaPage() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
-
-  const finishWelcome = useCallback(() => setWelcomeReady(true), []);
 
   // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
   const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
