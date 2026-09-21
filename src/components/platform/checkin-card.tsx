@@ -96,7 +96,7 @@ export function CheckinCard({ userId }: { userId: string }) {
   }
 
   return (
-    <Card className={`mb-6 overflow-hidden border-2 ${todayRow ? "border-primary/40 bg-primary/5" : "border-primary/20"}`}>
+    <Card id="checkin-section" className={`mb-6 scroll-mt-24 overflow-hidden border-2 ${todayRow ? "border-primary/40 bg-primary/5" : "border-primary/20"}`}>
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="font-display text-xl flex items-center gap-2">
