@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   Library,
   Tag,
+  MessageSquareText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -57,6 +58,7 @@ export const navGroups: NavGroup[] = [
       { title: "Alunos", url: "/admin/alunos", icon: Users },
       { title: "Plataforma do aluno", url: "/admin/plataforma", icon: LayoutGrid },
       { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
+      { title: "Feedbacks", url: "/admin/feedbacks", icon: MessageSquareText },
     ],
   },
   {
