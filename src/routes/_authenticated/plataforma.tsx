@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
@@ -25,6 +26,8 @@ import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog
 import { useGymPreference } from "@/hooks/use-gym-preference";
 import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
+import { FeedbackTab } from "@/components/platform/feedback-tab";
+import { WelcomeGate } from "@/components/platform/welcome-gate";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -406,12 +409,14 @@ function TreinoPanel({
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlataformaPage,
+  head: () => ({ meta: [{ title: "Minha plataforma — Gui Treinador" }, { name: "description", content: "Treinos, evolução e acompanhamento personalizado." }] }),
 });
 
 function PlataformaPage() {
   const { user, role, loading, isMentoria } = useAuth();
   const { gymId } = useGymPreference(isMentoria ? (user?.id ?? null) : null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -431,6 +436,8 @@ function PlataformaPage() {
   const [dataError, setDataError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("treino");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [welcomeReady, setWelcomeReady] = useState(false);
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -450,7 +457,7 @@ function PlataformaPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("has_class_access, is_active, access_expires_at, has_order_bump, has_nutrition_access, has_video_access")
+          .select("full_name, has_class_access, is_active, access_expires_at, has_order_bump, has_nutrition_access, has_video_access")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
@@ -459,6 +466,7 @@ function PlataformaPage() {
           throw new Error(msg);
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
+        setFullName(profile?.full_name?.trim() ?? "");
         setHasNutritionAccess(Boolean(profile?.has_nutrition_access));
         setHasVideoAccess(Boolean(profile?.has_video_access));
         setIsActive(profile?.is_active ?? true);
@@ -557,9 +565,13 @@ function PlataformaPage() {
   }
 
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const finishWelcome = useCallback(() => setWelcomeReady(true), []);
 
   // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
   const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
@@ -567,6 +579,7 @@ function PlataformaPage() {
   const canSeeVideos = hasVideoAccess || privileged;
   const showVideos = hasClassAccess && isActive && canSeeVideos;
   const isLight = config.theme === "light";
+  const firstName = fullName.split(/\s+/).filter(Boolean)[0] ?? "";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
   // Group workouts by category, ordered by config.row_order
@@ -647,6 +660,8 @@ function PlataformaPage() {
   const moduleVideos = activeWorkout
     ? workouts.filter((w) => (w.category || "Geral") === (activeWorkout.category || "Geral"))
     : [];
+
+  if (user && !welcomeReady && !isPreview && role !== "admin" && !isAdminEmail(user.email)) return <WelcomeGate onReady={finishWelcome} />;
 
   return (
     <div className={`relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
@@ -769,7 +784,7 @@ function PlataformaPage() {
             <>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
+                <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">{firstName ? `Olá, ${firstName} 👋` : "Olá 👋"}</h2>
                 {accessExpiresAt && !isExpired && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
                     <Timer className="h-3 w-3 text-primary" />
@@ -787,7 +802,7 @@ function PlataformaPage() {
               plans={plans}
               loading={dataLoading}
               light={config.theme === "light"}
-              showVideos={isMentoria}
+              showVideos
               gymId={gymId}
             />
           </TabsContent>
@@ -816,6 +831,10 @@ function PlataformaPage() {
               <MentoriaTab userId={user.id} />
             </TabsContent>
           ) : null}
+
+          <TabsContent value="feedback" className="mt-0">
+            {user ? <FeedbackTab userId={user.id} /> : null}
+          </TabsContent>
 
           {!canSeeVideos && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">

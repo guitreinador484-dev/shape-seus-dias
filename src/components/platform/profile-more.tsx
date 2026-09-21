@@ -1,4 +1,4 @@
-import { User, LogOut, Apple, ClipboardList, Library, ChevronRight } from "lucide-react";
+import { User, LogOut, Apple, ClipboardList, Library, ChevronRight, MessageSquareText, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -18,8 +18,10 @@ interface ProfileMoreProps {
 export function ProfileMore({ userEmail, onTabChange, onLogout, isMentoria }: ProfileMoreProps) {
   const items = [
     { id: "dieta", label: "Minha Dieta", icon: Apple },
+    { id: "aulas", label: "Aulas em vídeo", icon: Video },
     { id: "ficha", label: "Minha Ficha", icon: ClipboardList },
     ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
+    { id: "feedback", label: "Críticas e sugestões", icon: MessageSquareText },
   ];
 
   return (
