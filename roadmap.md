@@ -6,4 +6,4 @@
 - [x] Vincular vídeos da biblioteca aos exercícios dos treinos
 - [x] Criar boas-vindas pós-pagamento no primeiro acesso
 - [x] Coletar preferências alimentares no funil e exibir ao profissional
-- [ ] Validar fluxos, segurança e responsividade
+- [x] Validar fluxos, segurança e responsividade
