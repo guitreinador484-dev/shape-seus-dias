@@ -10,7 +10,7 @@ interface MobileNavProps {
   isMentoria?: boolean;
 }
 
-export function MobileNav({ activeTab, onTabChange, onLogout, userEmail, showVideos, isMentoria }: MobileNavProps) {
+export function MobileNav({ activeTab, onTabChange, onLogout, userEmail, isMentoria }: MobileNavProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/95 to-transparent">
       <nav className="max-w-md mx-auto h-16 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-2xl px-3 flex items-center justify-between shadow-2xl shadow-black">
