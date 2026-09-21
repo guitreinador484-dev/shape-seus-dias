@@ -10,7 +10,7 @@
 - [x] Permitir que o administrador altere a senha de qualquer aluno
 
 ## Otimização completa e responsividade mobile
-- [ ] Auditar todas as telas da área do aluno e painel em celular e desktop
-- [ ] Corrigir navegação, hierarquia, espaçamentos, overflow e tamanhos de toque
-- [ ] Revisar estados de carregamento, vazio e erro sem alterar regras existentes
-- [ ] Validar fluxos principais em celular e desktop
+- [x] Auditar todas as telas da área do aluno e painel em celular e desktop
+- [x] Corrigir navegação, hierarquia, espaçamentos, overflow e tamanhos de toque
+- [x] Revisar estados de carregamento, vazio e erro sem alterar regras existentes
+- [x] Validar fluxos principais em celular e desktop
