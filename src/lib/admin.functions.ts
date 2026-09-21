@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { AppRole } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
@@ -524,12 +525,10 @@ export const listStudentAccess = createServerFn({ method: "POST" })
 /** Admin-only: define uma nova senha de acesso para o aluno. */
 export const resetStudentPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { userId: string; password: string }) => {
-    if (!input?.userId) throw new Error("Aluno não informado");
-    if (!input?.password || input.password.length < 10) throw new Error("A senha deve ter pelo menos 10 caracteres");
-    if (input.password.length > 72) throw new Error("A senha deve ter no máximo 72 caracteres");
-    return input;
-  })
+  .inputValidator((input) => z.object({
+    userId: z.string().uuid("Aluno não informado"),
+    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").max(72, "A senha deve ter no máximo 72 caracteres"),
+  }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: callerIsAdmin, error: permissionError } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
@@ -554,7 +553,7 @@ export const resetStudentPassword = createServerFn({ method: "POST" })
     if (error) {
       throw new Error(
         /weak|easy to guess/i.test(error.message)
-          ? "Essa senha é muito comum. Use a senha sugerida ou crie outra com letras, números e símbolos."
+          ? "Essa senha não foi aceita. Tente outra senha com pelo menos 6 caracteres."
           : error.message,
       );
     }
