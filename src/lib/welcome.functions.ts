@@ -8,7 +8,9 @@ export const getWelcomeStateFn = createServerFn({ method: "GET" })
     if (profileError) throw new Error("Não foi possível verificar as boas-vindas.");
     const { data: purchase } = await context.supabase.from("purchases").select("id, created_at").eq("user_id", context.userId).in("status", ["approved", "paid"]).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (!purchase) return { show: false as const, purchaseId: null, videoUrl: "", title: "", text: "" };
-    const alreadyCompleted = profile.welcome_purchase_id === purchase.id && Boolean(profile.welcome_completed_at);
+    // A conclusão pertence à conta, não à compra mais recente. Assim, uma nova
+    // compra ou adicional não faz o vídeo de primeiro acesso aparecer novamente.
+    const alreadyCompleted = Boolean(profile.welcome_completed_at);
     if (alreadyCompleted) return { show: false as const, purchaseId: purchase.id, videoUrl: "", title: "", text: "" };
     const { data: config } = await context.supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1).maybeSingle();
     const content = config?.content && typeof config.content === "object" && !Array.isArray(config.content) ? config.content as Record<string, unknown> : {};
