@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dumbbell, MapPin, Play, Search } from "lucide-react";
+import { CheckCircle2, Dumbbell, MapPin, Play, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,27 +31,18 @@ export function GymPicker({ userId }: { userId: string }) {
     }
   }
 
-  if (loading) return <Skeleton className="h-10 w-full max-w-sm" />;
+  if (loading) return <Skeleton className="h-24 w-full sm:max-w-sm" />;
+
+  const selectedGym = gyms.find((gym) => gym.id === gymId) ?? null;
 
   return (
     <>
-      <div className="grid gap-1.5 sm:max-w-sm">
-        <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <MapPin className="h-3.5 w-3.5" /> Onde você treina
-        </Label>
-        <Select value={gymId ?? ""} onValueChange={(v) => void pick(v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Escolher academia" />
-          </SelectTrigger>
-          <SelectContent>
-            {gyms.map((g) => (
-              <SelectItem key={g.id} value={g.id}>
-                {g.name}
-                {g.neighborhood ? ` — ${g.neighborhood}` : ""}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4 sm:min-w-80">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground"><MapPin className="h-5 w-5" /></span><div className="min-w-0"><p className="text-xs font-semibold uppercase text-primary">Academia selecionada</p><p className="truncate font-semibold">{selectedGym?.name ?? "Escolha sua academia"}</p>{selectedGym?.neighborhood ? <p className="text-xs text-muted-foreground">{selectedGym.neighborhood}, Volta Redonda</p> : null}</div></div>
+          {selectedGym ? <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" /> : null}
+        </div>
+        <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setAskOpen(true)}>{selectedGym ? "Alterar academia" : "Selecionar academia"}</Button>
       </div>
 
       <Dialog open={askOpen} onOpenChange={setAskOpen}>
@@ -62,16 +53,11 @@ export function GymPicker({ userId }: { userId: string }) {
               Assim mostramos o vídeo gravado nas máquinas da sua academia. Você pode mudar quando quiser.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-2">
+          <div className="grid max-h-[60vh] gap-2 overflow-y-auto pr-1">
             {gyms.map((g) => (
-              <Button key={g.id} variant="outline" className="justify-start" onClick={() => void pick(g.id)}>
-                <MapPin className="mr-2 h-4 w-4" />
-                <span className="truncate">
-                  {g.name}
-                  {g.neighborhood ? ` — ${g.neighborhood}` : ""}
-                </span>
-              </Button>
+              <button key={g.id} type="button" onClick={() => void pick(g.id)} className={`flex min-h-20 items-center gap-3 rounded-xl border p-4 text-left transition ${gymId === g.id ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50"}`}><span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted"><MapPin className="h-5 w-5" /></span><span className="min-w-0 flex-1"><span className="block font-semibold">{g.name}</span><span className="block text-xs text-muted-foreground">{g.neighborhood ? `${g.neighborhood}, Volta Redonda` : "Volta Redonda, RJ"}</span></span>{gymId === g.id ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <span className="text-xs font-semibold text-primary">Selecionar</span>}</button>
             ))}
+            {gyms.length === 0 ? <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Nenhuma academia disponível no momento.</p> : null}
           </div>
         </DialogContent>
       </Dialog>

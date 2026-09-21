@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminOrderBumpRouteImport } from './routes/_authenticated/admin.order-bump'
 import { Route as AuthenticatedAdminNutricaoRouteImport } from './routes/_authenticated/admin.nutricao'
 import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_authenticated/admin.funil-vendas'
+import { Route as AuthenticatedAdminFeedbacksRouteImport } from './routes/_authenticated/admin.feedbacks'
 import { Route as AuthenticatedAdminEngajamentoRouteImport } from './routes/_authenticated/admin.engajamento'
 import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenticated/admin.cursos'
 import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
@@ -123,6 +124,12 @@ const AuthenticatedAdminFunilVendasRoute =
     path: '/funil-vendas',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminFeedbacksRoute =
+  AuthenticatedAdminFeedbacksRouteImport.update({
+    id: '/feedbacks',
+    path: '/feedbacks',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEngajamentoRoute =
   AuthenticatedAdminEngajamentoRouteImport.update({
     id: '/engajamento',
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
+  '/admin/feedbacks': typeof AuthenticatedAdminFeedbacksRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
   '/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
@@ -229,6 +237,7 @@ export interface FileRoutesByTo {
   '/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
+  '/admin/feedbacks': typeof AuthenticatedAdminFeedbacksRoute
   '/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
   '/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
@@ -259,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/configuracoes': typeof AuthenticatedAdminConfiguracoesRoute
   '/_authenticated/admin/cursos': typeof AuthenticatedAdminCursosRouteWithChildren
   '/_authenticated/admin/engajamento': typeof AuthenticatedAdminEngajamentoRoute
+  '/_authenticated/admin/feedbacks': typeof AuthenticatedAdminFeedbacksRoute
   '/_authenticated/admin/funil-vendas': typeof AuthenticatedAdminFunilVendasRoute
   '/_authenticated/admin/nutricao': typeof AuthenticatedAdminNutricaoRoute
   '/_authenticated/admin/order-bump': typeof AuthenticatedAdminOrderBumpRoute
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/cursos'
     | '/admin/engajamento'
+    | '/admin/feedbacks'
     | '/admin/funil-vendas'
     | '/admin/nutricao'
     | '/admin/order-bump'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/cursos'
     | '/admin/engajamento'
+    | '/admin/feedbacks'
     | '/admin/funil-vendas'
     | '/admin/nutricao'
     | '/admin/order-bump'
@@ -344,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/configuracoes'
     | '/_authenticated/admin/cursos'
     | '/_authenticated/admin/engajamento'
+    | '/_authenticated/admin/feedbacks'
     | '/_authenticated/admin/funil-vendas'
     | '/_authenticated/admin/nutricao'
     | '/_authenticated/admin/order-bump'
@@ -483,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFunilVendasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/feedbacks': {
+      id: '/_authenticated/admin/feedbacks'
+      path: '/feedbacks'
+      fullPath: '/admin/feedbacks'
+      preLoaderRoute: typeof AuthenticatedAdminFeedbacksRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/engajamento': {
       id: '/_authenticated/admin/engajamento'
       path: '/engajamento'
@@ -600,6 +620,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminConfiguracoesRoute: typeof AuthenticatedAdminConfiguracoesRoute
   AuthenticatedAdminCursosRoute: typeof AuthenticatedAdminCursosRouteWithChildren
   AuthenticatedAdminEngajamentoRoute: typeof AuthenticatedAdminEngajamentoRoute
+  AuthenticatedAdminFeedbacksRoute: typeof AuthenticatedAdminFeedbacksRoute
   AuthenticatedAdminFunilVendasRoute: typeof AuthenticatedAdminFunilVendasRoute
   AuthenticatedAdminNutricaoRoute: typeof AuthenticatedAdminNutricaoRoute
   AuthenticatedAdminOrderBumpRoute: typeof AuthenticatedAdminOrderBumpRoute
@@ -616,6 +637,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminConfiguracoesRoute: AuthenticatedAdminConfiguracoesRoute,
   AuthenticatedAdminCursosRoute: AuthenticatedAdminCursosRouteWithChildren,
   AuthenticatedAdminEngajamentoRoute: AuthenticatedAdminEngajamentoRoute,
+  AuthenticatedAdminFeedbacksRoute: AuthenticatedAdminFeedbacksRoute,
   AuthenticatedAdminFunilVendasRoute: AuthenticatedAdminFunilVendasRoute,
   AuthenticatedAdminNutricaoRoute: AuthenticatedAdminNutricaoRoute,
   AuthenticatedAdminOrderBumpRoute: AuthenticatedAdminOrderBumpRoute,

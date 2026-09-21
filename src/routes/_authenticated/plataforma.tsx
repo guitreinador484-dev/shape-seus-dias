@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
@@ -23,6 +24,10 @@ import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 import { MentoriaTab } from "@/components/platform/mentoria-tab";
 import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
 import { useGymPreference } from "@/hooks/use-gym-preference";
+import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
+import { MobileNav } from "@/components/platform/mobile-nav";
+import { FeedbackTab } from "@/components/platform/feedback-tab";
+import { WelcomeGate } from "@/components/platform/welcome-gate";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -182,7 +187,7 @@ function TreinoPanel({
   plans: PlanWithExercises[];
   loading: boolean;
   light: boolean;
-  /** Aluno da mentoria: exercícios abrem o vídeo de execução. */
+  /** Quando ativo, cada exercício abre o vídeo demonstrativo da biblioteca. */
   showVideos?: boolean;
   gymId?: string | null;
 }) {
@@ -404,12 +409,14 @@ function TreinoPanel({
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlataformaPage,
+  head: () => ({ meta: [{ title: "Minha plataforma — Gui Treinador" }, { name: "description", content: "Treinos, evolução e acompanhamento personalizado." }] }),
 });
 
 function PlataformaPage() {
   const { user, role, loading, isMentoria } = useAuth();
   const { gymId } = useGymPreference(isMentoria ? (user?.id ?? null) : null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -427,6 +434,10 @@ function PlataformaPage() {
   const [workoutProgress, setWorkoutProgress] = useState<Record<string, { watched_seconds: number; completed_at: string | null }>>({});
   const lastSavedRef = useRef<Record<string, number>>({});
   const [dataError, setDataError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("treino");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [welcomeReady, setWelcomeReady] = useState(false);
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -446,7 +457,7 @@ function PlataformaPage() {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("has_class_access, is_active, access_expires_at, has_order_bump, has_nutrition_access, has_video_access")
+          .select("full_name, has_class_access, is_active, access_expires_at, has_order_bump, has_nutrition_access, has_video_access")
           .eq("id", user.id)
           .maybeSingle();
         if (cancelled) return;
@@ -455,6 +466,7 @@ function PlataformaPage() {
           throw new Error(msg);
         }
         setHasClassAccess(Boolean(profile?.has_class_access));
+        setFullName(profile?.full_name?.trim() ?? "");
         setHasNutritionAccess(Boolean(profile?.has_nutrition_access));
         setHasVideoAccess(Boolean(profile?.has_video_access));
         setIsActive(profile?.is_active ?? true);
@@ -553,9 +565,13 @@ function PlataformaPage() {
   }
 
   async function signOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const finishWelcome = useCallback(() => setWelcomeReady(true), []);
 
   // Alunos online só acessam Dieta e Aulas em vídeo com o adicional (order bump).
   const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
@@ -563,6 +579,7 @@ function PlataformaPage() {
   const canSeeVideos = hasVideoAccess || privileged;
   const showVideos = hasClassAccess && isActive && canSeeVideos;
   const isLight = config.theme === "light";
+  const firstName = fullName.split(/\s+/).filter(Boolean)[0] ?? "";
   const heroWorkout = workouts.find((w) => w.id === config.hero_workout_id) ?? workouts.find((w) => w.is_featured) ?? workouts[0];
 
   // Group workouts by category, ordered by config.row_order
@@ -644,6 +661,8 @@ function PlataformaPage() {
     ? workouts.filter((w) => (w.category || "Geral") === (activeWorkout.category || "Geral"))
     : [];
 
+  if (user && !welcomeReady && !isPreview && role !== "admin" && !isAdminEmail(user.email)) return <WelcomeGate onReady={finishWelcome} />;
+
   return (
     <div className={`relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
       {/* Background ambient light orbs for real glass refraction */}
@@ -653,11 +672,11 @@ function PlataformaPage() {
         <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
       </div>
 
-      <Tabs defaultValue="treino" className="relative z-10 flex flex-col min-h-screen w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex flex-col min-h-screen w-full">
         <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
-            <TabsList className="h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
+            <TabsList className="hidden lg:flex h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
@@ -684,11 +703,11 @@ function PlataformaPage() {
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               <p className="text-xs text-white/40 truncate max-w-[160px] font-mono">{user?.email}</p>
-              <Button variant="ghost" size="sm" onClick={signOut} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">
+              <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">
                 <LogOut className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Sair</span>
               </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="sm:hidden shrink-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10" aria-label="Sair">
+            <Button variant="ghost" size="icon" onClick={() => setLogoutDialogOpen(true)} className="sm:hidden shrink-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10" aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -707,7 +726,7 @@ function PlataformaPage() {
         )}
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+          <main className="flex-1 pb-32 lg:pb-8 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
             {dataError ? (
               <Card className="border-red-500/30 bg-red-500/5">
                 <CardContent className="py-12 text-center space-y-3">
@@ -765,7 +784,7 @@ function PlataformaPage() {
             <>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">Olá!</h2>
+                <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">{firstName ? `Olá, ${firstName} 👋` : "Olá 👋"}</h2>
                 {accessExpiresAt && !isExpired && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] font-semibold text-white/70">
                     <Timer className="h-3 w-3 text-primary" />
@@ -783,7 +802,7 @@ function PlataformaPage() {
               plans={plans}
               loading={dataLoading}
               light={config.theme === "light"}
-              showVideos={isMentoria}
+              showVideos
               gymId={gymId}
             />
           </TabsContent>
@@ -812,6 +831,10 @@ function PlataformaPage() {
               <MentoriaTab userId={user.id} />
             </TabsContent>
           ) : null}
+
+          <TabsContent value="feedback" className="mt-0">
+            {user ? <FeedbackTab userId={user.id} /> : null}
+          </TabsContent>
 
           {!canSeeVideos && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">
@@ -1001,6 +1024,19 @@ function PlataformaPage() {
           </main>
         </div>
       </Tabs>
+      <MobileNav 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onLogout={() => setLogoutDialogOpen(true)} 
+        userEmail={user?.email} 
+        showVideos={showVideos} 
+        isMentoria={isMentoria} 
+      />
+      <LogoutConfirmation 
+        open={logoutDialogOpen} 
+        onOpenChange={setLogoutDialogOpen} 
+        onConfirm={signOut} 
+      />
       {embedVideo && (
         <EmbedOverlay title={embedVideo.title} url={embedVideo.url} onClose={() => setEmbedVideo(null)} />
       )}

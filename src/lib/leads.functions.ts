@@ -27,6 +27,11 @@ export const submitLeadFn = createServerFn({ method: "POST" })
   .inputValidator((input: SubmitLeadInput) => {
     if (!input || typeof input !== "object") throw new Error("Dados inválidos");
     if (input.source !== "funil") throw new Error("Origem inválida");
+    if (input.name && input.name.trim().length > 120) throw new Error("Nome muito longo");
+    if (input.email && (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.email.trim()) || input.email.length > 255)) throw new Error("E-mail inválido");
+    if (input.whatsapp && input.whatsapp.length > 30) throw new Error("WhatsApp inválido");
+    const serialized = JSON.stringify(input.answers ?? {});
+    if (serialized.length > 30000) throw new Error("Respostas muito longas");
     return input;
   })
   .handler(async ({ data }) => {

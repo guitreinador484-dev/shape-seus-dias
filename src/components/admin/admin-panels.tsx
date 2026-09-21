@@ -98,6 +98,9 @@ type AdminSettings = {
   platform_show_continue_watching: boolean;
   platform_show_recommended: boolean;
   platform_show_search: boolean;
+  welcome_video_url: string;
+  welcome_video_title: string;
+  welcome_video_text: string;
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -118,6 +121,9 @@ const defaultAdminSettings: AdminSettings = {
   platform_show_continue_watching: true,
   platform_show_recommended: true,
   platform_show_search: true,
+  welcome_video_url: "",
+  welcome_video_title: "Pagamento confirmado! 🎉",
+  welcome_video_text: "Agora começa oficialmente sua jornada.",
 };
 
 const roleLabels: Record<AppRole, string> = {
@@ -177,6 +183,9 @@ function readAdminSettings(value: Json | null): AdminSettings {
     platform_show_continue_watching: typeof data.platform_show_continue_watching === "boolean" ? data.platform_show_continue_watching : true,
     platform_show_recommended: typeof data.platform_show_recommended === "boolean" ? data.platform_show_recommended : true,
     platform_show_search: typeof data.platform_show_search === "boolean" ? data.platform_show_search : true,
+    welcome_video_url: typeof data.welcome_video_url === "string" ? data.welcome_video_url : "",
+    welcome_video_title: typeof data.welcome_video_title === "string" ? data.welcome_video_title : "Pagamento confirmado! 🎉",
+    welcome_video_text: typeof data.welcome_video_text === "string" ? data.welcome_video_text : "Agora começa oficialmente sua jornada.",
   };
 }
 
@@ -2143,6 +2152,13 @@ export function AdminPlatformPanel() {
                     placeholder="Mensagem exibida aos alunos ao logar..."
                   />
                 </Field>
+
+                <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <div><p className="font-semibold text-white">Primeiro acesso após a compra</p><p className="text-xs text-muted-foreground">Este vídeo aparece uma única vez depois do login e da confirmação real do pagamento.</p></div>
+                  <Field label="URL do vídeo de agradecimento"><Input value={settings.welcome_video_url} onChange={(e) => setSettings({ ...settings, welcome_video_url: e.target.value })} placeholder="YouTube, Vimeo ou arquivo de vídeo" /></Field>
+                  <Field label="Título da tela"><Input value={settings.welcome_video_title} maxLength={100} onChange={(e) => setSettings({ ...settings, welcome_video_title: e.target.value })} /></Field>
+                  <Field label="Mensagem"><Textarea rows={2} value={settings.welcome_video_text} maxLength={300} onChange={(e) => setSettings({ ...settings, welcome_video_text: e.target.value })} /></Field>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

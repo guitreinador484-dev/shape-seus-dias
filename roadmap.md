@@ -1,9 +1,9 @@
 # Roadmap
 
-- [ ] Analisar fluxos atuais de cliente, administração, autenticação e pagamentos
-- [ ] Criar Críticas e Sugestões para cliente e administrador
-- [ ] Melhorar academia, saudação, check-in, logout e navegação da cliente
-- [ ] Vincular vídeos da biblioteca aos exercícios dos treinos
-- [ ] Criar boas-vindas pós-pagamento no primeiro acesso
-- [ ] Coletar preferências alimentares no funil e exibir ao profissional
-- [ ] Validar fluxos, segurança e responsividade
+- [x] Analisar fluxos atuais de cliente, administração, autenticação e pagamentos
+- [x] Criar Críticas e Sugestões para cliente e administrador
+- [x] Melhorar academia, saudação, check-in, logout e navegação da cliente
+- [x] Vincular vídeos da biblioteca aos exercícios dos treinos
+- [x] Criar boas-vindas pós-pagamento no primeiro acesso
+- [x] Coletar preferências alimentares no funil e exibir ao profissional
+- [x] Validar fluxos, segurança e responsividade

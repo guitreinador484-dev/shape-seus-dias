@@ -46,7 +46,17 @@ type Measurements = {
   sexo: "" | "M" | "F";
 };
 
-type Stage = "form" | "plans" | "checkout" | "pix" | "done";
+type NutritionAnswers = {
+  favoriteFoods: string;
+  dislikedFoods: string;
+  restrictions: string;
+  allergies: string;
+  routine: string;
+  avoidedFoods: string;
+  goal: string;
+};
+
+type Stage = "form" | "nutrition" | "plans" | "checkout" | "pix" | "done";
 
 type PixData = {
   reference: string;
@@ -105,6 +115,7 @@ function FunnelPage() {
   });
   const [broad, setBroad] = useState<Record<string, string>>({});
   const [routine, setRoutine] = useState<Record<string, string>>({});
+  const [nutrition, setNutrition] = useState<NutritionAnswers>({ favoriteFoods: "", dislikedFoods: "", restrictions: "", allergies: "", routine: "", avoidedFoods: "", goal: "" });
   const [selectedPlan, setSelectedPlan] = useState<FunnelPlan | null>(null);
   const [bumps, setBumps] = useState<OrderBumpConfig[]>([]);
   const [bumpChecked, setBumpChecked] = useState<Record<string, boolean>>({});
@@ -145,7 +156,7 @@ function FunnelPage() {
       alert("Preencha todas as informações antes de continuar.");
       return;
     }
-    setStage("plans");
+    setStage("nutrition");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -176,7 +187,7 @@ function FunnelPage() {
     saveFunnelLead({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      answers: { measurements, broad, routine },
+      answers: { measurements, broad, routine, nutrition },
       planId: selectedPlan.id,
       contact,
     });
@@ -188,7 +199,7 @@ function FunnelPage() {
         email: contact.email,
         whatsapp: contact.whatsapp,
         planId: selectedPlan.id,
-        answers: { measurements, broad, routine, plan: selectedPlan },
+        answers: { measurements, broad, routine, nutrition, plan: selectedPlan },
       },
     }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
 
@@ -632,13 +643,29 @@ function FunnelPage() {
           </>
         )}
 
+        {stage === "nutrition" && (
+          <Card>
+            <CardHeader title="Sua alimentação" subtitle="Preferências iniciais para personalizar seu acompanhamento. Isso não substitui avaliação médica ou nutricional." icon={<Activity className="h-4 w-4 text-blue-700" />} />
+            <div className="grid gap-4">
+              <LongTextInput label="Quais alimentos você mais gosta?" value={nutrition.favoriteFoods} onChange={(value) => setNutrition((current) => ({ ...current, favoriteFoods: value }))} />
+              <LongTextInput label="Quais alimentos você não gosta?" value={nutrition.dislikedFoods} onChange={(value) => setNutrition((current) => ({ ...current, dislikedFoods: value }))} />
+              <LongTextInput label="Possui alguma restrição alimentar?" value={nutrition.restrictions} onChange={(value) => setNutrition((current) => ({ ...current, restrictions: value }))} placeholder="Se não possui, escreva: Nenhuma" />
+              <LongTextInput label="Possui alguma alergia alimentar?" value={nutrition.allergies} onChange={(value) => setNutrition((current) => ({ ...current, allergies: value }))} placeholder="Se não possui, escreva: Nenhuma" />
+              <LongTextInput label="Como é sua rotina de alimentação?" value={nutrition.routine} onChange={(value) => setNutrition((current) => ({ ...current, routine: value }))} />
+              <LongTextInput label="Existe algum alimento que você não consome?" value={nutrition.avoidedFoods} onChange={(value) => setNutrition((current) => ({ ...current, avoidedFoods: value }))} />
+              <LongTextInput label="Qual seu objetivo principal relacionado à alimentação?" value={nutrition.goal} onChange={(value) => setNutrition((current) => ({ ...current, goal: value }))} />
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onClick={() => setStage("form")} className="rounded-full border-2 border-blue-600 py-3 text-sm font-semibold text-blue-700">← Voltar</button><button onClick={() => { setStage("plans"); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={!nutrition.goal.trim() || !nutrition.routine.trim()} className="rounded-full bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-50">Continuar para os planos →</button></div>
+          </Card>
+        )}
+
         {stage === "plans" && (
           <div className="space-y-4">
             <div className="text-center">
               <h2 className="text-2xl font-extrabold">Escolha seu plano</h2>
               <p className="text-sm text-slate-500">Selecione o melhor plano para você</p>
               <button
-                onClick={() => setStage("form")}
+                onClick={() => setStage("nutrition")}
                 className="mt-2 text-xs text-blue-700 hover:underline"
               >
                 ← Mudar objetivo
@@ -921,6 +948,10 @@ function FunnelPage() {
       </main>
     </div>
   );
+}
+
+function LongTextInput({ label, value, onChange, placeholder = "Conte um pouco..." }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
+  return <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-800">{label}</span><textarea value={value} maxLength={1500} rows={3} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20" /></label>;
 }
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
