@@ -363,18 +363,41 @@ function TreinoPanel({
                           className={`group/ex flex items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}
                         >
                           <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
-                          <Play className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[11px] font-semibold text-primary transition-colors group-hover/ex:bg-primary group-hover/ex:text-primary-foreground">
+                            <Play className="h-3 w-3 fill-current" /> Assistir
+                          </span>
                         </button>
                       ) : (
                         <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
                       )}
                       {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
                       <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
+                        {showVideos ? (
+                          <button
+                            type="button"
+                            onClick={() => setVideoFor(ex)}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/40 px-3 py-1 font-semibold text-primary backdrop-blur-md transition-colors hover:bg-primary hover:text-primary-foreground"
+                          >
+                            <Play className="h-3.5 w-3.5 fill-current" /> Vídeo da execução
+                          </button>
+                        ) : null}
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
                           <span className="font-display text-sm">{ex.sets}</span>
                           <span className="opacity-60">×</span>
                           <span className="font-display text-sm">{ex.reps}</span>
                         </span>
+                        {ex.rest_seconds ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
+                            <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
+                          </span>
+                        ) : null}
+                        {ex.load_text ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
+                            Carga: {ex.load_text}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
                         {ex.rest_seconds ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
                             <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
