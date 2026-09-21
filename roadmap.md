@@ -7,4 +7,4 @@
 - [x] Criar boas-vindas pós-pagamento no primeiro acesso
 - [x] Coletar preferências alimentares no funil e exibir ao profissional
 - [x] Validar fluxos, segurança e responsividade
-- [ ] Permitir que o administrador altere a senha de qualquer aluno
+- [x] Permitir que o administrador altere a senha de qualquer aluno
