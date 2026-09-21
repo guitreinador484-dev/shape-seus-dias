@@ -187,7 +187,7 @@ function TreinoPanel({
   plans: PlanWithExercises[];
   loading: boolean;
   light: boolean;
-  /** Aluno da mentoria: exercícios abrem o vídeo de execução. */
+  /** Quando ativo, cada exercício abre o vídeo demonstrativo da biblioteca. */
   showVideos?: boolean;
   gymId?: string | null;
 }) {
