@@ -272,7 +272,33 @@ export function AdminStudentsPanel() {
           }
         />
       ) : (
-        <Card>
+        <>
+        <div className="grid gap-3 sm:hidden">
+          {filtered.map((student) => {
+            const state = accessState(student, access[student.id]?.last_sign_in_at);
+            const plan = studentPlanLabel(purchases, student);
+            return (
+              <Card key={student.id}>
+                <CardContent className="space-y-4 p-4">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary">{initials(student)}</span>
+                    <div className="min-w-0">
+                      <Link to="/admin/alunos/$id" params={{ id: student.id }} className="block truncate font-medium hover:underline">{student.full_name || "Sem nome"}</Link>
+                      <p className="truncate text-xs text-muted-foreground">{student.email}</p>
+                    </div>
+                    <StudentActionsMenu student={student} blocked={!student.is_active} onToggleAccess={(liberado) => void setAccessFor(student, liberado)} onChanged={() => void reload()} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><p className="text-xs text-muted-foreground">Plano</p><p className="mt-1 font-medium">{plan || "Sem plano"}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Último acesso</p><p className="mt-1 font-medium">{access[student.id]?.last_sign_in_at ? formatDate(access[student.id]?.last_sign_in_at) : "Nunca entrou"}</p></div>
+                  </div>
+                  <StatusPill tone={state.tone}>{state.label}</StatusPill>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        <Card className="hidden sm:block">
           <CardContent className="overflow-x-auto p-0">
             <Table className="min-w-[560px]">
               <TableHeader>
@@ -333,6 +359,7 @@ export function AdminStudentsPanel() {
             </Table>
           </CardContent>
         </Card>
+        </>
       )}
 
       <section className="mt-10">
@@ -345,7 +372,29 @@ export function AdminStudentsPanel() {
         ) : purchases.length === 0 ? (
           <EmptyBox title="Nenhuma compra registrada" description="As vendas do site aparecem aqui automaticamente." />
         ) : (
-          <Card>
+          <>
+          <div className="grid gap-3 sm:hidden">
+            {purchases.map((purchase) => {
+              const hasAccount = Boolean(purchase.customer_email && registeredEmails.has(purchase.customer_email.toLowerCase()));
+              return (
+                <Card key={purchase.id}>
+                  <CardContent className="space-y-4 p-4">
+                    <div className="min-w-0"><p className="truncate font-medium">{purchase.customer_name || "Sem nome"}</p><p className="truncate text-xs text-muted-foreground">{purchase.customer_email || "Sem e-mail"}</p></div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div><p className="text-xs text-muted-foreground">Valor</p><p className="font-semibold">{formatCurrency(purchase.amount)}</p></div>
+                      <StatusPill tone={["paid", "approved"].includes(purchase.status) ? "green" : purchase.status === "pending" ? "amber" : "red"}>{purchaseStatusLabels[purchase.status] ?? purchase.status}</StatusPill>
+                    </div>
+                    {hasAccount ? (
+                      <span className="inline-flex min-h-11 items-center gap-1 text-xs text-muted-foreground"><CheckCircle2 className="h-4 w-4 text-success" /> Já tem login</span>
+                    ) : purchase.customer_email ? (
+                      <CreateStudentDialog trigger={<Button className="w-full" variant="outline"><Plus className="mr-1.5 h-4 w-4" /> Criar acesso</Button>} defaultEmail={purchase.customer_email} defaultName={purchase.customer_name ?? ""} onCreated={() => void reload()} />
+                    ) : <span className="text-xs text-muted-foreground">Não é possível criar acesso sem e-mail.</span>}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <Card className="hidden sm:block">
             <CardContent className="overflow-x-auto p-0">
               <Table className="min-w-[600px]">
                 <TableHeader>
@@ -409,6 +458,7 @@ export function AdminStudentsPanel() {
               )}
             </CardContent>
           </Card>
+          </>
         )}
       </section>
     </div>

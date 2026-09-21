@@ -147,7 +147,7 @@ function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b border-border bg-popover grid grid-cols-[auto_minmax(0,1fr)_auto] items-center px-3 gap-2 sm:gap-3">
+          <header className="sticky top-0 z-30 grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-popover/95 px-3 backdrop-blur-xl sm:gap-3">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0">
               <h1 className="font-display text-lg truncate">Painel do personal</h1>
@@ -160,7 +160,7 @@ function AdminLayout() {
               </Button>
             </div>
           </header>
-          <main className="admin-mobile flex-1 p-3 sm:p-6 overflow-x-hidden overflow-y-auto">
+          <main className="admin-mobile min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6">
             <Outlet />
           </main>
         </div>

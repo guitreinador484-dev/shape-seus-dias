@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Flame, AlertTriangle } from "lucide-react";
+import { AdminPageHeader, EmptyBox, StatusPill } from "@/components/admin/ui-kit";
 
 type Checkin = Tables<"checkins">;
 type Student = Tables<"profiles"> & { role: AppRole | null };
@@ -91,18 +92,40 @@ export function AdminEngagementPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 items-end gap-3 mb-6 sm:grid-cols-[minmax(0,1fr)_auto]">
-        <div>
-          <h2 className="font-display text-2xl tracking-wide">Engajamento</h2>
-          <p className="text-sm text-muted-foreground">Quem está treinando com consistência e quem precisa de atenção.</p>
-        </div>
+      <AdminPageHeader title="Engajamento" description="Quem está treinando com consistência e quem precisa de atenção.">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="gap-1"><Flame className="h-3 w-3" /> {activeToday} check-in hoje</Badge>
           <Badge variant="secondary" className="gap-1 text-amber-500"><AlertTriangle className="h-3 w-3" /> {atRisk} sem contato há 7+ dias</Badge>
         </div>
-      </div>
+      </AdminPageHeader>
 
-      <Card>
+      {stats.length === 0 ? (
+        <EmptyBox title="Nenhum check-in registrado" description="Os dados de frequência dos alunos aparecerão aqui." />
+      ) : <>
+      <div className="grid gap-3 sm:hidden">
+        {stats.map(({ student, streak, last, daysSince, completion }) => (
+          <Card key={student.id}>
+            <CardContent className="space-y-4 p-4">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{student.full_name || student.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{student.email}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><p className="text-xs text-muted-foreground">Sequência</p><p className="mt-1 flex items-center gap-1 font-semibold"><Flame className="h-4 w-4 text-warning" /> {streak} dias</p></div>
+                <div><p className="text-xs text-muted-foreground">Último check-in</p><p className="mt-1 font-medium">{last ? formatDate(`${last}T12:00:00`) : "Nunca"}</p></div>
+              </div>
+              <div>
+                <div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">Consistência em 30 dias</span><span>{completion}%</span></div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-primary" style={{ width: `${completion}%` }} /></div>
+              </div>
+              <StatusPill tone={daysSince >= 7 ? "amber" : daysSince >= 3 ? "gray" : "green"}>
+                {daysSince >= 7 ? "Precisando de contato" : daysSince >= 3 ? "Alguns dias sem check-in" : "Em dia"}
+              </StatusPill>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card className="hidden sm:block">
         <CardContent className="overflow-x-auto pt-6">
           <Table className="min-w-[720px]">
             <TableHeader>
@@ -151,7 +174,7 @@ export function AdminEngagementPanel() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card></>}
 
       <p className="text-xs text-muted-foreground mt-3">
         Consistência = % de dias com check-in nos últimos 30 dias. Streak considera a sequência até hoje/ontem.
