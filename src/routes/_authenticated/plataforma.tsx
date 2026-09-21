@@ -331,7 +331,9 @@ function TreinoPanel({
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-base text-white truncate">{plan.plan_name}</p>
-                <p className="text-xs text-muted-foreground">{plan.exercises.length} exercícios</p>
+                <p className="text-xs text-muted-foreground">
+                  {plan.exercises.length} exercícios{showVideos ? " · todos com vídeo de execução" : ""}
+                </p>
               </div>
             </div>
             {pdfByPlan[plan.id] ? <WorkoutPdfButton planId={plan.id} /> : null}
