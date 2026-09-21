@@ -19,6 +19,7 @@ import {
   UserPlus,
   Users,
   Apple,
+  Copy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -454,7 +455,7 @@ function StudentActionsMenu({
           {blocked ? "Liberar acesso" : "Bloquear acesso"}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => setPasswordOpen(true)}>
-          <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
+          <KeyRound className="mr-2 h-4 w-4" /> Alterar senha
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -495,17 +496,26 @@ export function ResetPasswordDialog({
 }) {
   const resetFn = useServerFn(resetStudentPassword);
   const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (open) setPassword(generateTemporaryPassword());
+    if (open) {
+      const generated = generateTemporaryPassword();
+      setPassword(generated);
+      setConfirmation(generated);
+    }
   }, [open]);
 
   async function submit() {
+    if (password !== confirmation) {
+      toast.error("As senhas não são iguais.");
+      return;
+    }
     setBusy(true);
     try {
       await resetFn({ data: { userId: student.id, password } });
-      toast.success("Senha redefinida", { description: "Envie a nova senha para o aluno." });
+      toast.success("Senha alterada com sucesso", { description: "Envie a nova senha para o aluno." });
       onOpenChange(false);
     } catch (e) {
       toast.error("Não foi possível redefinir a senha", {
@@ -520,24 +530,30 @@ export function ResetPasswordDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:w-full">
         <DialogHeader>
-          <DialogTitle>Redefinir senha de {student.full_name || student.email}</DialogTitle>
-          <DialogDescription>Gere uma nova senha e envie para o aluno pelo WhatsApp ou e-mail.</DialogDescription>
+          <DialogTitle>Alterar senha de {student.full_name || student.email}</DialogTitle>
+          <DialogDescription>Defina uma senha segura. O aluno usará essa nova senha no próximo acesso.</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Label>Nova senha</Label>
            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
+            <Input value={password} maxLength={72} onChange={(e) => setPassword(e.target.value)} />
+            <Button type="button" variant="outline" onClick={() => { const generated = generateTemporaryPassword(); setPassword(generated); setConfirmation(generated); }}>
               Gerar
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Mínimo de 10 caracteres com letras, números e símbolos.</p>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <Input value={confirmation} maxLength={72} onChange={(e) => setConfirmation(e.target.value)} placeholder="Confirme a nova senha" aria-label="Confirmar nova senha" />
+            <Button type="button" variant="outline" size="icon" aria-label="Copiar nova senha" title="Copiar nova senha" onClick={() => { void navigator.clipboard.writeText(password); toast.success("Senha copiada."); }} disabled={!password}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Use de 10 a 72 caracteres, com letras, números e símbolos.</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancelar
           </Button>
-          <Button onClick={() => void submit()} disabled={busy || password.length < 10}>
+          <Button onClick={() => void submit()} disabled={busy || password.length < 10 || password.length > 72 || password !== confirmation}>
             {busy ? "Salvando..." : "Salvar nova senha"}
           </Button>
         </DialogFooter>
@@ -972,6 +988,9 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setPasswordOpen(true)}>
+            <KeyRound className="mr-2 h-4 w-4" /> Alterar senha
+          </Button>
           <Button variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" /> Editar dados
           </Button>
@@ -1036,7 +1055,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
             <InfoRow label="Dieta / acompanhamento" value={student.has_order_bump ? "Liberado" : "Bloqueado"} />
             <div className="flex flex-wrap gap-2 pt-2">
               <Button size="sm" variant="outline" onClick={() => setPasswordOpen(true)}>
-                <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
+                <KeyRound className="mr-2 h-4 w-4" /> Alterar senha
               </Button>
               <Button size="sm" variant="outline" onClick={() => setAnamneseOpen(true)}>
                 <FileText className="mr-2 h-4 w-4" /> Ver ficha

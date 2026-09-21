@@ -527,11 +527,26 @@ export const resetStudentPassword = createServerFn({ method: "POST" })
   .inputValidator((input: { userId: string; password: string }) => {
     if (!input?.userId) throw new Error("Aluno não informado");
     if (!input?.password || input.password.length < 10) throw new Error("A senha deve ter pelo menos 10 caracteres");
+    if (input.password.length > 72) throw new Error("A senha deve ter no máximo 72 caracteres");
     return input;
   })
   .handler(async ({ data, context }) => {
+    const { data: callerIsAdmin, error: permissionError } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (permissionError || !callerIsAdmin) throw new Error("Acesso negado: apenas administradores podem alterar senhas");
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertAdmin(supabaseAdmin, context.userId);
+    const { data: targetRoles, error: targetRoleError } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.userId);
+    if (targetRoleError) throw new Error("Não foi possível verificar o aluno.");
+    if ((targetRoles ?? []).some((item) => item.role === "admin")) {
+      throw new Error("A senha de outro administrador não pode ser alterada por esta tela.");
+    }
+
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       password: data.password,
       email_confirm: true,
