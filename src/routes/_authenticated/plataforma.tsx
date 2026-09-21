@@ -440,16 +440,7 @@ function PlataformaPage() {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
-    if (!loading && (role === "admin" || isAdminEmail(user?.email))) {
-      navigate({ to: "/admin", replace: true });
-    }
-  }, [loading, role, user?.email, navigate]);
-
-  useEffect(() => {
-    const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview");
     if (loading || !user) return;
-    if (!isPreview && (role === "admin" || isAdminEmail(user?.email))) return;
     let cancelled = false;
     (async () => {
       setDataLoading(true);
@@ -556,7 +547,7 @@ function PlataformaPage() {
   }, [config.theme]);
 
   const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview");
-  if (loading || (!isPreview && (role === "admin" || isAdminEmail(user?.email)))) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
