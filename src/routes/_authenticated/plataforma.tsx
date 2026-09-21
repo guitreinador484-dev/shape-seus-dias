@@ -23,6 +23,8 @@ import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 import { MentoriaTab } from "@/components/platform/mentoria-tab";
 import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
 import { useGymPreference } from "@/hooks/use-gym-preference";
+import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
+import { MobileNav } from "@/components/platform/mobile-nav";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -427,6 +429,8 @@ function PlataformaPage() {
   const [workoutProgress, setWorkoutProgress] = useState<Record<string, { watched_seconds: number; completed_at: string | null }>>({});
   const lastSavedRef = useRef<Record<string, number>>({});
   const [dataError, setDataError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("treino");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview")) return;
@@ -653,11 +657,11 @@ function PlataformaPage() {
         <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
       </div>
 
-      <Tabs defaultValue="treino" className="relative z-10 flex flex-col min-h-screen w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex flex-col min-h-screen w-full">
         <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
-            <TabsList className="h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
+            <TabsList className="hidden lg:flex h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
@@ -684,11 +688,11 @@ function PlataformaPage() {
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
               <p className="text-xs text-white/40 truncate max-w-[160px] font-mono">{user?.email}</p>
-              <Button variant="ghost" size="sm" onClick={signOut} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">
+              <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)} className="rounded-xl text-white/60 hover:text-white hover:bg-white/10">
                 <LogOut className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Sair</span>
               </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="sm:hidden shrink-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10" aria-label="Sair">
+            <Button variant="ghost" size="icon" onClick={() => setLogoutDialogOpen(true)} className="sm:hidden shrink-0 rounded-xl text-white/60 hover:text-white hover:bg-white/10" aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -707,7 +711,7 @@ function PlataformaPage() {
         )}
 
         <div className="flex-1 min-w-0 w-full flex flex-col">
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
+          <main className="flex-1 pb-32 lg:pb-8 max-w-7xl w-full mx-auto px-4 py-8 space-y-6">
             {dataError ? (
               <Card className="border-red-500/30 bg-red-500/5">
                 <CardContent className="py-12 text-center space-y-3">
@@ -1001,6 +1005,19 @@ function PlataformaPage() {
           </main>
         </div>
       </Tabs>
+      <MobileNav 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        onLogout={() => setLogoutDialogOpen(true)} 
+        userEmail={user?.email} 
+        showVideos={showVideos} 
+        isMentoria={isMentoria} 
+      />
+      <LogoutConfirmation 
+        open={logoutDialogOpen} 
+        onOpenChange={setLogoutDialogOpen} 
+        onConfirm={signOut} 
+      />
       {embedVideo && (
         <EmbedOverlay title={embedVideo.title} url={embedVideo.url} onClose={() => setEmbedVideo(null)} />
       )}

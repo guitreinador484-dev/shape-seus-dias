@@ -141,6 +141,37 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     }
   }
 
+  // Copia as preferências alimentares do funil para o perfil já identificado.
+  const { data: sourceLead } = await supabaseAdmin
+    .from("leads")
+    .select("id, answers")
+    .ilike("email", email)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (sourceLead?.answers && typeof sourceLead.answers === "object" && !Array.isArray(sourceLead.answers)) {
+    const answerMap = sourceLead.answers as Record<string, unknown>;
+    const nutrition = answerMap.nutrition && typeof answerMap.nutrition === "object" && !Array.isArray(answerMap.nutrition)
+      ? answerMap.nutrition as Record<string, unknown>
+      : null;
+    const asText = (value: unknown) => typeof value === "string" ? value.trim().slice(0, 1500) || null : null;
+    if (nutrition) {
+      const { error: nutritionError } = await supabaseAdmin.from("nutrition_intake").upsert({
+        user_id: userId,
+        source_lead_id: sourceLead.id,
+        favorite_foods: asText(nutrition.favoriteFoods),
+        disliked_foods: asText(nutrition.dislikedFoods),
+        dietary_restrictions: asText(nutrition.restrictions),
+        food_allergies: asText(nutrition.allergies),
+        eating_routine: asText(nutrition.routine),
+        avoided_foods: asText(nutrition.avoidedFoods),
+        nutrition_goal: asText(nutrition.goal),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+      if (nutritionError) console.error("[access] falha ao salvar preferências alimentares", nutritionError.message);
+    }
+  }
+
   await supabaseAdmin
     .from("leads")
     .update({ status: "aluno", student_id: userId, stage_updated_at: new Date().toISOString() })

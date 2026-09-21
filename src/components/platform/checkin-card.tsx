@@ -5,7 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Flame } from "lucide-react";
+import { CheckCircle2, Loader2, Flame } from "lucide-react";
 
 type Checkin = Tables<"checkins">;
 
@@ -96,11 +96,11 @@ export function CheckinCard({ userId }: { userId: string }) {
   }
 
   return (
-    <Card className="mb-6">
+    <Card className={`mb-6 overflow-hidden border-2 ${todayRow ? "border-primary/40 bg-primary/5" : "border-primary/20"}`}>
       <CardContent className="pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="font-display text-xl flex items-center gap-2">
-            Check-in de hoje
+            {todayRow ? <CheckCircle2 className="h-5 w-5 text-primary" /> : null} Check-in de hoje
           </h3>
           <div className="flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5">
             <Flame className="h-4 w-4 text-orange-500" />
@@ -113,48 +113,55 @@ export function CheckinCard({ userId }: { userId: string }) {
         ) : (
           <div className="space-y-4">
             <div className="grid gap-2 sm:grid-cols-2">
-              <button
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setTreinoDone(!treinoDone)}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                className={`h-14 justify-between px-4 text-sm ${
                   treinoDone ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 hover:border-primary/30"
                 }`}
               >
                 <span>🏋️ Fiz meu treino hoje</span>
                 <span className="text-lg">{treinoDone ? "✅" : "⬜"}</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setDietDone(!dietDone)}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                className={`h-14 justify-between px-4 text-sm ${
                   dietDone ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 hover:border-primary/30"
                 }`}
               >
                 <span>🥗 Segui minha dieta</span>
                 <span className="text-lg">{dietDone ? "✅" : "⬜"}</span>
-              </button>
+              </Button>
             </div>
 
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">Como você está se sentindo hoje?</p>
               <div className="flex gap-2">
                 {MOODS.map((m) => (
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
                     key={m.value}
                     onClick={() => setMood(mood === m.value ? null : m.value)}
-                    className={`grid h-11 w-11 place-items-center rounded-xl border text-xl transition ${
+                    className={`h-12 w-12 text-xl ${
                       mood === m.value ? "border-primary/60 bg-primary/10 scale-110" : "border-border/60 bg-muted/40 hover:border-primary/30"
                     }`}
                     title={`Humor ${m.value}/5`}
                   >
                     {m.emoji}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
 
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observações do dia (opcional)" />
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <div className="flex justify-between gap-1.5 overflow-x-auto sm:justify-start">
                 {last7.map((d) => {
                   const done = dates.has(d);
                   const isToday = d === today;
@@ -178,8 +185,8 @@ export function CheckinCard({ userId }: { userId: string }) {
                   );
                 })}
               </div>
-              <Button onClick={save} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Salvar check-in
+              <Button className="h-12 w-full sm:w-auto" onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : todayRow ? <CheckCircle2 className="h-4 w-4" /> : null} {todayRow ? "Atualizar check-in" : "Salvar check-in"}
               </Button>
             </div>
           </div>
