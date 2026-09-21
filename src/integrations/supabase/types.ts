@@ -397,6 +397,44 @@ export type Database = {
         }
         Relationships: []
       }
+      feedbacks: {
+        Row: {
+          created_at: string
+          feedback_type: string
+          id: string
+          message: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_type: string
+          id?: string
+          message: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          message?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gyms: {
         Row: {
           created_at: string
@@ -604,6 +642,66 @@ export type Database = {
           },
         ]
       }
+      nutrition_intake: {
+        Row: {
+          avoided_foods: string | null
+          created_at: string
+          dietary_restrictions: string | null
+          disliked_foods: string | null
+          eating_routine: string | null
+          favorite_foods: string | null
+          food_allergies: string | null
+          id: string
+          nutrition_goal: string | null
+          source_lead_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avoided_foods?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          disliked_foods?: string | null
+          eating_routine?: string | null
+          favorite_foods?: string | null
+          food_allergies?: string | null
+          id?: string
+          nutrition_goal?: string | null
+          source_lead_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avoided_foods?: string | null
+          created_at?: string
+          dietary_restrictions?: string | null
+          disliked_foods?: string | null
+          eating_routine?: string | null
+          favorite_foods?: string | null
+          food_allergies?: string | null
+          id?: string
+          nutrition_goal?: string | null
+          source_lead_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutrition_intake_source_lead_id_fkey"
+            columns: ["source_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutrition_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nutrition_items: {
         Row: {
           amount: string | null
@@ -752,6 +850,8 @@ export type Database = {
           referral_code: string
           referred_by: string | null
           updated_at: string
+          welcome_completed_at: string | null
+          welcome_purchase_id: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -768,6 +868,8 @@ export type Database = {
           referral_code: string
           referred_by?: string | null
           updated_at?: string
+          welcome_completed_at?: string | null
+          welcome_purchase_id?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -784,9 +886,19 @@ export type Database = {
           referral_code?: string
           referred_by?: string | null
           updated_at?: string
+          welcome_completed_at?: string | null
+          welcome_purchase_id?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_welcome_purchase_id_fkey"
+            columns: ["welcome_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchases: {
         Row: {
