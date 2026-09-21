@@ -884,6 +884,7 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
   const [plans, setPlans] = useState<Tables<"student_plans">[]>([]);
   const [nutrition, setNutrition] = useState<Tables<"nutrition_plans">[]>([]);
   const [pdfs, setPdfs] = useState<Tables<"workout_pdfs">[]>([]);
+  const [nutritionIntake, setNutritionIntake] = useState<Tables<"nutrition_intake"> | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [evolutionOpen, setEvolutionOpen] = useState(false);
@@ -898,15 +899,17 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
     if (!studentId) return;
     let cancelled = false;
     (async () => {
-      const [planRes, nutriRes, pdfRes] = await Promise.all([
+      const [planRes, nutriRes, pdfRes, intakeRes] = await Promise.all([
         supabase.from("student_plans").select("*").eq("student_id", studentId).order("day_of_week"),
         supabase.from("nutrition_plans").select("*").eq("student_id", studentId),
         supabase.from("workout_pdfs").select("*").eq("student_id", studentId).order("generated_at", { ascending: false }),
+        supabase.from("nutrition_intake").select("*").eq("user_id", studentId).maybeSingle(),
       ]);
       if (cancelled) return;
       setPlans(planRes.data ?? []);
       setNutrition(nutriRes.data ?? []);
       setPdfs(pdfRes.data ?? []);
+      setNutritionIntake(intakeRes.data ?? null);
     })();
     return () => {
       cancelled = true;
@@ -1091,6 +1094,11 @@ export function StudentProfilePanel({ studentId }: { studentId: string }) {
             </ul>
           )}
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-base"><Apple className="h-4 w-4" /> Preferências alimentares</CardTitle></CardHeader>
+        <CardContent>{nutritionIntake ? <div className="grid gap-4 sm:grid-cols-2"><InfoRow label="Alimentos preferidos" value={nutritionIntake.favorite_foods || "Não informado"} /><InfoRow label="Alimentos que não gosta" value={nutritionIntake.disliked_foods || "Não informado"} /><InfoRow label="Restrições" value={nutritionIntake.dietary_restrictions || "Nenhuma informada"} /><InfoRow label="Alergias" value={nutritionIntake.food_allergies || "Nenhuma informada"} /><InfoRow label="Rotina alimentar" value={nutritionIntake.eating_routine || "Não informada"} /><InfoRow label="Objetivo alimentar" value={nutritionIntake.nutrition_goal || "Não informado"} /></div> : <EmptyBox title="Sem informações alimentares" description="As respostas aparecem aqui após o preenchimento no funil e a criação do acesso." />}</CardContent>
       </Card>
 
       <Card>
