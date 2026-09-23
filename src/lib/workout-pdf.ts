@@ -42,10 +42,10 @@ export type WorkoutPdfInput = {
   updateNote?: string | null;
 };
 
-const BLUE: [number, number, number] = [37, 99, 235];
+const BLUE: [number, number, number] = [230, 0, 0];
 const GRAY: [number, number, number] = [110, 116, 128];
-const INK: [number, number, number] = [17, 24, 39];
-const PALE: [number, number, number] = [239, 246, 255];
+const INK: [number, number, number] = [5, 5, 5];
+const PALE: [number, number, number] = [245, 245, 245];
 
 /** Gera o PDF do treino e devolve o conteúdo em base64 (sem prefixo data:). */
 export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileName: string } {

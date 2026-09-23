@@ -9,12 +9,17 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Acesso — Plataforma do Personal" },
       { name: "description", content: "Entre na sua área de aluno ou administrador." },
+      { property: "og:title", content: "Acesso — Gui Treinador" },
+      { property: "og:description", content: "Entre na sua área de aluno ou administrador." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -42,9 +47,9 @@ function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-display text-5xl text-foreground">PERSONAL</h1>
-          <p className="text-muted-foreground mt-2 text-sm">Sua transformação começa aqui</p>
+        <div className="mb-7 text-center">
+          <BrandLogo className="mx-auto h-40 w-full max-w-xs" />
+          <p className="mt-3 text-sm font-medium text-muted-foreground">Força, disciplina e alta performance</p>
         </div>
 
         <Card className="bg-popover border-border p-6">
@@ -118,7 +123,7 @@ function LoginForm() {
         <Label htmlFor="login-password">Senha</Label>
         <Input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      <Button type="submit" disabled={busy} className="w-full h-12 bg-primary hover:bg-[oklch(0.60_0.22_25)] uppercase tracking-wider font-semibold">
+      <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
       </Button>
     </form>
@@ -173,7 +178,7 @@ function SignupForm() {
         <Label htmlFor="su-pw">Senha</Label>
         <Input id="su-pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
-      <Button type="submit" disabled={busy} className="w-full h-12 bg-primary hover:bg-[oklch(0.60_0.22_25)] uppercase tracking-wider font-semibold">
+      <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
       </Button>
     </form>

@@ -21,6 +21,7 @@ import {
 } from "@/lib/payments.functions";
 import { provisionAccessFn } from "@/lib/access.functions";
 import { generateAiPlanFn } from "@/lib/ai-plan.functions";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -32,6 +33,10 @@ export const Route = createFileRoute("/funil")({
         content:
           "Responda algumas perguntas rápidas e receba um treino sob medida para o seu objetivo.",
       },
+      { property: "og:title", content: "Monte seu treino personalizado — Gui Treinador" },
+      { property: "og:description", content: "Responda algumas perguntas rápidas e receba um treino sob medida para o seu objetivo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -322,28 +327,25 @@ function FunnelPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="h-6 w-6 animate-spin text-blue-700" />
+      <div className="min-h-screen flex items-center justify-center bg-card">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f8ff] text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-blue-100 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 font-bold text-blue-700">
-            <span className="text-xl">{cfg.brandEmoji}</span>
-            <span className="text-lg tracking-tight">{cfg.brand}</span>
-          </div>
-          <div className="text-xs text-slate-500 hidden sm:flex items-center gap-1">
-            <ShieldCheck className="h-4 w-4 text-blue-700" /> Pagamento seguro
+          <BrandLogo className="h-12 w-24" />
+          <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-1">
+            <ShieldCheck className="h-4 w-4 text-primary" /> Pagamento seguro
           </div>
         </div>
       </header>
       {cfg.urgencyText && (
-        <div className="bg-blue-600 text-white text-center text-xs font-semibold py-1.5 px-4 sticky top-[57px] z-30">
+        <div className="bg-primary text-white text-center text-xs font-semibold py-1.5 px-4 sticky top-[57px] z-30">
           {cfg.urgencyText}
         </div>
       )}
@@ -352,14 +354,14 @@ function FunnelPage() {
         {stage === "form" && (
           <>
             {cfg.banner?.enabled && cfg.banner.image && (
-              <section className="relative overflow-hidden rounded-3xl shadow-lg">
+              <section className="relative overflow-hidden rounded-lg shadow-lg">
                 <img src={cfg.banner.image} alt="" className="h-56 w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/85 via-blue-800/60 to-transparent flex items-center">
+                <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/65 to-transparent flex items-center">
                   <div className="px-6 py-4 text-white max-w-md">
                     <h2 className="text-2xl font-extrabold leading-tight">{cfg.banner.title}</h2>
-                    <p className="text-sm text-blue-100 mt-1">{cfg.banner.subtitle}</p>
+                    <p className="text-sm text-foreground/80 mt-1">{cfg.banner.subtitle}</p>
                     {cfg.banner.ctaLabel && (
-                      <div className="mt-3 inline-block rounded-full bg-white text-blue-700 text-xs font-bold px-4 py-2">
+                      <div className="mt-3 inline-block rounded-lg bg-card text-primary text-xs font-bold px-4 py-2">
                         {cfg.banner.ctaLabel}
                       </div>
                     )}
@@ -372,7 +374,7 @@ function FunnelPage() {
               <Card>
                 <div className="text-center mb-3">
                   <h3 className="text-lg font-bold">{cfg.video.title}</h3>
-                  <p className="text-xs text-slate-500">{cfg.video.subtitle}</p>
+                  <p className="text-xs text-muted-foreground">{cfg.video.subtitle}</p>
                 </div>
                 <VideoEmbed url={cfg.video.url} />
               </Card>
@@ -383,10 +385,10 @@ function FunnelPage() {
                 {cfg.trustBadges.map((b) => (
                   <div
                     key={b.id}
-                    className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-center shadow-sm"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-center shadow-sm"
                   >
                     <div className="text-xl">{b.emoji}</div>
-                    <div className="text-[11px] font-semibold text-slate-700 mt-0.5 leading-tight">
+                    <div className="text-[11px] font-semibold text-foreground/80 mt-0.5 leading-tight">
                       {b.label}
                     </div>
                   </div>
@@ -399,7 +401,7 @@ function FunnelPage() {
               <CardHeader
                 title={cfg.headline}
                 subtitle={cfg.subheadline}
-                icon={<Activity className="h-4 w-4 text-blue-700" />}
+                icon={<Activity className="h-4 w-4 text-primary" />}
                 progress={measurementProgress}
               />
               <div className="grid gap-3">
@@ -444,10 +446,10 @@ function FunnelPage() {
                     <button
                       key={s}
                       onClick={() => setMeasurements((m) => ({ ...m, sexo: s }))}
-                      className={`rounded-xl border py-3 text-sm font-medium transition ${
+                      className={`rounded-lg border py-3 text-sm font-medium transition ${
                         measurements.sexo === s
-                          ? "border-blue-600 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/35"
                       }`}
                     >
                       {s === "M" ? "Masculino" : "Feminino"}
@@ -462,7 +464,7 @@ function FunnelPage() {
               <CardHeader
                 title="Sobre você"
                 subtitle="Perguntas rápidas para entender seu momento — sem termos técnicos"
-                icon={<Sparkles className="h-4 w-4 text-blue-700" />}
+                icon={<Sparkles className="h-4 w-4 text-primary" />}
                 progress={Math.round((broadFilled / BROAD_QUESTIONS.length) * 100)}
               />
               <div className="space-y-5">
@@ -471,7 +473,7 @@ function FunnelPage() {
                     <h3 className="text-sm font-bold flex items-center gap-2">
                       <span>{q.emoji}</span> {q.title}
                     </h3>
-                    {q.subtitle && <p className="text-xs text-slate-500 mt-0.5">{q.subtitle}</p>}
+                    {q.subtitle && <p className="text-xs text-muted-foreground mt-0.5">{q.subtitle}</p>}
                     <div className="grid gap-2 mt-2">
                       {q.options.map((opt) => {
                         const active = broad[q.key] === opt;
@@ -479,10 +481,10 @@ function FunnelPage() {
                           <button
                             key={opt}
                             onClick={() => setBroad((prev) => ({ ...prev, [q.key]: opt }))}
-                            className={`text-sm rounded-xl border px-4 py-3 text-left transition ${
+                            className={`text-sm rounded-lg border px-4 py-3 text-left transition ${
                               active
-                                ? "border-blue-600 bg-blue-600 text-white font-medium shadow-sm"
-                                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300"
+                                ? "border-primary bg-primary text-white font-medium shadow-sm"
+                                : "border-border bg-card text-foreground/80 hover:border-primary/35"
                             }`}
                           >
                             {opt}
@@ -501,7 +503,7 @@ function FunnelPage() {
               <CardHeader
                 title="Informações de Rotina"
                 subtitle="Detalhes sobre sua rotina de treinos"
-                icon={<Sparkles className="h-4 w-4 text-blue-700" />}
+                icon={<Sparkles className="h-4 w-4 text-primary" />}
                 progress={Math.round((routineFilled / cfg.routine.length) * 100)}
               />
               <div className="grid gap-3">
@@ -527,13 +529,13 @@ function FunnelPage() {
                       key={i}
                       src={src}
                       alt=""
-                      className="h-8 w-8 rounded-full border-2 border-white object-cover"
+                      className="h-8 w-8 rounded-lg border-2 border-white object-cover"
                     />
                   ))}
                 </div>
-                <span className="text-xs text-slate-500">{cfg.socialProof}</span>
+                <span className="text-xs text-muted-foreground">{cfg.socialProof}</span>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-4">Resultados reais</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/70 mt-4">Resultados reais</p>
               <div className="grid grid-cols-5 gap-1.5 mt-2">
                 {cfg.results.slice(0, 5).map((src, i) => (
                   <img
@@ -546,31 +548,31 @@ function FunnelPage() {
               </div>
               <div className="mt-5 flex items-center justify-center gap-6">
                 <div className="text-left">
-                  <div className="text-[10px] uppercase tracking-widest text-slate-400">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground/70">
                     A partir de
                   </div>
-                  <div className="text-2xl font-extrabold text-slate-900">{cfg.basePrice}</div>
+                  <div className="text-2xl font-extrabold text-foreground">{cfg.basePrice}</div>
                 </div>
-                <ul className="text-xs text-slate-600 space-y-1 text-left">
+                <ul className="text-xs text-muted-foreground space-y-1 text-left">
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-blue-700" /> Treino personalizado completo
+                    <Check className="h-3 w-3 text-primary" /> Treino personalizado completo
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-blue-700" /> Baseado nas suas preferências
+                    <Check className="h-3 w-3 text-primary" /> Baseado nas suas preferências
                   </li>
                   <li className="flex items-center gap-1.5">
-                    <Check className="h-3 w-3 text-blue-700" /> Modifique quando quiser
+                    <Check className="h-3 w-3 text-primary" /> Modifique quando quiser
                   </li>
                 </ul>
               </div>
               <button
                 onClick={handleGoPlans}
                 disabled={!canSubmit}
-                className="mt-5 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cfg.ctaLabel} →
               </button>
-              <p className="text-[10px] text-slate-400 mt-2 flex items-center justify-center gap-1">
+              <p className="text-[10px] text-muted-foreground/70 mt-2 flex items-center justify-center gap-1">
                 <Lock className="h-3 w-3" /> Pagamento seguro
               </p>
             </Card>
@@ -578,27 +580,27 @@ function FunnelPage() {
             {!!cfg.testimonials?.length && (
               <Card>
                 <h3 className="text-lg font-bold text-center">O que nossos alunos dizem</h3>
-                <p className="text-xs text-slate-500 text-center mb-4">
+                <p className="text-xs text-muted-foreground text-center mb-4">
                   Resultados reais de quem já começou
                 </p>
                 <div className="grid gap-3 md:grid-cols-3">
                   {cfg.testimonials.map((t) => (
                     <div
                       key={t.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-4 flex flex-col"
+                      className="rounded-lg border border-border bg-card p-4 flex flex-col"
                     >
                       <div className="flex items-center gap-3">
                         {t.avatar && (
                           <img
                             src={t.avatar}
                             alt=""
-                            className="h-10 w-10 rounded-full object-cover"
+                            className="h-10 w-10 rounded-lg object-cover"
                           />
                         )}
                         <div>
                           <div className="text-sm font-bold">{t.name}</div>
                           {t.role && (
-                            <div className="text-[10px] text-blue-700 font-medium">{t.role}</div>
+                            <div className="text-[10px] text-primary font-medium">{t.role}</div>
                           )}
                         </div>
                       </div>
@@ -609,14 +611,14 @@ function FunnelPage() {
                               key={i}
                               className={`h-3.5 w-3.5 ${
                                 i < (t.rating ?? 0)
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-slate-200"
+                                  ? "fill-primary text-primary"
+                                  : "text-muted-foreground/30"
                               }`}
                             />
                           ))}
                         </div>
                       )}
-                      <p className="text-xs text-slate-600 mt-2 leading-relaxed">"{t.text}"</p>
+                      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">"{t.text}"</p>
                     </div>
                   ))}
                 </div>
@@ -624,20 +626,20 @@ function FunnelPage() {
             )}
 
             {cfg.guarantee?.enabled && (
-              <Card className="border-2 border-blue-200 bg-blue-50/50">
+              <Card className="border-2 border-primary/25 bg-primary/5">
                 <div className="flex items-start gap-3">
-                  <div className="rounded-full bg-blue-600 p-2 text-white shrink-0">
+                  <div className="rounded-lg bg-primary p-2 text-white shrink-0">
                     <Award className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-blue-900">{cfg.guarantee.title}</h3>
-                    <p className="text-xs text-slate-700 mt-1">{cfg.guarantee.description}</p>
+                    <h3 className="text-base font-bold text-foreground">{cfg.guarantee.title}</h3>
+                    <p className="text-xs text-foreground/80 mt-1">{cfg.guarantee.description}</p>
                   </div>
                 </div>
               </Card>
             )}
 
-            <div className="text-center text-xs text-slate-400 pb-6">
+            <div className="text-center text-xs text-muted-foreground/70 pb-6">
               Já são mais de 850 mil pessoas com seus objetivos alcançados
             </div>
           </>
@@ -645,7 +647,7 @@ function FunnelPage() {
 
         {stage === "nutrition" && (
           <Card>
-            <CardHeader title="Sua alimentação" subtitle="Preferências iniciais para personalizar seu acompanhamento. Isso não substitui avaliação médica ou nutricional." icon={<Activity className="h-4 w-4 text-blue-700" />} />
+            <CardHeader title="Sua alimentação" subtitle="Preferências iniciais para personalizar seu acompanhamento. Isso não substitui avaliação médica ou nutricional." icon={<Activity className="h-4 w-4 text-primary" />} />
             <div className="grid gap-4">
               <LongTextInput label="Quais alimentos você mais gosta?" value={nutrition.favoriteFoods} onChange={(value) => setNutrition((current) => ({ ...current, favoriteFoods: value }))} />
               <LongTextInput label="Quais alimentos você não gosta?" value={nutrition.dislikedFoods} onChange={(value) => setNutrition((current) => ({ ...current, dislikedFoods: value }))} />
@@ -655,7 +657,7 @@ function FunnelPage() {
               <LongTextInput label="Existe algum alimento que você não consome?" value={nutrition.avoidedFoods} onChange={(value) => setNutrition((current) => ({ ...current, avoidedFoods: value }))} />
               <LongTextInput label="Qual seu objetivo principal relacionado à alimentação?" value={nutrition.goal} onChange={(value) => setNutrition((current) => ({ ...current, goal: value }))} />
             </div>
-            <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onClick={() => setStage("form")} className="rounded-full border-2 border-blue-600 py-3 text-sm font-semibold text-blue-700">← Voltar</button><button onClick={() => { setStage("plans"); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={!nutrition.goal.trim() || !nutrition.routine.trim()} className="rounded-full bg-blue-600 py-3 text-sm font-semibold text-white disabled:opacity-50">Continuar para os planos →</button></div>
+            <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onClick={() => setStage("form")} className="rounded-lg border-2 border-primary py-3 text-sm font-semibold text-primary">← Voltar</button><button onClick={() => { setStage("plans"); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={!nutrition.goal.trim() || !nutrition.routine.trim()} className="rounded-lg bg-primary py-3 text-sm font-semibold text-white disabled:opacity-50">Continuar para os planos →</button></div>
           </Card>
         )}
 
@@ -663,10 +665,10 @@ function FunnelPage() {
           <div className="space-y-4">
             <div className="text-center">
               <h2 className="text-2xl font-extrabold">Escolha seu plano</h2>
-              <p className="text-sm text-slate-500">Selecione o melhor plano para você</p>
+              <p className="text-sm text-muted-foreground">Selecione o melhor plano para você</p>
               <button
                 onClick={() => setStage("nutrition")}
-                className="mt-2 text-xs text-blue-700 hover:underline"
+                className="mt-2 text-xs text-primary hover:underline"
               >
                 ← Mudar objetivo
               </button>
@@ -675,36 +677,36 @@ function FunnelPage() {
               {cfg.plans.map((p) => (
                 <div
                   key={p.id}
-                  className={`relative rounded-2xl border-2 bg-white p-5 flex flex-col transition ${
+                  className={`relative rounded-lg border-2 bg-card p-5 flex flex-col transition ${
                     p.highlighted
-                      ? "border-blue-600 shadow-lg shadow-blue-600/10"
-                      : "border-slate-200"
+                      ? "border-primary shadow-lg shadow-primary/10"
+                      : "border-border"
                   }`}
                 >
                   {p.badge && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
                       {p.badge}
                     </div>
                   )}
-                  <div className="text-xs text-blue-700 font-semibold flex items-center gap-1">
+                  <div className="text-xs text-primary font-semibold flex items-center gap-1">
                     {cfg.brandEmoji} {cfg.brand}
                   </div>
                   <h3 className="mt-2 text-lg font-bold">{p.name}</h3>
-                  <div className="mt-1 text-3xl font-extrabold text-slate-900">{p.price}</div>
-                  <ul className="mt-4 space-y-2 text-sm text-slate-700 flex-1">
+                  <div className="mt-1 text-3xl font-extrabold text-foreground">{p.price}</div>
+                  <ul className="mt-4 space-y-2 text-sm text-foreground/80 flex-1">
                     {p.features.map((f, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                        <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                         <span>{f}</span>
                       </li>
                     ))}
                   </ul>
                   <button
                     onClick={() => handlePickPlan(p)}
-                    className={`mt-5 rounded-full py-2.5 text-sm font-semibold transition ${
+                    className={`mt-5 rounded-lg py-2.5 text-sm font-semibold transition ${
                       p.highlighted
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border-2 border-blue-600 text-blue-700 hover:bg-blue-50"
+                        ? "bg-primary text-white hover:bg-primary"
+                        : "border-2 border-primary text-primary hover:bg-primary/10"
                     }`}
                   >
                     Escolher Plano
@@ -720,24 +722,24 @@ function FunnelPage() {
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={() => setStage("plans")}
-                className="text-sm text-slate-600 hover:text-slate-900"
+                className="text-sm text-muted-foreground hover:text-foreground"
               >
                 ← Voltar
               </button>
-              <span className="text-xs font-semibold text-blue-700 bg-blue-50 rounded-full px-3 py-1 flex items-center gap-1">
+              <span className="text-xs font-semibold text-primary bg-primary/10 rounded-lg px-3 py-1 flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" /> Pagamento Seguro
               </span>
             </div>
-            <p className="text-center text-xs text-slate-500 mb-2">Escolha como pagar</p>
+            <p className="text-center text-xs text-muted-foreground mb-2">Escolha como pagar</p>
             <div className="grid grid-cols-2 gap-2 mb-5">
               {(["pix", "card"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setMethod(m)}
-                  className={`rounded-xl border-2 py-3 text-sm font-semibold transition ${
+                  className={`rounded-lg border-2 py-3 text-sm font-semibold transition ${
                     method === m
-                      ? "border-blue-600 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-white text-slate-500"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground"
                   }`}
                 >
                   {m === "pix" ? "✚ PIX" : "💳 Cartão"}
@@ -745,21 +747,21 @@ function FunnelPage() {
               ))}
             </div>
 
-            <div className="rounded-2xl border border-slate-200 p-5 bg-white">
-              <div className="text-center font-bold text-blue-700 flex items-center justify-center gap-1">
+            <div className="rounded-lg border border-border p-5 bg-card">
+              <div className="text-center font-bold text-primary flex items-center justify-center gap-1">
                 {cfg.brandEmoji} {cfg.brand}
               </div>
-              <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                <span className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <div className="mt-4 flex items-center justify-between rounded-lg bg-secondary px-4 py-3">
+                <span className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                   {method === "pix" ? "✚ Pagamento via PIX" : "💳 Pagamento via Cartão"}
                 </span>
-                <span className="text-lg font-bold text-blue-700">{formatBRL(totalPrice)}</span>
+                <span className="text-lg font-bold text-primary">{formatBRL(totalPrice)}</span>
               </div>
               {activeBumps.map((b) => (
                 <label
                   key={b.id}
-                  className={`mt-4 flex cursor-pointer gap-3 rounded-2xl border-2 border-dashed p-4 transition ${
-                    bumpChecked[b.id] ? "border-blue-600 bg-blue-50" : "border-blue-300 bg-blue-50/40"
+                  className={`mt-4 flex cursor-pointer gap-3 rounded-lg border-2 border-dashed p-4 transition ${
+                    bumpChecked[b.id] ? "border-primary bg-primary/10" : "border-primary/35 bg-primary/5"
                   }`}
                 >
                   <input
@@ -768,20 +770,20 @@ function FunnelPage() {
                     onChange={(e) =>
                       setBumpChecked((prev) => ({ ...prev, [b.id]: e.target.checked }))
                     }
-                    className="mt-1 h-5 w-5 accent-blue-600"
+                    className="mt-1 h-5 w-5 accent-primary"
                   />
                   <span className="text-left">
-                    <span className="block text-sm font-bold text-slate-900">
+                    <span className="block text-sm font-bold text-foreground">
                       Sim! Quero adicionar: {b.title} — +{formatBRL(b.price)}
                     </span>
-                    <span className="mt-1 block text-xs text-slate-600">{b.description}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{b.description}</span>
                   </span>
                 </label>
               ))}
-              <ul className="mt-4 space-y-1.5 text-sm text-slate-700">
+              <ul className="mt-4 space-y-1.5 text-sm text-foreground/80">
                 {selectedPlan.features.slice(0, 3).map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
-                    <span className="text-blue-600">🎯</span> {f}
+                    <span className="text-primary">🎯</span> {f}
                   </li>
                 ))}
               </ul>
@@ -796,7 +798,7 @@ function FunnelPage() {
                   value={contact.whatsapp}
                   onChange={(v) => setContact((c) => ({ ...c, whatsapp: v }))}
                 />
-                <label className="block text-xs text-slate-500 pt-2">
+                <label className="block text-xs text-muted-foreground pt-2">
                   Digite seu email para receber o treino:
                 </label>
                 <TextInput
@@ -812,7 +814,7 @@ function FunnelPage() {
               <button
                 onClick={handleFinish}
                 disabled={!contact.email || submitting}
-                className="mt-5 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -829,15 +831,15 @@ function FunnelPage() {
         {stage === "pix" && pix && (
           <Card>
             <div className="text-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                 <ShieldCheck className="h-3 w-3" /> Pagamento via PIX
               </span>
-              <h2 className="mt-3 text-xl font-extrabold text-slate-900">
+              <h2 className="mt-3 text-xl font-extrabold text-foreground">
                 Escaneie o QR Code para pagar
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Valor:{" "}
-                <b className="text-blue-700">
+                <b className="text-primary">
                   {pix.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                 </b>
               </p>
@@ -847,13 +849,13 @@ function FunnelPage() {
               <img
                 src={`data:image/png;base64,${pix.qrCodeBase64}`}
                 alt="QR Code PIX para pagamento"
-                className="mx-auto mt-5 h-56 w-56 rounded-xl border border-slate-200 bg-white p-2"
+                className="mx-auto mt-5 h-56 w-56 rounded-lg border border-border bg-card p-2"
               />
             )}
 
             <div className="mt-5">
-              <label className="text-xs font-medium text-slate-500">PIX copia e cola</label>
-              <div className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] break-all text-slate-600">
+              <label className="text-xs font-medium text-muted-foreground">PIX copia e cola</label>
+              <div className="mt-1 rounded-lg border border-border bg-secondary p-3 text-[11px] break-all text-muted-foreground">
                 {pix.qrCode}
               </div>
               <button
@@ -866,7 +868,7 @@ function FunnelPage() {
                     setPixCopied(false);
                   }
                 }}
-                className="mt-3 w-full rounded-full bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
+                className="mt-3 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary"
               >
                 {pixCopied ? "Código copiado ✓" : "Copiar código PIX"}
               </button>
@@ -875,15 +877,15 @@ function FunnelPage() {
                   href={pix.ticketUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 block text-center text-xs font-medium text-blue-700 hover:underline"
+                  className="mt-2 block text-center text-xs font-medium text-primary hover:underline"
                 >
                   Abrir comprovante no Mercado Pago
                 </a>
               )}
             </div>
 
-            <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-slate-50 px-4 py-3 text-xs text-slate-600">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+            <div className="mt-5 flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-3 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
               Aguardando confirmação do pagamento... a liberação é automática.
             </div>
 
@@ -892,7 +894,7 @@ function FunnelPage() {
                 setPix(null);
                 setStage("checkout");
               }}
-              className="mt-4 w-full text-center text-xs text-slate-500 hover:text-slate-800"
+              className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
             >
               ← Voltar e escolher outra forma de pagamento
             </button>
@@ -901,36 +903,36 @@ function FunnelPage() {
 
         {stage === "done" && (
           <Card className="text-center py-10">
-            <div className="mx-auto h-14 w-14 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl">
+            <div className="mx-auto h-14 w-14 rounded-lg bg-primary flex items-center justify-center text-white text-3xl">
               ✓
             </div>
             <h2 className="mt-4 text-2xl font-extrabold">Tudo pronto, {contact.name || "atleta"}!</h2>
-            <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">{cfg.thankYou}</p>
+            <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">{cfg.thankYou}</p>
 
             {accountLoading && (
-              <p className="mt-6 text-sm text-slate-600 flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-700" />
+              <p className="mt-6 text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 Criando sua conta de acesso...
               </p>
             )}
 
             {!accountLoading && account?.ok && (
-              <div className="mx-auto mt-6 max-w-md rounded-2xl border border-blue-200 bg-blue-50 p-5 text-left">
-                <p className="text-sm font-bold text-blue-800">
+              <div className="mx-auto mt-6 max-w-md rounded-lg border border-primary/25 bg-primary/10 p-5 text-left">
+                <p className="text-sm font-bold text-primary">
                   {account.created ? "Sua conta foi criada!" : "Seu acesso foi liberado!"}
                 </p>
-                <p className="mt-2 text-sm text-slate-700">
+                <p className="mt-2 text-sm text-foreground/80">
                   Agora é só criar a sua senha para entrar na plataforma. Também enviamos uma cópia para{" "}
                   <b>{contact.email}</b>.
                 </p>
                 <a
                   href={pix?.reference ? `/criar-senha?ref=${encodeURIComponent(pix.reference)}` : "/auth"}
-                  className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-700 px-4 font-semibold text-white hover:bg-blue-800"
+                  className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 font-semibold text-white hover:bg-primary"
                 >
                   Criar minha senha
                 </a>
                 {!account.emailSent && (
-                  <p className="mt-3 text-xs text-amber-700">
+                  <p className="mt-3 text-xs text-muted-foreground">
                     Não conseguimos enviar o e-mail agora. Use “Esqueci minha senha” na tela de acesso com este
                     mesmo e-mail.
                   </p>
@@ -939,7 +941,7 @@ function FunnelPage() {
             )}
 
             {!accountLoading && !account && (
-              <p className="mt-4 text-xs text-slate-400">
+              <p className="mt-4 text-xs text-muted-foreground/70">
                 Enviamos os detalhes para <b>{contact.email}</b>. Fique de olho na sua caixa de entrada.
               </p>
             )}
@@ -951,13 +953,13 @@ function FunnelPage() {
 }
 
 function LongTextInput({ label, value, onChange, placeholder = "Conte um pouco..." }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <label className="block"><span className="mb-1.5 block text-sm font-semibold text-slate-800">{label}</span><textarea value={value} maxLength={1500} rows={3} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20" /></label>;
+  return <label className="block"><span className="mb-1.5 block text-sm font-semibold text-foreground">{label}</span><textarea value={value} maxLength={1500} rows={3} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full resize-none rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>;
 }
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <section
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}
+      className={`rounded-lg border border-border bg-card p-5 shadow-sm ${className}`}
     >
       {children}
     </section>
@@ -983,15 +985,15 @@ function CardHeader({
           {title}
         </h2>
         {typeof progress === "number" && (
-          <div className="h-1.5 w-20 rounded-full bg-slate-100 overflow-hidden">
+          <div className="h-1.5 w-20 rounded-lg bg-muted overflow-hidden">
             <div
-              className="h-full bg-blue-600 transition-all"
+              className="h-full bg-primary transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
       </div>
-      {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
     </div>
   );
 }
@@ -1013,7 +1015,7 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+      className="w-full rounded-lg border border-border bg-card px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/20"
     />
   );
 }
@@ -1034,8 +1036,8 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 pr-9 text-sm outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 ${
-          value ? "text-slate-900" : "text-slate-400"
+        className={`w-full appearance-none rounded-lg border border-border bg-card px-4 py-3 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+          value ? "text-foreground" : "text-muted-foreground/70"
         }`}
       >
         <option value="">{placeholder}</option>
@@ -1045,7 +1047,7 @@ function Select({
           </option>
         ))}
       </select>
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70 text-xs">
         ▾
       </span>
     </div>
@@ -1057,7 +1059,7 @@ function VideoEmbed({ url }: { url: string }) {
   const vimeo = url.match(/vimeo\.com\/(\d+)/);
   if (yt) {
     return (
-      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+      <div className="relative w-full overflow-hidden rounded-lg bg-black" style={{ paddingTop: "56.25%" }}>
         <iframe
           src={`https://www.youtube.com/embed/${yt[1]}`}
           className="absolute inset-0 h-full w-full"
@@ -1069,7 +1071,7 @@ function VideoEmbed({ url }: { url: string }) {
   }
   if (vimeo) {
     return (
-      <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+      <div className="relative w-full overflow-hidden rounded-lg bg-black" style={{ paddingTop: "56.25%" }}>
         <iframe
           src={`https://player.vimeo.com/video/${vimeo[1]}`}
           className="absolute inset-0 h-full w-full"
@@ -1080,6 +1082,6 @@ function VideoEmbed({ url }: { url: string }) {
     );
   }
   return (
-    <video src={url} controls className="w-full rounded-xl bg-black" />
+    <video src={url} controls className="w-full rounded-lg bg-black" />
   );
 }

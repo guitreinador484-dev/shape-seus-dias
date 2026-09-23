@@ -86,9 +86,9 @@ function ContinueCard({ item, onOpen }: { item: ContinueItem; onOpen: () => void
         {cover ? (
           <img src={cover} alt={item.lessonTitle} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/25 via-card to-background text-primary/50"><BookOpen className="h-8 w-8" /></div>
+          <div className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/25 via-card to-background text-primary/50"><BookOpen className="h-8 w-8" /></div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 grid place-items-center opacity-0 transition group-hover:opacity-100">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-xl">
             <Play className="h-5 w-5 fill-current" />

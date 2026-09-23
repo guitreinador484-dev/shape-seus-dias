@@ -267,7 +267,7 @@ export function VideoPlayer({
 
       {/* Top Header Bar */}
       {(title || onClose) && (
-        <div className={`pointer-events-none absolute inset-x-0 top-0 flex items-start gap-4 bg-gradient-to-b from-black/90 via-black/40 to-transparent p-4 sm:p-5 transition-opacity duration-300 z-20 ${chrome ? "opacity-100" : "opacity-0"}`}>
+        <div className={`pointer-events-none absolute inset-x-0 top-0 flex items-start gap-4 bg-linear-to-b from-background/90 via-background/40 to-transparent p-4 sm:p-5 transition-opacity duration-300 z-20 ${chrome ? "opacity-100" : "opacity-0"}`}>
           <div className="min-w-0 flex-1">
             {subtitle && <p className="text-[11px] uppercase tracking-[0.2em] text-white/60 font-medium">{subtitle}</p>}
             {title && <h3 className="truncate font-display text-lg text-white drop-shadow sm:text-2xl">{title}</h3>}
@@ -330,7 +330,7 @@ export function VideoPlayer({
       )}
 
       {/* Controls Bar */}
-      <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 pb-3 pt-10 transition-opacity duration-300 sm:px-5 z-20 ${chrome ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+      <div className={`absolute inset-x-0 bottom-0 bg-linear-to-t from-background/95 via-background/60 to-transparent px-3 pb-3 pt-10 transition-opacity duration-300 sm:px-5 z-20 ${chrome ? "opacity-100" : "pointer-events-none opacity-0"}`}>
         {/* Scrubber Progress Bar */}
         <div
           role="slider" tabIndex={0}

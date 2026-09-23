@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "@/components/brand-logo";
 
 const navItems = [
   { to: "/plataforma", label: "Meu Treino", icon: Dumbbell, exact: true },
@@ -36,13 +37,13 @@ export default function LeftSidebar({ mobile = false, onNavigate, onRequestLogou
       mobile ? "min-h-dvh" : "hidden min-h-dvh lg:flex",
     )}>
       {/* Logo / Brand */}
-      <div className="px-6 py-5 border-b border-white/5">
-        <span className="font-display text-2xl text-sidebar-foreground">PERSONAL</span>
-        <p className="mt-0.5 text-[11px] uppercase text-muted-foreground">Área de Membros</p>
+      <div className="border-b border-sidebar-border px-5 py-4 group-data-[collapsible=icon]:px-1">
+        <BrandLogo className="h-20 w-full group-data-[collapsible=icon]:h-10" />
+        <p className="mt-1 text-center text-[10px] font-semibold uppercase text-muted-foreground">Área de membros</p>
       </div>
 
       {/* User info */}
-      <div className="px-6 py-4 border-b border-white/5">
+      <div className="border-b border-sidebar-border px-6 py-4">
         <div className="flex items-center gap-3">
           <div
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary font-display text-sm text-primary-foreground"
@@ -81,7 +82,7 @@ export default function LeftSidebar({ mobile = false, onNavigate, onRequestLogou
       </nav>
 
       {/* Sign out */}
-      <div className="px-3 py-4 border-t border-white/5">
+      <div className="border-t border-sidebar-border px-3 py-4">
         <Button
           variant="ghost"
           onClick={onRequestLogout ?? signOut}

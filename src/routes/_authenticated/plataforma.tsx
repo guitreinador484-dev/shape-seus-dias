@@ -28,6 +28,7 @@ import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
 import { FeedbackTab } from "@/components/platform/feedback-tab";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
+import { BrandLogo } from "@/components/brand-logo";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -305,12 +306,8 @@ function TreinoPanel({
         </div>
         <div className="relative mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden shadow-inner">
           <div
-            className="h-full transition-all duration-500 ease-out"
-            style={{
-              width: `${progress}%`,
-              background: "linear-gradient(90deg, #7C5CFF 0%, #5B8CFF 100%)",
-              boxShadow: progress > 0 ? "0 0 16px rgba(124,92,255,0.7)" : undefined,
-            }}
+            className="h-full bg-linear-to-r from-primary/70 to-primary shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>
@@ -673,18 +670,11 @@ function PlataformaPage() {
 
   return (
     <div className={`relative min-h-dvh bg-background text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
-      {/* Background ambient light orbs for real glass refraction */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px]" />
-        <div className="absolute top-1/3 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
-        <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex min-h-dvh w-full flex-col">
-        <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
-            <TabsList className="hidden lg:flex h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
+            <BrandLogo className="h-14 w-24 shrink-0" />
+            <TabsList className="hidden h-11 border-border bg-secondary p-1 lg:flex">
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
@@ -725,7 +715,7 @@ function PlataformaPage() {
           <div className={`w-full py-3 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b backdrop-blur-xl ${
             config.announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
             : config.announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-            : config.announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/20 text-purple-300"
+            : config.announcement_type === "purple" ? "bg-primary/10 border-primary/25 text-primary"
             : "bg-primary/10 border-primary/20 text-primary-foreground"
           }`}>
             <Megaphone className="h-4 w-4 shrink-0 text-primary" />
@@ -917,7 +907,7 @@ function PlataformaPage() {
                                     {thumb ? (
                                       <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
                                     ) : (
-                                      <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-foreground/40">
+                                      <span className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/20 via-card to-background/80 text-foreground/40">
                                         <Video className="h-5 w-5" />
                                       </span>
                                     )}
@@ -957,8 +947,8 @@ function PlataformaPage() {
                           className="absolute inset-0 w-full h-full object-cover animate-[kenburns_20s_ease-in-out_infinite_alternate]"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-r from-background via-background/70 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
                       <div className="relative h-full flex items-end px-4 sm:px-12 pb-16 max-w-7xl mx-auto">
                         <div className="max-w-2xl space-y-4 animate-fade-in">
                           <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 backdrop-blur px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary-foreground ring-1 ring-primary/40">
@@ -980,7 +970,7 @@ function PlataformaPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-background" />
+                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-linear-to-b from-transparent to-background" />
                     </div>
                   )}
 
@@ -1004,7 +994,7 @@ function PlataformaPage() {
                               ) : (
                                 <div className="absolute inset-0 grid place-items-center text-muted-foreground/40"><Video className="h-10 w-10" /></div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
+                              <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
                               <div className="absolute inset-x-0 bottom-0 p-4 text-white translate-y-1 group-hover:translate-y-0 transition-transform">
                                 <p className="font-semibold text-sm sm:text-base line-clamp-1 drop-shadow text-white">{w.title}</p>
                                 <p className="text-xs text-white/70 line-clamp-1 mt-0.5">{w.difficulty || w.category}</p>
@@ -1018,8 +1008,8 @@ function PlataformaPage() {
                           );
                         })}
                         </div>
-                        <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background to-transparent" />
-                        <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background to-transparent" />
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-linear-to-r from-background to-transparent" />
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-linear-to-l from-background to-transparent" />
                       </div>
                     </section>
                   ))}
