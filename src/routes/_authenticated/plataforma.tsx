@@ -306,7 +306,6 @@ function TreinoPanel({
         </div>
         <div className="relative mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden shadow-inner">
           <div
-            className="h-full transition-all duration-500 ease-out"
             className="h-full bg-linear-to-r from-primary/70 to-primary shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
