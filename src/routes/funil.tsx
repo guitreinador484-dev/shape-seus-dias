@@ -21,6 +21,7 @@ import {
 } from "@/lib/payments.functions";
 import { provisionAccessFn } from "@/lib/access.functions";
 import { generateAiPlanFn } from "@/lib/ai-plan.functions";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -32,6 +33,10 @@ export const Route = createFileRoute("/funil")({
         content:
           "Responda algumas perguntas rápidas e receba um treino sob medida para o seu objetivo.",
       },
+      { property: "og:title", content: "Monte seu treino personalizado — Gui Treinador" },
+      { property: "og:description", content: "Responda algumas perguntas rápidas e receba um treino sob medida para o seu objetivo." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
 });
@@ -333,10 +338,7 @@ function FunnelPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 font-bold text-primary">
-            <span className="text-xl">{cfg.brandEmoji}</span>
-            <span className="text-lg tracking-tight">{cfg.brand}</span>
-          </div>
+          <BrandLogo className="h-12 w-24" />
           <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-1">
             <ShieldCheck className="h-4 w-4 text-primary" /> Pagamento seguro
           </div>

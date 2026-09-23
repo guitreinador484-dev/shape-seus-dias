@@ -715,7 +715,7 @@ function PlataformaPage() {
           <div className={`w-full py-3 px-4 text-center text-xs font-semibold flex items-center justify-center gap-2 border-b backdrop-blur-xl ${
             config.announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
             : config.announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-            : config.announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/20 text-purple-300"
+            : config.announcement_type === "purple" ? "bg-primary/10 border-primary/25 text-primary"
             : "bg-primary/10 border-primary/20 text-primary-foreground"
           }`}>
             <Megaphone className="h-4 w-4 shrink-0 text-primary" />

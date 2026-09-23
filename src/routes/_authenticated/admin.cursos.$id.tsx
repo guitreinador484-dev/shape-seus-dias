@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/cursos/$id")({
   component: AdminCoursePage,
+  head: () => ({ meta: [{ title: "Editar curso — Gui Treinador" }, { name: "description", content: "Edite módulos, aulas e materiais do curso." }, { property: "og:title", content: "Editar curso — Gui Treinador" }, { property: "og:description", content: "Edite módulos, aulas e materiais do curso." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function AdminCoursePage() {

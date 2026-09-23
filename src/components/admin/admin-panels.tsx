@@ -419,7 +419,7 @@ export function AdminDashboardPanel() {
               <div className="space-y-2">
                 {latestStudents.map((student) => (
                   <div key={student.id} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] transition">
-                    <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-xs font-bold">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-bold text-primary-foreground">
                       {(student.full_name || student.email || "?")[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -520,7 +520,7 @@ export function AdminDashboardPanel() {
                       onClick={() => loadStudentEvolution(student.id)}
                       className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-primary/10 hover:border-primary/30 transition text-left"
                     >
-                      <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-sm font-bold">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-sm font-bold text-primary-foreground">
                         {(student.full_name || student.email || "?")[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -542,7 +542,7 @@ export function AdminDashboardPanel() {
                   ← Voltar
                 </Button>
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-blue-500 grid place-items-center text-white text-xs font-bold">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-bold text-primary-foreground">
                     {(selectedStudent?.full_name || selectedStudent?.email || "?")[0].toUpperCase()}
                   </div>
                   <div>
@@ -580,7 +580,7 @@ export function AdminDashboardPanel() {
                           return (
                             <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
                               <div
-                                className="w-full rounded-t bg-gradient-to-t from-primary to-blue-500 transition-all duration-500"
+                                className="w-full rounded-t bg-linear-to-t from-primary/60 to-primary transition-all duration-500"
                                 style={{ height: `${Math.max(height, 8)}%` }}
                               />
                             </div>
@@ -2204,10 +2204,10 @@ export function AdminPlatformPanel() {
                       >
                         <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="info">🔹 Azul Informativo</SelectItem>
-                          <SelectItem value="success">🟢 Verde Sucesso / Novidade</SelectItem>
-                          <SelectItem value="warning">⚡ Laranja Alerta / Atenção</SelectItem>
-                          <SelectItem value="purple">✨ Roxo Destaque VIP</SelectItem>
+                          <SelectItem value="info">Vermelho informativo</SelectItem>
+                          <SelectItem value="success">Prata sucesso / novidade</SelectItem>
+                          <SelectItem value="warning">Cinza alerta / atenção</SelectItem>
+                          <SelectItem value="purple">Vermelho destaque VIP</SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
@@ -2218,7 +2218,7 @@ export function AdminPlatformPanel() {
                       <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 backdrop-blur-md shadow-md ${
                         settings.platform_announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                         : settings.platform_announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                        : settings.platform_announcement_type === "purple" ? "bg-purple-500/10 border-purple-500/30 text-purple-300"
+                        : settings.platform_announcement_type === "purple" ? "bg-primary/10 border-primary/30 text-primary"
                         : "bg-primary/10 border-primary/30 text-primary-foreground"
                       }`}>
                         <Megaphone className="h-4 w-4 shrink-0 text-primary" />

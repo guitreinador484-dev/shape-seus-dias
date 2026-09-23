@@ -89,6 +89,7 @@ function UploadButton({
 
 export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
   component: AdminFunnelPage,
+  head: () => ({ meta: [{ title: "Funil de vendas — Gui Treinador" }, { name: "description", content: "Configure o funil e acompanhe o movimento dos leads." }, { property: "og:title", content: "Funil de vendas — Gui Treinador" }, { property: "og:description", content: "Configure o funil e acompanhe o movimento dos leads." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function AdminFunnelPage() {

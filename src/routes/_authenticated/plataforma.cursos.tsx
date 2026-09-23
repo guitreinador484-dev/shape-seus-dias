@@ -21,6 +21,7 @@ import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
   component: MyCoursesPage,
+  head: () => ({ meta: [{ title: "Meus cursos — Gui Treinador" }, { name: "description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:title", content: "Meus cursos — Gui Treinador" }, { property: "og:description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type Row = {

@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")(
     aula: typeof search.aula === "string" ? search.aula : undefined,
   }),
   component: CourseDetailPage,
+  head: () => ({ meta: [{ title: "Aulas do curso — Gui Treinador" }, { name: "description", content: "Assista às aulas e acompanhe seu progresso no curso." }, { property: "og:title", content: "Aulas do curso — Gui Treinador" }, { property: "og:description", content: "Assista às aulas e acompanhe seu progresso no curso." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type ProgressRow = { lesson_id: string; completed_at: string | null; updated_at: string; watched_seconds: number };
