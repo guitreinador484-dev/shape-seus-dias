@@ -138,9 +138,9 @@ export function EvolutionTab({ userId }: { userId: string }) {
                   <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} domain={["auto", "auto"]} />
                   <Tooltip contentStyle={{ background: "rgba(0,0,0,0.85)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, fontSize: 12 }} />
                   <Legend />
-                  <Line type="monotone" dataKey="peso" name="Peso (kg)" stroke="#7C5CFF" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="peso" name="Peso (kg)" stroke="#FF0000" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                   {chartData.some((d) => d.cintura !== null) && (
-                    <Line type="monotone" dataKey="cintura" name="Cintura (cm)" stroke="#38bdf8" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                    <Line type="monotone" dataKey="cintura" name="Cintura (cm)" stroke="#C0C0C0" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                   )}
                 </LineChart>
               </ResponsiveContainer>

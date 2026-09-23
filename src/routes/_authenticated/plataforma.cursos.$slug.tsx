@@ -56,12 +56,7 @@ function markDownloaded(id: string) {
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden">
-      {/* Background ambient light orbs for real glass refraction */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[130px]" />
-        <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
-      </div>
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <div className="relative z-10">{children}</div>
     </div>
   );

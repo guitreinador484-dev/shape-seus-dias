@@ -26,6 +26,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,6 +34,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -88,6 +90,9 @@ function AdminSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
   return (
     <Sidebar collapsible="icon">
+      <SidebarHeader className="border-b border-sidebar-border p-3">
+        <BrandLogo className="h-20 w-full object-contain group-data-[collapsible=icon]:h-9" />
+      </SidebarHeader>
       <SidebarContent>
         {navGroups.map((group) => (
           <SidebarGroup key={group.label}>
@@ -150,8 +155,8 @@ function AdminLayout() {
           <header className="sticky top-0 z-30 grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-popover/95 px-3 backdrop-blur-xl sm:gap-3">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0">
-              <h1 className="font-display text-lg truncate">Painel do personal</h1>
-              <span className="hidden sm:inline text-xs px-2 py-0.5 rounded bg-primary/15 text-primary">Administrador</span>
+              <h1 className="truncate font-display text-lg">Painel Gui Treinador</h1>
+              <span className="hidden rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:inline">Administrador</span>
             </div>
             <div className="ml-auto flex items-center gap-3 text-sm">
               <span className="text-muted-foreground hidden md:inline">{user?.email}</span>
