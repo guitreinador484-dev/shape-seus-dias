@@ -17,6 +17,7 @@ import {
   AlertTriangle, RotateCcw, Search, TrendingUp, Award, Clock,
   Menu, X,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
   component: MyCoursesPage,
@@ -32,8 +33,8 @@ type Row = {
 /* ─── Mobile header ─────────────────────────────────────────────────────── */
 function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
-    <header className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-white/10 bg-[#0A0A0B]/80 backdrop-blur-xl">
-      <span className="font-display text-xl tracking-wide text-white">PERSONAL</span>
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:hidden">
+      <BrandLogo className="h-12 w-20" />
       <Button
         type="button"
         variant="ghost"
@@ -242,12 +243,7 @@ function MyCoursesPage() {
   const nextUp = continueItems[0] ?? null;
 
   return (
-    <div className="relative flex min-h-screen bg-[#0A0A0B] text-foreground overflow-x-hidden">
-      {/* Background ambient light orbs for real glass refraction */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/3 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[130px]" />
-        <div className="absolute top-1/2 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
-      </div>
+    <div className="relative flex min-h-screen overflow-x-hidden bg-background text-foreground">
 
       {/* Left sidebar — desktop */}
       <LeftSidebar />
@@ -287,7 +283,7 @@ function MyCoursesPage() {
             {/* color halos */}
             <div className="absolute -top-32 -left-20 h-[400px] w-[400px] rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-32 right-0 h-[300px] w-[300px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B]/60 via-[#0A0A0B]/80 to-[#0A0A0B] pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-background/60 via-background/85 to-background" />
 
             <div className="relative px-5 py-10 sm:px-8 sm:py-14 max-w-5xl">
               {/* Back link */}

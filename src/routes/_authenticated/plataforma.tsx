@@ -28,6 +28,7 @@ import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
 import { FeedbackTab } from "@/components/platform/feedback-tab";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
+import { BrandLogo } from "@/components/brand-logo";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -306,11 +307,8 @@ function TreinoPanel({
         <div className="relative mt-6 h-2 w-full rounded-full bg-white/10 overflow-hidden shadow-inner">
           <div
             className="h-full transition-all duration-500 ease-out"
-            style={{
-              width: `${progress}%`,
-              background: "linear-gradient(90deg, #7C5CFF 0%, #5B8CFF 100%)",
-              boxShadow: progress > 0 ? "0 0 16px rgba(124,92,255,0.7)" : undefined,
-            }}
+            className="h-full bg-linear-to-r from-primary/70 to-primary shadow-[0_0_14px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
           />
         </div>
       </div>
@@ -673,18 +671,11 @@ function PlataformaPage() {
 
   return (
     <div className={`relative min-h-dvh bg-background text-foreground overflow-x-hidden ${config.theme === "light" ? "platform-light" : ""}`}>
-      {/* Background ambient light orbs for real glass refraction */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/15 blur-[120px]" />
-        <div className="absolute top-1/3 -right-40 h-[450px] w-[450px] rounded-full bg-blue-600/10 blur-[140px]" />
-        <div className="absolute bottom-10 left-10 h-[400px] w-[400px] rounded-full bg-purple-600/10 blur-[130px]" />
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex min-h-dvh w-full flex-col">
-        <header className="sticky top-0 z-30 border-b border-white/12 bg-[#0A0A0B]/70 backdrop-blur-2xl backdrop-saturate-150">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <h1 className="font-display text-xl sm:text-2xl shrink-0 text-white tracking-wider">PERSONAL</h1>
-            <TabsList className="hidden lg:flex h-11 bg-white/5 border border-white/12 p-1 rounded-full backdrop-blur-xl shadow-inner">
+            <BrandLogo className="h-14 w-24 shrink-0" />
+            <TabsList className="hidden h-11 border-border bg-secondary p-1 lg:flex">
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>
               </TabsTrigger>
