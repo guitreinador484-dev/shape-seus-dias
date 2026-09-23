@@ -92,7 +92,8 @@ function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-3">
-        <BrandLogo className="h-20 w-full object-contain group-data-[collapsible=icon]:h-9" />
+        <BrandLogo className="mx-auto h-14 w-auto group-data-[collapsible=icon]:hidden" />
+        <BrandLogoMark className="mx-auto hidden h-9 w-auto group-data-[collapsible=icon]:block" />
       </SidebarHeader>
       <SidebarContent>
         {navGroups.map((group) => (

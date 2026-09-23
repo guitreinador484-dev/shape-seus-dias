@@ -48,7 +48,8 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <div className="w-full max-w-md">
         <div className="mb-7 text-center">
-          <BrandLogo className="mx-auto h-40 w-full max-w-xs" />
+          <BrandLogoMark className="mx-auto h-24 w-auto" />
+          <BrandLogoName className="mx-auto mt-4 h-12 w-auto" />
           <p className="mt-3 text-sm font-medium text-muted-foreground">Força, disciplina e alta performance</p>
         </div>
 
