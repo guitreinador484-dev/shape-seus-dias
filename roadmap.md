@@ -14,3 +14,4 @@
 - [x] Corrigir navegação, hierarquia, espaçamentos, overflow e tamanhos de toque
 - [x] Revisar estados de carregamento, vazio e erro sem alterar regras existentes
 - [x] Validar fluxos principais em celular e desktop
+- [ ] Reformular toda a identidade visual para preto, vermelho e prata usando o novo logo; preservar funções e validar desktop/mobile.
