@@ -393,29 +393,29 @@
 }
 @utility btn-cta-hover { filter: brightness(1.1); }
 
-/* Quiz de Vendas — force light/black readable colors regardless of admin theme */
+/* Funil e editor seguem a mesma identidade escura da marca. */
 .quiz-vendas-scope,
 .quiz-vendas-scope * {
-  color: #0f172a;
+  color: var(--foreground);
 }
 .quiz-vendas-scope [data-slot="card"],
 .quiz-vendas-scope [data-slot="popover-content"],
 .quiz-vendas-scope [data-slot="dialog-content"],
 .quiz-vendas-scope [data-slot="select-content"],
 .quiz-vendas-scope [data-slot="dropdown-menu-content"] {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: var(--card);
+  color: var(--foreground);
 }
 .quiz-vendas-scope [data-slot="input"],
 .quiz-vendas-scope [data-slot="textarea"],
 .quiz-vendas-scope [data-slot="select-trigger"] {
-  background-color: #ffffff;
-  color: #0f172a;
-  border-color: #e2e8f0;
+  background-color: var(--card);
+  color: var(--foreground);
+  border-color: var(--input);
 }
 .quiz-vendas-scope [data-slot="input"]::placeholder,
 .quiz-vendas-scope [data-slot="textarea"]::placeholder {
-  color: #94a3b8;
+  color: var(--muted-foreground);
 }
 /* Preserve intentionally-colored text */
 .quiz-vendas-scope .text-white,
@@ -433,10 +433,10 @@
 .quiz-vendas-scope [class*="bg-slate-800"] * {
   color: #ffffff;
 }
-.quiz-vendas-scope .text-blue-700 { color: #1d4ed8 !important; }
-.quiz-vendas-scope .text-blue-600 { color: #2563eb !important; }
-.quiz-vendas-scope .text-blue-100 { color: #dbeafe !important; }
-.quiz-vendas-scope .text-blue-900 { color: #1e3a8a !important; }
+.quiz-vendas-scope .text-blue-700,
+.quiz-vendas-scope .text-blue-600,
+.quiz-vendas-scope .text-blue-900 { color: var(--primary) !important; }
+.quiz-vendas-scope .text-blue-100 { color: var(--foreground) !important; }
 .quiz-vendas-scope .text-emerald-700 { color: #047857 !important; }
 .quiz-vendas-scope .text-amber-700 { color: #b45309 !important; }
 .quiz-vendas-scope .text-rose-600 { color: #e11d48 !important; }
