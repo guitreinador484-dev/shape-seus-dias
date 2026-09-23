@@ -386,7 +386,7 @@ function NextUpPlaylist({
                         {thumb ? (
                           <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
                         ) : (
-                          <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-foreground/40">
+                          <span className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/20 via-card to-background/80 text-foreground/40">
                             {done ? <CheckCircle2 className="h-5 w-5 text-primary" /> : <Play className="h-5 w-5 fill-current" />}
                           </span>
                         )}

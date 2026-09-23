@@ -38,6 +38,7 @@ import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
+  head: () => ({ meta: [{ title: "Administração — Gui Treinador" }, { name: "description", content: "Painel administrativo da plataforma Gui Treinador." }, { property: "og:title", content: "Administração — Gui Treinador" }, { property: "og:description", content: "Painel administrativo da plataforma Gui Treinador." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type NavItem = {

@@ -90,13 +90,13 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-[#131316] to-[#0A0A0B] text-primary/40">
+          <div className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/20 via-card to-background text-primary/40">
             <BookOpen className="h-10 w-10" />
           </div>
         )}
 
         {/* gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B]/95 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/40 to-transparent" />
 
         {/* lesson badge */}
         <span className="glass-pill absolute right-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-white">

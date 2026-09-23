@@ -907,7 +907,7 @@ function PlataformaPage() {
                                     {thumb ? (
                                       <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
                                     ) : (
-                                      <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-primary/20 via-card to-background/80 text-foreground/40">
+                                      <span className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/20 via-card to-background/80 text-foreground/40">
                                         <Video className="h-5 w-5" />
                                       </span>
                                     )}
@@ -947,8 +947,8 @@ function PlataformaPage() {
                           className="absolute inset-0 w-full h-full object-cover animate-[kenburns_20s_ease-in-out_infinite_alternate]"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-r from-background via-background/70 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
                       <div className="relative h-full flex items-end px-4 sm:px-12 pb-16 max-w-7xl mx-auto">
                         <div className="max-w-2xl space-y-4 animate-fade-in">
                           <div className="inline-flex items-center gap-2 rounded-full bg-primary/20 backdrop-blur px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary-foreground ring-1 ring-primary/40">
@@ -970,7 +970,7 @@ function PlataformaPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-gradient-to-b from-transparent to-background" />
+                      <div className="pointer-events-none absolute bottom-0 inset-x-0 h-24 bg-linear-to-b from-transparent to-background" />
                     </div>
                   )}
 
@@ -994,7 +994,7 @@ function PlataformaPage() {
                               ) : (
                                 <div className="absolute inset-0 grid place-items-center text-muted-foreground/40"><Video className="h-10 w-10" /></div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
+                              <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity" />
                               <div className="absolute inset-x-0 bottom-0 p-4 text-white translate-y-1 group-hover:translate-y-0 transition-transform">
                                 <p className="font-semibold text-sm sm:text-base line-clamp-1 drop-shadow text-white">{w.title}</p>
                                 <p className="text-xs text-white/70 line-clamp-1 mt-0.5">{w.difficulty || w.category}</p>
@@ -1008,8 +1008,8 @@ function PlataformaPage() {
                           );
                         })}
                         </div>
-                        <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-background to-transparent" />
-                        <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-background to-transparent" />
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-8 bg-linear-to-r from-background to-transparent" />
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-8 bg-linear-to-l from-background to-transparent" />
                       </div>
                     </section>
                   ))}

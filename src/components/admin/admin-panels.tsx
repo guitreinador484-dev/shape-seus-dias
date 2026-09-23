@@ -644,7 +644,7 @@ export function AdminDashboardPanel() {
                           return (
                             <figure key={id} className="group relative rounded-xl overflow-hidden border border-white/10">
                               <img src={url} alt="Progresso" className="h-40 w-full object-cover transition duration-300 group-hover:scale-105" />
-                              <figcaption className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent px-3 py-2">
+                              <figcaption className="absolute bottom-0 inset-x-0 bg-linear-to-t from-background/90 to-transparent px-3 py-2">
                                 <p className="text-[11px] text-white font-medium">{formatDate(row?.measured_at)}</p>
                                 {row?.weight_kg && <p className="text-[10px] text-white/70">{row.weight_kg} kg</p>}
                               </figcaption>
@@ -1973,7 +1973,7 @@ export function AdminPlatformPanel() {
                     {bannerPreviewUrl ? (
                       <div className="relative rounded-2xl overflow-hidden border border-border aspect-video max-h-56 w-full bg-black group">
                         <img src={bannerPreviewUrl} alt="Preview do banner" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4 justify-between">
+                        <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent flex items-end p-4 justify-between">
                           <span className="text-xs text-white/80 font-mono truncate max-w-xs">{settings.platform_hero_image_path}</span>
                           <Button type="button" size="sm" variant="destructive" className="rounded-full text-xs" onClick={deleteBanner}>
                             <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover imagem
