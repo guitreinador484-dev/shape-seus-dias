@@ -34,7 +34,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, BrandLogoMark } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,

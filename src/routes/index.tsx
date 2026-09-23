@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogoMark, BrandLogoName } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({

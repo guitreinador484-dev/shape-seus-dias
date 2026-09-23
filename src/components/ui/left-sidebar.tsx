@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, BrandLogoMark } from "@/components/brand-logo";
 
 const navItems = [
   { to: "/plataforma", label: "Meu Treino", icon: Dumbbell, exact: true },
