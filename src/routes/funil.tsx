@@ -338,7 +338,7 @@ function FunnelPage() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <BrandLogo className="h-12 w-24" />
+          <BrandLogo className="h-9 w-auto" />
           <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-1">
             <ShieldCheck className="h-4 w-4 text-primary" /> Pagamento seguro
           </div>

@@ -673,7 +673,7 @@ function PlataformaPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="relative z-10 flex min-h-dvh w-full flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <BrandLogo className="h-14 w-24 shrink-0" />
+            <BrandLogo className="h-8 w-auto shrink-0" />
             <TabsList className="hidden h-11 border-border bg-secondary p-1 lg:flex">
               <TabsTrigger value="treino" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Dumbbell className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Meu treino</span>

@@ -35,7 +35,7 @@ type Row = {
 function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:hidden">
-      <BrandLogo className="h-12 w-20" />
+      <BrandLogo className="h-7 w-auto" />
       <Button
         type="button"
         variant="ghost"

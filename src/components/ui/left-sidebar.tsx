@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogo, BrandLogoMark } from "@/components/brand-logo";
 
 const navItems = [
   { to: "/plataforma", label: "Meu Treino", icon: Dumbbell, exact: true },
@@ -38,7 +38,8 @@ export default function LeftSidebar({ mobile = false, onNavigate, onRequestLogou
     )}>
       {/* Logo / Brand */}
       <div className="border-b border-sidebar-border px-5 py-4 group-data-[collapsible=icon]:px-1">
-        <BrandLogo className="h-20 w-full group-data-[collapsible=icon]:h-10" />
+        <BrandLogo className="mx-auto h-12 w-auto group-data-[collapsible=icon]:hidden" />
+        <BrandLogoMark className="mx-auto hidden h-10 w-auto group-data-[collapsible=icon]:block" />
         <p className="mt-1 text-center text-[10px] font-semibold uppercase text-muted-foreground">Área de membros</p>
       </div>
 
