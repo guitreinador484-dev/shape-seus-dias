@@ -89,9 +89,8 @@ async function askAiForPlan(promptText: string, tier: PlanTier): Promise<AiResul
       "X-Lovable-AIG-SDK": "fetch",
     },
     body: JSON.stringify({
-      model: "openai/gpt-6-astra",
+      model: "google/gemini-3.5-flash",
       stream: true,
-      reasoning: { effort: "low", summary: "auto" },
       instructions:
         "Você é um personal trainer brasileiro especialista em MUSCULAÇÃO. Monte uma divisão de treino semanal " +
         "de musculação (academia, pesos livres e máquinas), em português do Brasil. " +
@@ -175,6 +174,28 @@ function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanT
 
 export type AiPlanResult = { ok: boolean; plans: number; pdf: boolean; message?: string };
 
+const ex = (exercise_name: string, sets = "3", reps = "10 a 12", rest_seconds = 60): AiExercise => ({
+  exercise_name, sets, reps, rest_seconds, load_text: "moderado", notes: null,
+});
+
+/** Treino de musculação padrão, usado na hora se a IA falhar ou demorar. */
+function fallbackPlan(answers: Record<string, unknown>): AiResult {
+  const text = JSON.stringify(answers).toLowerCase();
+  const m = text.match(/(\d)\s*(x|dias|vezes)/);
+  const days = Math.min(6, Math.max(3, m ? Number(m[1]) : 4));
+  const A = { plan_name: "Treino A — Peito, ombros e tríceps", exercises: [ex("Supino reto com halteres"), ex("Supino inclinado na máquina"), ex("Crucifixo na máquina"), ex("Desenvolvimento com halteres"), ex("Elevação lateral"), ex("Tríceps na polia")] };
+  const B = { plan_name: "Treino B — Costas e bíceps", exercises: [ex("Puxada frontal na polia"), ex("Remada baixa na polia"), ex("Remada curvada com halteres"), ex("Pulldown com braços estendidos"), ex("Rosca direta"), ex("Rosca martelo")] };
+  const C = { plan_name: "Treino C — Pernas e glúteos", exercises: [ex("Agachamento livre"), ex("Leg press 45°"), ex("Cadeira extensora"), ex("Mesa flexora"), ex("Elevação pélvica"), ex("Panturrilha em pé", "4", "15")] };
+  const rotation = [A, B, C];
+  const dayMap = [1, 2, 3, 4, 5, 6];
+  return {
+    summary: "Treino de musculação para evoluir com segurança.",
+    goals: null,
+    progression: null,
+    plans: Array.from({ length: days }, (_, i) => ({ day_of_week: dayMap[i], ...rotation[i % 3] })),
+  };
+}
+
 /**
  * Gera (uma única vez) o treino com IA para o comprador de uma venda aprovada.
  * Nunca lança: falhas são registradas e a compra/acesso seguem normalmente.
@@ -227,9 +248,18 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
 
     const studentName = purchase.customer_name || email || "Aluno";
     const tier = resolvePlanTier(purchase.plan_id);
-    const ai = await askAiForPlan(buildPrompt(studentName, answers, tier), tier);
+    let ai: AiResult;
+    try {
+      ai = await Promise.race([
+        askAiForPlan(buildPrompt(studentName, answers, tier), tier),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("IA demorou demais")), 45000)),
+      ]);
+      if (!ai.plans?.length) throw new Error("A IA não retornou treinos");
+    } catch (e) {
+      console.error("[ai-plan] usando treino padrão:", e instanceof Error ? e.message : e);
+      ai = fallbackPlan(answers);
+    }
     const plans = (ai.plans ?? []).slice(0, 7);
-    if (!plans.length) return { ok: false, plans: 0, pdf: false, message: "A IA não retornou treinos" };
 
     let pdfSaved = false;
     let created = 0;
