@@ -141,6 +141,13 @@ function EmptyTraining() {
 
   useEffect(() => {
     let cancelled = false;
+    // Mostra o treino assim que ele for salvo (em poucos segundos), sem esperar a IA terminar.
+    const poll = setInterval(async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { count } = await supabase.from("student_plans").select("id", { count: "exact", head: true }).eq("student_id", u.user.id);
+      if (!cancelled && count) window.location.reload();
+    }, 1500);
     (async () => {
       try {
         const result = await ensureMyPlan({ data: undefined });
@@ -152,9 +159,9 @@ function EmptyTraining() {
       } catch {
         /* mostra o estado vazio abaixo */
       }
-      if (!cancelled) setState("none");
+      if (!cancelled) { clearInterval(poll); setState("none"); }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearInterval(poll); };
   }, [ensureMyPlan]);
 
   return (

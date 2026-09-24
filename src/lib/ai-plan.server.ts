@@ -366,7 +366,7 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
       await supabaseAdmin.from("student_plans").delete().in("id", instant.planIds);
       await savePlans(userId!, studentName, tier, ai);
     }).catch((e) => console.error("[ai-plan] falha ao trocar pelo treino da IA", e));
-    await Promise.race([upgrade, new Promise((r) => setTimeout(r, 25000))]);
+    await Promise.race([upgrade, new Promise((r) => setTimeout(r, 90000))]);
     return instant;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
