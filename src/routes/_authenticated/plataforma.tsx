@@ -141,6 +141,13 @@ function EmptyTraining() {
 
   useEffect(() => {
     let cancelled = false;
+    // Mostra o treino assim que ele for salvo (em poucos segundos), sem esperar a IA terminar.
+    const poll = setInterval(async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { count } = await supabase.from("student_plans").select("id", { count: "exact", head: true }).eq("student_id", u.user.id);
+      if (!cancelled && count) window.location.reload();
+    }, 1500);
     (async () => {
       try {
         const result = await ensureMyPlan({ data: undefined });
@@ -152,9 +159,9 @@ function EmptyTraining() {
       } catch {
         /* mostra o estado vazio abaixo */
       }
-      if (!cancelled) setState("none");
+      if (!cancelled) { clearInterval(poll); setState("none"); }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearInterval(poll); };
   }, [ensureMyPlan]);
 
   return (
@@ -166,11 +173,11 @@ function EmptyTraining() {
             : <Dumbbell className="h-6 w-6 text-muted-foreground" />}
         </div>
         <p className="font-display text-xl">
-          {state === "checking" ? "Montando seu treino..." : "Sem treino cadastrado"}
+          {state === "checking" ? "Estamos criando seu treino personalizado..." : "Sem treino cadastrado"}
         </p>
         <p className="text-sm text-muted-foreground">
           {state === "checking"
-            ? "Estamos preparando seu plano com base nas suas respostas. Leva menos de um minuto."
+            ? "Estamos montando seu treino com base nas suas respostas. Leva só alguns segundos."
             : "Seu personal ainda não montou seu plano. Fale com ele para começar."}
         </p>
       </CardContent>

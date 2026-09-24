@@ -89,8 +89,9 @@ async function askAiForPlan(promptText: string, tier: PlanTier): Promise<AiResul
       "X-Lovable-AIG-SDK": "fetch",
     },
     body: JSON.stringify({
-      model: "google/gemini-3.5-flash",
+      model: "openai/gpt-6-astra",
       stream: true,
+      reasoning: { effort: "low" },
       instructions:
         "Você é um personal trainer brasileiro especialista em MUSCULAÇÃO. Monte uma divisão de treino semanal " +
         "de musculação (academia, pesos livres e máquinas), em português do Brasil. " +
@@ -168,6 +169,7 @@ function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanT
     "Respostas do questionário (JSON):",
     JSON.stringify(answers, null, 2),
     "Monte a divisão semanal de MUSCULAÇÃO respeitando a quantidade de dias disponíveis informada e o objetivo declarado. " +
+      "Se faltar alguma resposta, NÃO peça mais informações: assuma iniciante, 4 dias (seg, ter, qui, sex) e objetivo de ganhar massa, e monte o treino mesmo assim. " +
       "Se o objetivo for emagrecer, mantenha a musculação como base do treino e acrescente no máximo um cardio curto no final.",
   ].join("\n");
 }
@@ -179,88 +181,39 @@ const ex = (exercise_name: string, sets = "3", reps = "10 a 12", rest_seconds = 
 });
 
 /** Treino de musculação padrão, usado na hora se a IA falhar ou demorar. */
-function fallbackPlan(answers: Record<string, unknown>): AiResult {
+function fallbackPlan(answers: Record<string, unknown>, tier?: PlanTier): AiResult {
   const text = JSON.stringify(answers).toLowerCase();
   const m = text.match(/(\d)\s*(x|dias|vezes)/);
   const days = Math.min(6, Math.max(3, m ? Number(m[1]) : 4));
   const A = { plan_name: "Treino A — Peito, ombros e tríceps", exercises: [ex("Supino reto com halteres"), ex("Supino inclinado na máquina"), ex("Crucifixo na máquina"), ex("Desenvolvimento com halteres"), ex("Elevação lateral"), ex("Tríceps na polia")] };
   const B = { plan_name: "Treino B — Costas e bíceps", exercises: [ex("Puxada frontal na polia"), ex("Remada baixa na polia"), ex("Remada curvada com halteres"), ex("Pulldown com braços estendidos"), ex("Rosca direta"), ex("Rosca martelo")] };
   const C = { plan_name: "Treino C — Pernas e glúteos", exercises: [ex("Agachamento livre"), ex("Leg press 45°"), ex("Cadeira extensora"), ex("Mesa flexora"), ex("Elevação pélvica"), ex("Panturrilha em pé", "4", "15")] };
-  const rotation = [A, B, C];
+  const lose = /emagre|perder|gordura|secar/.test(text);
+  const beginner = /iniciante|nunca|come[cç]ando|sem experi/.test(text);
+  const tune = (p: { plan_name: string; exercises: AiExercise[] }) => ({
+    plan_name: p.plan_name,
+    exercises: [
+      ...p.exercises.map((e) => ({ ...e, sets: beginner ? "3" : "4", reps: lose ? "12 a 15" : "8 a 12", rest_seconds: lose ? 45 : 75, load_text: beginner ? "peso leve, foco na execução" : "moderado" })),
+      ...(lose ? [ex("Esteira ou bicicleta (cardio leve)", "1", "15 min", 0)] : []),
+    ],
+  });
+  const rotation = (days <= 3 ? [
+    { plan_name: "Treino A — Corpo inteiro", exercises: [A.exercises[0], B.exercises[0], C.exercises[0], A.exercises[3], B.exercises[4], C.exercises[4]] },
+    { plan_name: "Treino B — Corpo inteiro", exercises: [C.exercises[1], B.exercises[1], A.exercises[1], A.exercises[4], A.exercises[5], C.exercises[3]] },
+  ] : [A, B, C]).map(tune);
   const dayMap = [1, 2, 3, 4, 5, 6];
   return {
-    summary: "Treino de musculação para evoluir com segurança.",
-    goals: null,
-    progression: null,
-    plans: Array.from({ length: days }, (_, i) => ({ day_of_week: dayMap[i], ...rotation[i % 3] })),
+    summary: lose ? "Musculação como base para queimar gordura, com cardio curto no final." : "Musculação para ganhar força e massa muscular com segurança.",
+    goals: tier?.pdf.goals ? ["Treinar com constância toda semana", "Aprender a execução correta", "Aumentar a carga aos poucos"] : null,
+    progression: tier?.pdf.progression ? "Quando fizer todas as repetições com facilidade, aumente um pouco a carga na semana seguinte." : null,
+    plans: Array.from({ length: days }, (_, i) => ({ day_of_week: days <= 3 ? [1, 3, 5][i] : dayMap[i], ...rotation[i % rotation.length] })),
   };
 }
 
-/**
- * Gera (uma única vez) o treino com IA para o comprador de uma venda aprovada.
- * Nunca lança: falhas são registradas e a compra/acesso seguem normalmente.
- */
-export async function generateAiPlanForPurchase(reference: string): Promise<AiPlanResult> {
-  try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: purchase } = await supabaseAdmin
-      .from("purchases")
-      .select("user_id, customer_email, customer_name, status, plan_id")
-      .eq("provider_reference", reference)
-      .maybeSingle();
-
-    if (!purchase || purchase.status !== "approved") {
-      return { ok: false, plans: 0, pdf: false, message: "Pagamento não confirmado" };
-    }
-
-    const email = purchase.customer_email?.trim().toLowerCase();
-    let userId = purchase.user_id;
-    if (!userId && email) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-      userId = profile?.id ?? null;
-    }
-    if (!userId) return { ok: false, plans: 0, pdf: false, message: "Conta do aluno não encontrada" };
-
-    // Idempotente: se o aluno já tem treinos, não gera de novo.
-    const { data: existingPlans } = await supabaseAdmin
-      .from("student_plans")
-      .select("id")
-      .eq("student_id", userId)
-      .limit(1);
-    if (existingPlans?.length) return { ok: true, plans: 0, pdf: false, message: "Aluno já possui treinos" };
-
-    let answers: Record<string, unknown> = {};
-    if (email) {
-      const { data: lead } = await supabaseAdmin
-        .from("leads")
-        .select("answers")
-        .eq("email", email)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      answers = (lead?.answers as Record<string, unknown> | null) ?? {};
-    }
-
-    const studentName = purchase.customer_name || email || "Aluno";
-    const tier = resolvePlanTier(purchase.plan_id);
-    let ai: AiResult;
-    try {
-      ai = await Promise.race([
-        askAiForPlan(buildPrompt(studentName, answers, tier), tier),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("IA demorou demais")), 45000)),
-      ]);
-      if (!ai.plans?.length) throw new Error("A IA não retornou treinos");
-    } catch (e) {
-      console.error("[ai-plan] usando treino padrão:", e instanceof Error ? e.message : e);
-      ai = fallbackPlan(answers);
-    }
-    const plans = (ai.plans ?? []).slice(0, 7);
-
+async function savePlans(userId: string, studentName: string, tier: PlanTier, ai: AiResult): Promise<AiPlanResult & { planIds: string[] }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const plans = (ai.plans ?? []).slice(0, 7);
+  const planIds: string[] = [];
     let pdfSaved = false;
     let created = 0;
 
@@ -280,6 +233,7 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
         continue;
       }
       created += 1;
+      planIds.push(planRow.id);
 
       const exercises = (plan.exercises ?? []).slice(0, 12);
       if (exercises.length) {
@@ -335,7 +289,85 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
       }
     }
 
-    return { ok: created > 0, plans: created, pdf: pdfSaved };
+    return { ok: created > 0, plans: created, pdf: pdfSaved, planIds };
+}
+
+/**
+ * Gera (uma única vez) o treino com IA para o comprador de uma venda aprovada.
+ * Nunca lança: falhas são registradas e a compra/acesso seguem normalmente.
+ */
+export async function generateAiPlanForPurchase(reference: string): Promise<AiPlanResult> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: purchase } = await supabaseAdmin
+      .from("purchases")
+      .select("user_id, customer_email, customer_name, status, plan_id")
+      .eq("provider_reference", reference)
+      .maybeSingle();
+
+    if (!purchase || purchase.status !== "approved") {
+      return { ok: false, plans: 0, pdf: false, message: "Pagamento não confirmado" };
+    }
+
+    const email = purchase.customer_email?.trim().toLowerCase();
+    let userId = purchase.user_id;
+    if (!userId && email) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      userId = profile?.id ?? null;
+    }
+    if (!userId) return { ok: false, plans: 0, pdf: false, message: "Conta do aluno não encontrada" };
+
+    // Idempotente: se o aluno já tem treinos, não gera de novo.
+    const { data: existingPlans } = await supabaseAdmin
+      .from("student_plans")
+      .select("id")
+      .eq("student_id", userId)
+      .limit(1);
+    if (existingPlans?.length) return { ok: true, plans: 0, pdf: false, message: "Aluno já possui treinos" };
+
+    let answers: Record<string, unknown> = {};
+    if (email) {
+      const { data: lead } = await supabaseAdmin
+        .from("leads")
+        .select("answers")
+        .eq("email", email)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      answers = (lead?.answers as Record<string, unknown> | null) ?? {};
+    }
+
+    const studentName = purchase.customer_name || email || "Aluno";
+    const tier = resolvePlanTier(purchase.plan_id);
+    const aiPromise = askAiForPlan(buildPrompt(studentName, answers, tier), tier)
+      .then((r) => { if (!r.plans?.length) console.error("[ai-plan] IA sem treinos", JSON.stringify(r).slice(0, 300)); return r.plans?.length ? r : null; })
+      .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
+
+    // Espera no máximo 2,5s pela IA; se demorar, libera na hora um treino montado pelas respostas.
+    const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 2500))]);
+    if (quick && quick !== "timeout") {
+      return await savePlans(userId, studentName, tier, quick);
+    }
+
+    const instant = await savePlans(userId, studentName, tier, fallbackPlan(answers, tier));
+    // Continua esperando a IA e troca pelo treino personalizado quando ficar pronto.
+    const upgrade = aiPromise.then(async (ai) => {
+      if (!ai) return;
+      const { data: done } = await supabaseAdmin.from("student_plan_exercises").select("id")
+        .in("plan_id", instant.planIds).not("completed_at", "is", null).limit(1);
+      if (done?.length) return; // aluno já começou a usar: não mexe
+      await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", instant.planIds);
+      await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", instant.planIds);
+      await supabaseAdmin.from("student_plans").delete().in("id", instant.planIds);
+      await savePlans(userId!, studentName, tier, ai);
+    }).catch((e) => console.error("[ai-plan] falha ao trocar pelo treino da IA", e));
+    await Promise.race([upgrade, new Promise((r) => setTimeout(r, 90000))]);
+    return instant;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[ai-plan] erro", message);
