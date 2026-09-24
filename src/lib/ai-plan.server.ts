@@ -344,7 +344,7 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
     const studentName = purchase.customer_name || email || "Aluno";
     const tier = resolvePlanTier(purchase.plan_id);
     const aiPromise = askAiForPlan(buildPrompt(studentName, answers, tier), tier)
-      .then((r) => (r.plans?.length ? r : null))
+      .then((r) => { if (!r.plans?.length) console.error("[ai-plan] IA sem treinos", JSON.stringify(r).slice(0, 300)); return r.plans?.length ? r : null; })
       .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
 
     // Espera no máximo 4s pela IA; se demorar, libera na hora um treino montado pelas respostas.
