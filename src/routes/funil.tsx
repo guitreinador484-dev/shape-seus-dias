@@ -192,7 +192,7 @@ function FunnelPage() {
     saveFunnelLead({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      answers: { measurements, broad, routine, nutrition },
+      answers: { measurements, broad, routine, nutrition: unlockNutrition ? nutrition : null },
       planId: selectedPlan.id,
       contact,
     });
@@ -204,7 +204,7 @@ function FunnelPage() {
         email: contact.email,
         whatsapp: contact.whatsapp,
         planId: selectedPlan.id,
-        answers: { measurements, broad, routine, nutrition, plan: selectedPlan },
+        answers: { measurements, broad, routine, nutrition: unlockNutrition ? nutrition : null, plan: selectedPlan },
       },
     }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
 
@@ -652,7 +652,7 @@ function FunnelPage() {
               <h2 className="text-2xl font-extrabold">Escolha seu plano</h2>
               <p className="text-sm text-muted-foreground">Selecione o melhor plano para você</p>
               <button
-                onClick={() => setStage("nutrition")}
+                onClick={() => setStage("form")}
                 className="mt-2 text-xs text-primary hover:underline"
               >
                 ← Mudar objetivo
