@@ -161,7 +161,7 @@ function FunnelPage() {
       alert("Preencha todas as informações antes de continuar.");
       return;
     }
-    setStage("nutrition");
+    setStage("plans");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -645,21 +645,6 @@ function FunnelPage() {
           </>
         )}
 
-        {stage === "nutrition" && (
-          <Card>
-            <CardHeader title="Sua alimentação" subtitle="Preferências iniciais para personalizar seu acompanhamento. Isso não substitui avaliação médica ou nutricional." icon={<Activity className="h-4 w-4 text-primary" />} />
-            <div className="grid gap-4">
-              <LongTextInput label="Quais alimentos você mais gosta?" value={nutrition.favoriteFoods} onChange={(value) => setNutrition((current) => ({ ...current, favoriteFoods: value }))} />
-              <LongTextInput label="Quais alimentos você não gosta?" value={nutrition.dislikedFoods} onChange={(value) => setNutrition((current) => ({ ...current, dislikedFoods: value }))} />
-              <LongTextInput label="Possui alguma restrição alimentar?" value={nutrition.restrictions} onChange={(value) => setNutrition((current) => ({ ...current, restrictions: value }))} placeholder="Se não possui, escreva: Nenhuma" />
-              <LongTextInput label="Possui alguma alergia alimentar?" value={nutrition.allergies} onChange={(value) => setNutrition((current) => ({ ...current, allergies: value }))} placeholder="Se não possui, escreva: Nenhuma" />
-              <LongTextInput label="Como é sua rotina de alimentação?" value={nutrition.routine} onChange={(value) => setNutrition((current) => ({ ...current, routine: value }))} />
-              <LongTextInput label="Existe algum alimento que você não consome?" value={nutrition.avoidedFoods} onChange={(value) => setNutrition((current) => ({ ...current, avoidedFoods: value }))} />
-              <LongTextInput label="Qual seu objetivo principal relacionado à alimentação?" value={nutrition.goal} onChange={(value) => setNutrition((current) => ({ ...current, goal: value }))} />
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onClick={() => setStage("form")} className="rounded-lg border-2 border-primary py-3 text-sm font-semibold text-primary">← Voltar</button><button onClick={() => { setStage("plans"); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={!nutrition.goal.trim() || !nutrition.routine.trim()} className="rounded-lg bg-primary py-3 text-sm font-semibold text-white disabled:opacity-50">Continuar para os planos →</button></div>
-          </Card>
-        )}
 
         {stage === "plans" && (
           <div className="space-y-4">
@@ -780,6 +765,13 @@ function FunnelPage() {
                   </span>
                 </label>
               ))}
+              {unlockNutrition && (
+                <div className="mt-5 rounded-lg border border-primary/30 bg-secondary p-4">
+                  <p className="text-base font-bold text-foreground">Sua alimentação</p>
+                  <p className="mb-4 text-xs text-muted-foreground">Toque nas opções para personalizarmos seu plano alimentar. Não substitui avaliação médica ou nutricional.</p>
+                  <NutritionChoices value={nutrition} onChange={setNutrition} />
+                </div>
+              )}
               <ul className="mt-4 space-y-1.5 text-sm text-foreground/80">
                 {selectedPlan.features.slice(0, 3).map((f, i) => (
                   <li key={i} className="flex items-center gap-2">
@@ -813,7 +805,7 @@ function FunnelPage() {
               )}
               <button
                 onClick={handleFinish}
-                disabled={!contact.email || submitting}
+                disabled={!contact.email || submitting || (unlockNutrition && (!nutrition.goal || !nutrition.routine))}
                 className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
@@ -952,8 +944,49 @@ function FunnelPage() {
   );
 }
 
-function LongTextInput({ label, value, onChange, placeholder = "Conte um pouco..." }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
-  return <label className="block"><span className="mb-1.5 block text-sm font-semibold text-foreground">{label}</span><textarea value={value} maxLength={1500} rows={3} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full resize-none rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>;
+const NUTRITION_QUESTIONS: { key: keyof NutritionAnswers; label: string; options: string[]; single?: boolean }[] = [
+  { key: "goal", label: "Qual seu objetivo principal com a alimentação?", single: true, options: ["Emagrecer", "Ganhar massa muscular", "Definir o corpo", "Ter mais energia", "Comer de forma mais saudável"] },
+  { key: "routine", label: "Quantas refeições você faz por dia?", single: true, options: ["1 a 2", "3", "4", "5 ou mais", "Não tenho horário certo"] },
+  { key: "favoriteFoods", label: "Quais alimentos você mais gosta?", options: ["Frango", "Carne vermelha", "Peixe", "Ovos", "Arroz e feijão", "Massas", "Frutas", "Legumes e verduras", "Laticínios", "Doces"] },
+  { key: "dislikedFoods", label: "Quais alimentos você não gosta?", options: ["Peixe", "Ovos", "Legumes e verduras", "Frutas", "Carne vermelha", "Laticínios", "Nenhum"] },
+  { key: "restrictions", label: "Possui alguma restrição alimentar?", options: ["Nenhuma", "Vegetariano", "Vegano", "Sem lactose", "Sem glúten", "Low carb"] },
+  { key: "allergies", label: "Possui alguma alergia alimentar?", options: ["Nenhuma", "Lactose", "Glúten", "Amendoim / castanhas", "Frutos do mar", "Ovo"] },
+  { key: "avoidedFoods", label: "Existe algum alimento que você não consome?", options: ["Nenhum", "Carne de porco", "Carne vermelha", "Açúcar", "Refrigerante", "Bebida alcoólica"] },
+];
+
+function NutritionChoices({ value, onChange }: { value: NutritionAnswers; onChange: (v: NutritionAnswers) => void }) {
+  return (
+    <div className="grid gap-5">
+      {NUTRITION_QUESTIONS.map((q) => {
+        const selected = value[q.key] ? value[q.key].split(", ") : [];
+        const toggle = (opt: string) => {
+          let next: string[];
+          if (q.single) next = [opt];
+          else if (selected.includes(opt)) next = selected.filter((s) => s !== opt);
+          else if (/^Nenhum/.test(opt)) next = [opt];
+          else next = [...selected.filter((s) => !/^Nenhum/.test(s)), opt];
+          onChange({ ...value, [q.key]: next.join(", ") });
+        };
+        return (
+          <div key={q.key}>
+            <p className="mb-2 text-sm font-semibold text-foreground">
+              {q.label} <span className="text-xs font-normal text-muted-foreground">{q.single ? "(escolha uma)" : "(pode marcar várias)"}</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {q.options.map((opt) => {
+                const on = selected.includes(opt);
+                return (
+                  <button key={opt} type="button" onClick={() => toggle(opt)} className={`min-h-10 rounded-lg border-2 px-3 py-2 text-sm font-medium transition ${on ? "border-primary bg-primary/15 text-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/50"}`}>
+                    {on && <Check className="mr-1 inline h-3.5 w-3.5 text-primary" />}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
