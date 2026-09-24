@@ -169,6 +169,7 @@ function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanT
     "Respostas do questionário (JSON):",
     JSON.stringify(answers, null, 2),
     "Monte a divisão semanal de MUSCULAÇÃO respeitando a quantidade de dias disponíveis informada e o objetivo declarado. " +
+      "Se faltar alguma resposta, NÃO peça mais informações: assuma iniciante, 4 dias (seg, ter, qui, sex) e objetivo de ganhar massa, e monte o treino mesmo assim. " +
       "Se o objetivo for emagrecer, mantenha a musculação como base do treino e acrescente no máximo um cardio curto no final.",
   ].join("\n");
 }
@@ -347,8 +348,8 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
       .then((r) => { if (!r.plans?.length) console.error("[ai-plan] IA sem treinos", JSON.stringify(r).slice(0, 300)); return r.plans?.length ? r : null; })
       .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
 
-    // Espera no máximo 4s pela IA; se demorar, libera na hora um treino montado pelas respostas.
-    const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 4000))]);
+    // Espera no máximo 2,5s pela IA; se demorar, libera na hora um treino montado pelas respostas.
+    const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 2500))]);
     if (quick && quick !== "timeout") {
       return await savePlans(userId, studentName, tier, quick);
     }
