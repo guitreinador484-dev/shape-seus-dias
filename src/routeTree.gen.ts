@@ -9,48 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as FunilRouteImport } from './routes/funil'
-import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
+import { Route as FunilRouteImport } from './routes/funil'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedPlataformaRouteImport } from './routes/_authenticated/plataforma'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_authenticated/plataforma.cursos'
-import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
-import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
-import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_authenticated/admin.plataforma'
-import { Route as AuthenticatedAdminOrderBumpRouteImport } from './routes/_authenticated/admin.order-bump'
-import { Route as AuthenticatedAdminNutricaoRouteImport } from './routes/_authenticated/admin.nutricao'
-import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_authenticated/admin.funil-vendas'
-import { Route as AuthenticatedAdminFeedbacksRouteImport } from './routes/_authenticated/admin.feedbacks'
-import { Route as AuthenticatedAdminEngajamentoRouteImport } from './routes/_authenticated/admin.engajamento'
-import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenticated/admin.cursos'
-import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
-import { Route as AuthenticatedAdminBibliotecaRouteImport } from './routes/_authenticated/admin.biblioteca'
-import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
 import { Route as AuthenticatedAdminAlunosRouteImport } from './routes/_authenticated/admin.alunos'
+import { Route as AuthenticatedAdminAulasRouteImport } from './routes/_authenticated/admin.aulas'
+import { Route as AuthenticatedAdminBibliotecaRouteImport } from './routes/_authenticated/admin.biblioteca'
+import { Route as AuthenticatedAdminConfiguracoesRouteImport } from './routes/_authenticated/admin.configuracoes'
+import { Route as AuthenticatedAdminCursosRouteImport } from './routes/_authenticated/admin.cursos'
+import { Route as AuthenticatedAdminEngajamentoRouteImport } from './routes/_authenticated/admin.engajamento'
+import { Route as AuthenticatedAdminFeedbacksRouteImport } from './routes/_authenticated/admin.feedbacks'
+import { Route as AuthenticatedAdminFunilVendasRouteImport } from './routes/_authenticated/admin.funil-vendas'
+import { Route as AuthenticatedAdminNutricaoRouteImport } from './routes/_authenticated/admin.nutricao'
+import { Route as AuthenticatedAdminOrderBumpRouteImport } from './routes/_authenticated/admin.order-bump'
+import { Route as AuthenticatedAdminPlataformaRouteImport } from './routes/_authenticated/admin.plataforma'
+import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin.treinos'
+import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin.vendas'
+import { Route as AuthenticatedPlataformaCursosRouteImport } from './routes/_authenticated/plataforma.cursos'
 import { Route as AuthenticatedAdminAlunosIndexRouteImport } from './routes/_authenticated/admin.alunos.index'
-import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
-import { Route as AuthenticatedPlataformaCursosSlugRouteImport } from './routes/_authenticated/plataforma.cursos.$slug'
-import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
 import { Route as AuthenticatedAdminAlunosIdRouteImport } from './routes/_authenticated/admin.alunos.$id'
+import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
+import { Route as AuthenticatedPlataformaCursosSlugRouteImport } from './routes/_authenticated/plataforma.cursos.$slug'
+import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FunilRoute = FunilRouteImport.update({
-  id: '/funil',
-  path: '/funil',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CriarSenhaRoute = CriarSenhaRouteImport.update({
-  id: '/criar-senha',
-  path: '/criar-senha',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -58,105 +52,34 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const CriarSenhaRoute = CriarSenhaRouteImport.update({
+  id: '/criar-senha',
+  path: '/criar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const FunilRoute = FunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPlataformaRoute = AuthenticatedPlataformaRouteImport.update({
-  id: '/plataforma',
-  path: '/plataforma',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlataformaRoute = AuthenticatedPlataformaRouteImport.update({
+  id: '/plataforma',
+  path: '/plataforma',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedPlataformaCursosRoute =
-  AuthenticatedPlataformaCursosRouteImport.update({
-    id: '/cursos',
-    path: '/cursos',
-    getParentRoute: () => AuthenticatedPlataformaRoute,
-  } as any)
-const AuthenticatedAdminVendasRoute =
-  AuthenticatedAdminVendasRouteImport.update({
-    id: '/vendas',
-    path: '/vendas',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminTreinosRoute =
-  AuthenticatedAdminTreinosRouteImport.update({
-    id: '/treinos',
-    path: '/treinos',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminPlataformaRoute =
-  AuthenticatedAdminPlataformaRouteImport.update({
-    id: '/plataforma',
-    path: '/plataforma',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminOrderBumpRoute =
-  AuthenticatedAdminOrderBumpRouteImport.update({
-    id: '/order-bump',
-    path: '/order-bump',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminNutricaoRoute =
-  AuthenticatedAdminNutricaoRouteImport.update({
-    id: '/nutricao',
-    path: '/nutricao',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminFunilVendasRoute =
-  AuthenticatedAdminFunilVendasRouteImport.update({
-    id: '/funil-vendas',
-    path: '/funil-vendas',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminFeedbacksRoute =
-  AuthenticatedAdminFeedbacksRouteImport.update({
-    id: '/feedbacks',
-    path: '/feedbacks',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminEngajamentoRoute =
-  AuthenticatedAdminEngajamentoRouteImport.update({
-    id: '/engajamento',
-    path: '/engajamento',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminCursosRoute =
-  AuthenticatedAdminCursosRouteImport.update({
-    id: '/cursos',
-    path: '/cursos',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminConfiguracoesRoute =
-  AuthenticatedAdminConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminBibliotecaRoute =
-  AuthenticatedAdminBibliotecaRouteImport.update({
-    id: '/biblioteca',
-    path: '/biblioteca',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminAulasRoute = AuthenticatedAdminAulasRouteImport.update({
-  id: '/aulas',
-  path: '/aulas',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedAdminAlunosRoute =
@@ -165,23 +88,94 @@ const AuthenticatedAdminAlunosRoute =
     path: '/alunos',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAulasRoute = AuthenticatedAdminAulasRouteImport.update({
+  id: '/aulas',
+  path: '/aulas',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminBibliotecaRoute =
+  AuthenticatedAdminBibliotecaRouteImport.update({
+    id: '/biblioteca',
+    path: '/biblioteca',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminConfiguracoesRoute =
+  AuthenticatedAdminConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCursosRoute =
+  AuthenticatedAdminCursosRouteImport.update({
+    id: '/cursos',
+    path: '/cursos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEngajamentoRoute =
+  AuthenticatedAdminEngajamentoRouteImport.update({
+    id: '/engajamento',
+    path: '/engajamento',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminFeedbacksRoute =
+  AuthenticatedAdminFeedbacksRouteImport.update({
+    id: '/feedbacks',
+    path: '/feedbacks',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminFunilVendasRoute =
+  AuthenticatedAdminFunilVendasRouteImport.update({
+    id: '/funil-vendas',
+    path: '/funil-vendas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminNutricaoRoute =
+  AuthenticatedAdminNutricaoRouteImport.update({
+    id: '/nutricao',
+    path: '/nutricao',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminOrderBumpRoute =
+  AuthenticatedAdminOrderBumpRouteImport.update({
+    id: '/order-bump',
+    path: '/order-bump',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPlataformaRoute =
+  AuthenticatedAdminPlataformaRouteImport.update({
+    id: '/plataforma',
+    path: '/plataforma',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminTreinosRoute =
+  AuthenticatedAdminTreinosRouteImport.update({
+    id: '/treinos',
+    path: '/treinos',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminVendasRoute =
+  AuthenticatedAdminVendasRouteImport.update({
+    id: '/vendas',
+    path: '/vendas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedPlataformaCursosRoute =
+  AuthenticatedPlataformaCursosRouteImport.update({
+    id: '/cursos',
+    path: '/cursos',
+    getParentRoute: () => AuthenticatedPlataformaRoute,
+  } as any)
 const AuthenticatedAdminAlunosIndexRoute =
   AuthenticatedAdminAlunosIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedAdminAlunosRoute,
   } as any)
-const ApiPublicMercadopagoWebhookRoute =
-  ApiPublicMercadopagoWebhookRouteImport.update({
-    id: '/api/public/mercadopago/webhook',
-    path: '/api/public/mercadopago/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedPlataformaCursosSlugRoute =
-  AuthenticatedPlataformaCursosSlugRouteImport.update({
-    id: '/$slug',
-    path: '/$slug',
-    getParentRoute: () => AuthenticatedPlataformaCursosRoute,
+const AuthenticatedAdminAlunosIdRoute =
+  AuthenticatedAdminAlunosIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminAlunosRoute,
   } as any)
 const AuthenticatedAdminCursosIdRoute =
   AuthenticatedAdminCursosIdRouteImport.update({
@@ -189,11 +183,17 @@ const AuthenticatedAdminCursosIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAdminCursosRoute,
   } as any)
-const AuthenticatedAdminAlunosIdRoute =
-  AuthenticatedAdminAlunosIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAdminAlunosRoute,
+const AuthenticatedPlataformaCursosSlugRoute =
+  AuthenticatedPlataformaCursosSlugRouteImport.update({
+    id: '/$slug',
+    path: '/$slug',
+    getParentRoute: () => AuthenticatedPlataformaCursosRoute,
+  } as any)
+const ApiPublicMercadopagoWebhookRoute =
+  ApiPublicMercadopagoWebhookRouteImport.update({
+    id: '/api/public/mercadopago/webhook',
+    path: '/api/public/mercadopago/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -384,32 +384,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/funil': {
-      id: '/funil'
-      path: '/funil'
-      fullPath: '/funil'
-      preLoaderRoute: typeof FunilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/criar-senha': {
-      id: '/criar-senha'
-      path: '/criar-senha'
-      fullPath: '/criar-senha'
-      preLoaderRoute: typeof CriarSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -419,25 +398,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/plataforma': {
-      id: '/_authenticated/plataforma'
-      path: '/plataforma'
-      fullPath: '/plataforma'
-      preLoaderRoute: typeof AuthenticatedPlataformaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/criar-senha': {
+      id: '/criar-senha'
+      path: '/criar-senha'
+      fullPath: '/criar-senha'
+      preLoaderRoute: typeof CriarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/funil': {
+      id: '/funil'
+      path: '/funil'
+      fullPath: '/funil'
+      preLoaderRoute: typeof FunilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plataforma': {
+      id: '/_authenticated/plataforma'
+      path: '/plataforma'
+      fullPath: '/plataforma'
+      preLoaderRoute: typeof AuthenticatedPlataformaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/': {
@@ -447,88 +447,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/plataforma/cursos': {
-      id: '/_authenticated/plataforma/cursos'
-      path: '/cursos'
-      fullPath: '/plataforma/cursos'
-      preLoaderRoute: typeof AuthenticatedPlataformaCursosRouteImport
-      parentRoute: typeof AuthenticatedPlataformaRoute
-    }
-    '/_authenticated/admin/vendas': {
-      id: '/_authenticated/admin/vendas'
-      path: '/vendas'
-      fullPath: '/admin/vendas'
-      preLoaderRoute: typeof AuthenticatedAdminVendasRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/treinos': {
-      id: '/_authenticated/admin/treinos'
-      path: '/treinos'
-      fullPath: '/admin/treinos'
-      preLoaderRoute: typeof AuthenticatedAdminTreinosRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/plataforma': {
-      id: '/_authenticated/admin/plataforma'
-      path: '/plataforma'
-      fullPath: '/admin/plataforma'
-      preLoaderRoute: typeof AuthenticatedAdminPlataformaRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/order-bump': {
-      id: '/_authenticated/admin/order-bump'
-      path: '/order-bump'
-      fullPath: '/admin/order-bump'
-      preLoaderRoute: typeof AuthenticatedAdminOrderBumpRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/nutricao': {
-      id: '/_authenticated/admin/nutricao'
-      path: '/nutricao'
-      fullPath: '/admin/nutricao'
-      preLoaderRoute: typeof AuthenticatedAdminNutricaoRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/funil-vendas': {
-      id: '/_authenticated/admin/funil-vendas'
-      path: '/funil-vendas'
-      fullPath: '/admin/funil-vendas'
-      preLoaderRoute: typeof AuthenticatedAdminFunilVendasRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/feedbacks': {
-      id: '/_authenticated/admin/feedbacks'
-      path: '/feedbacks'
-      fullPath: '/admin/feedbacks'
-      preLoaderRoute: typeof AuthenticatedAdminFeedbacksRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/engajamento': {
-      id: '/_authenticated/admin/engajamento'
-      path: '/engajamento'
-      fullPath: '/admin/engajamento'
-      preLoaderRoute: typeof AuthenticatedAdminEngajamentoRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/cursos': {
-      id: '/_authenticated/admin/cursos'
-      path: '/cursos'
-      fullPath: '/admin/cursos'
-      preLoaderRoute: typeof AuthenticatedAdminCursosRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/configuracoes': {
-      id: '/_authenticated/admin/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/admin/configuracoes'
-      preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/biblioteca': {
-      id: '/_authenticated/admin/biblioteca'
-      path: '/biblioteca'
-      fullPath: '/admin/biblioteca'
-      preLoaderRoute: typeof AuthenticatedAdminBibliotecaRouteImport
+    '/_authenticated/admin/alunos': {
+      id: '/_authenticated/admin/alunos'
+      path: '/alunos'
+      fullPath: '/admin/alunos'
+      preLoaderRoute: typeof AuthenticatedAdminAlunosRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/aulas': {
@@ -538,12 +461,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAulasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/alunos': {
-      id: '/_authenticated/admin/alunos'
-      path: '/alunos'
-      fullPath: '/admin/alunos'
-      preLoaderRoute: typeof AuthenticatedAdminAlunosRouteImport
+    '/_authenticated/admin/biblioteca': {
+      id: '/_authenticated/admin/biblioteca'
+      path: '/biblioteca'
+      fullPath: '/admin/biblioteca'
+      preLoaderRoute: typeof AuthenticatedAdminBibliotecaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/configuracoes': {
+      id: '/_authenticated/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AuthenticatedAdminConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/cursos': {
+      id: '/_authenticated/admin/cursos'
+      path: '/cursos'
+      fullPath: '/admin/cursos'
+      preLoaderRoute: typeof AuthenticatedAdminCursosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/engajamento': {
+      id: '/_authenticated/admin/engajamento'
+      path: '/engajamento'
+      fullPath: '/admin/engajamento'
+      preLoaderRoute: typeof AuthenticatedAdminEngajamentoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/feedbacks': {
+      id: '/_authenticated/admin/feedbacks'
+      path: '/feedbacks'
+      fullPath: '/admin/feedbacks'
+      preLoaderRoute: typeof AuthenticatedAdminFeedbacksRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/funil-vendas': {
+      id: '/_authenticated/admin/funil-vendas'
+      path: '/funil-vendas'
+      fullPath: '/admin/funil-vendas'
+      preLoaderRoute: typeof AuthenticatedAdminFunilVendasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/nutricao': {
+      id: '/_authenticated/admin/nutricao'
+      path: '/nutricao'
+      fullPath: '/admin/nutricao'
+      preLoaderRoute: typeof AuthenticatedAdminNutricaoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/order-bump': {
+      id: '/_authenticated/admin/order-bump'
+      path: '/order-bump'
+      fullPath: '/admin/order-bump'
+      preLoaderRoute: typeof AuthenticatedAdminOrderBumpRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/plataforma': {
+      id: '/_authenticated/admin/plataforma'
+      path: '/plataforma'
+      fullPath: '/admin/plataforma'
+      preLoaderRoute: typeof AuthenticatedAdminPlataformaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/treinos': {
+      id: '/_authenticated/admin/treinos'
+      path: '/treinos'
+      fullPath: '/admin/treinos'
+      preLoaderRoute: typeof AuthenticatedAdminTreinosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/vendas': {
+      id: '/_authenticated/admin/vendas'
+      path: '/vendas'
+      fullPath: '/admin/vendas'
+      preLoaderRoute: typeof AuthenticatedAdminVendasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/plataforma/cursos': {
+      id: '/_authenticated/plataforma/cursos'
+      path: '/cursos'
+      fullPath: '/plataforma/cursos'
+      preLoaderRoute: typeof AuthenticatedPlataformaCursosRouteImport
+      parentRoute: typeof AuthenticatedPlataformaRoute
     }
     '/_authenticated/admin/alunos/': {
       id: '/_authenticated/admin/alunos/'
@@ -552,19 +552,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAlunosIndexRouteImport
       parentRoute: typeof AuthenticatedAdminAlunosRoute
     }
-    '/api/public/mercadopago/webhook': {
-      id: '/api/public/mercadopago/webhook'
-      path: '/api/public/mercadopago/webhook'
-      fullPath: '/api/public/mercadopago/webhook'
-      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/plataforma/cursos/$slug': {
-      id: '/_authenticated/plataforma/cursos/$slug'
-      path: '/$slug'
-      fullPath: '/plataforma/cursos/$slug'
-      preLoaderRoute: typeof AuthenticatedPlataformaCursosSlugRouteImport
-      parentRoute: typeof AuthenticatedPlataformaCursosRoute
+    '/_authenticated/admin/alunos/$id': {
+      id: '/_authenticated/admin/alunos/$id'
+      path: '/$id'
+      fullPath: '/admin/alunos/$id'
+      preLoaderRoute: typeof AuthenticatedAdminAlunosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminAlunosRoute
     }
     '/_authenticated/admin/cursos/$id': {
       id: '/_authenticated/admin/cursos/$id'
@@ -573,12 +566,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCursosIdRouteImport
       parentRoute: typeof AuthenticatedAdminCursosRoute
     }
-    '/_authenticated/admin/alunos/$id': {
-      id: '/_authenticated/admin/alunos/$id'
-      path: '/$id'
-      fullPath: '/admin/alunos/$id'
-      preLoaderRoute: typeof AuthenticatedAdminAlunosIdRouteImport
-      parentRoute: typeof AuthenticatedAdminAlunosRoute
+    '/_authenticated/plataforma/cursos/$slug': {
+      id: '/_authenticated/plataforma/cursos/$slug'
+      path: '/$slug'
+      fullPath: '/plataforma/cursos/$slug'
+      preLoaderRoute: typeof AuthenticatedPlataformaCursosSlugRouteImport
+      parentRoute: typeof AuthenticatedPlataformaCursosRoute
+    }
+    '/api/public/mercadopago/webhook': {
+      id: '/api/public/mercadopago/webhook'
+      path: '/api/public/mercadopago/webhook'
+      fullPath: '/api/public/mercadopago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }

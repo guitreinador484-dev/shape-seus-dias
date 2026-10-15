@@ -1105,6 +1105,7 @@ export function AdminTrainingPanel() {
   const [plans, setPlans] = useState<PlanWithExercises[]>([]);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [filterStudent, setFilterStudent] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const [planName, setPlanName] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState("1");
   const [loading, setLoading] = useState(true);
@@ -1166,15 +1167,6 @@ export function AdminTrainingPanel() {
         description="Crie, organize e entregue os treinos e PDFs de cada aluno."
         action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Novo treino</Button>}
       />
-      <Card className="mb-6">
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-          <Select value={filterStudent} onValueChange={setFilterStudent}>
-            <SelectTrigger><SelectValue placeholder="Filtrar por aluno" /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Todos os alunos ({plans.length})</SelectItem>{sortedStudents.map((student) => <SelectItem key={student.id} value={student.id}>{student.full_name || student.email} ({plans.filter((plan) => plan.student_id === student.id).length})</SelectItem>)}</SelectContent>
-          </Select>
-          <p className="text-sm text-muted-foreground">{filteredPlans.length} treino(s)</p>
-        </CardContent>
-      </Card>
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader><DialogTitle>Novo treino</DialogTitle><DialogDescription>Escolha o aluno, o nome e o dia deste treino.</DialogDescription></DialogHeader>
@@ -1192,11 +1184,60 @@ export function AdminTrainingPanel() {
           <DialogFooter><Button variant="outline" onClick={() => setNewOpen(false)}>Cancelar</Button><Button onClick={createPlan}><Plus className="h-4 w-4" /> Criar treino</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-      {loading ? <Skeleton className="h-80" /> : filteredPlans.length === 0 ? <EmptyBox title="Nenhum treino encontrado" description={filterStudent === "all" ? "Crie o primeiro treino e vincule a um aluno." : "Este aluno ainda não possui treinos."} action={<Button onClick={() => setNewOpen(true)}><Plus className="mr-2 h-4 w-4" /> Criar primeiro treino</Button>} /> : (
-        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={studentById.get(plan.student_id)} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
-        </div>
-      )}
+      {loading ? <Skeleton className="h-80" /> : filterStudent !== "all" ? (() => {
+        const student = studentById.get(filterStudent);
+        const name = student?.full_name || student?.email || "Aluno";
+        const totalEx = filteredPlans.reduce((n, p) => n + p.exercises.length, 0);
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <Button variant="outline" size="sm" onClick={() => setFilterStudent("all")}>← Voltar</Button>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-semibold">{name}</p>
+                  <p className="text-sm text-muted-foreground">{filteredPlans.length} dia(s) de treino · {totalEx} exercício(s)</p>
+                </div>
+              </div>
+              <Button onClick={() => { setSelectedStudent(filterStudent); setNewOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Novo dia de treino</Button>
+            </div>
+            {filteredPlans.length === 0 ? <EmptyBox title="Este aluno ainda não tem treino" description="Crie o primeiro dia de treino para ele." /> : (
+              <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filteredPlans.map((plan) => <PlanCard key={plan.id} plan={plan} student={student} onReload={load} onDelete={deletePlan} pdf={pdfByPlan[plan.id]} onPdfReload={reloadPdfs} />)}
+              </div>
+            )}
+          </div>
+        );
+      })() : (() => {
+        const q = search.trim().toLowerCase();
+        const list = sortedStudents
+          .map((s) => ({ s, plans: plans.filter((p) => p.student_id === s.id) }))
+          .filter(({ s }) => !q || (s.full_name || "").toLowerCase().includes(q) || s.email.toLowerCase().includes(q))
+          .sort((a, b) => Number(b.plans.length > 0) - Number(a.plans.length > 0));
+        return (
+          <div className="space-y-4">
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar aluno por nome ou e-mail" />
+            {list.length === 0 ? <EmptyBox title="Nenhum aluno encontrado" description="Tente outro nome ou cadastre o aluno na aba Alunos." /> : (
+              <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+                {list.map(({ s, plans: sp }) => {
+                  const days = sp.map((p) => ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][p.day_of_week] ?? "").filter(Boolean);
+                  const ex = sp.reduce((n, p) => n + p.exercises.length, 0);
+                  return (
+                    <button key={s.id} type="button" onClick={() => setFilterStudent(s.id)} className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-muted/50">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 font-semibold text-primary">{(s.full_name || s.email).charAt(0).toUpperCase()}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">{s.full_name || s.email}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{sp.length ? `${sp.length} dia(s) · ${ex} exercício(s) · ${days.join(", ")}` : "Sem treino ainda"}</span>
+                      </span>
+                      {sp.length ? <StatusPill tone="green">Com treino</StatusPill> : <StatusPill tone="gray">Sem treino</StatusPill>}
+                      <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
