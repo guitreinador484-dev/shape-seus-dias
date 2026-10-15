@@ -142,6 +142,7 @@ export function ExerciseLibraryPanel() {
         </Tabs>
       )}
 
+      <BulkVideoDialog open={bulkOpen} onOpenChange={setBulkOpen} exercises={exercises} gyms={gyms} onSaved={() => void reload()} />
       <VideoDialog
         open={videoOpen}
         onOpenChange={setVideoOpen}
