@@ -8,7 +8,7 @@ export type ExerciseVideo = Tables<"exercise_videos">;
 export const VIDEO_BUCKET = "exercise-videos";
 
 /** Tamanho máximo aceito para cada vídeo (configurável). */
-export const MAX_VIDEO_MB = 200;
+export const MAX_VIDEO_MB = 1024;
 
 export const VIDEO_ACCEPT = "video/mp4,video/quicktime,video/webm";
 
