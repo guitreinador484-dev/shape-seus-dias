@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BulkVideoDialog } from "@/components/admin/bulk-video-upload";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Dumbbell, MapPin, Pencil, Plus, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ function formatDate(value: string) {
 export function ExerciseLibraryPanel() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [gyms, setGyms] = useState<Gym[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [videos, setVideos] = useState<ExerciseVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,14 +91,19 @@ export function ExerciseLibraryPanel() {
         title="Biblioteca de exercícios"
         description="Cadastre os exercícios, as academias de Volta Redonda e envie os vídeos de execução que os alunos da mentoria vão assistir."
         action={
-          <Button
-            onClick={() => {
-              setEditingVideo(null);
-              setVideoOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Adicionar vídeo
-          </Button>
+          <div className="grid gap-2 sm:flex">
+            <Button variant="outline" onClick={() => setBulkOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" /> Enviar vários
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingVideo(null);
+                setVideoOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Adicionar vídeo
+            </Button>
+          </div>
         }
       />
 
