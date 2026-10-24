@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BulkVideoDialog } from "@/components/admin/bulk-video-upload";
+import { VideoIdentification } from "@/components/admin/video-identification";
+import { matchingVideos } from "@/lib/exercise-identification";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Dumbbell, MapPin, Pencil, Plus, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -142,13 +145,14 @@ export function ExerciseLibraryPanel() {
         </Tabs>
       )}
 
-      <BulkVideoDialog open={bulkOpen} onOpenChange={setBulkOpen} exercises={exercises} gyms={gyms} onSaved={() => void reload()} />
+      <BulkVideoDialog open={bulkOpen} onOpenChange={setBulkOpen} exercises={exercises} gyms={gyms} videos={videos} onSaved={() => void reload()} />
       <VideoDialog
         open={videoOpen}
         onOpenChange={setVideoOpen}
         exercises={exercises}
         gyms={gyms}
         video={editingVideo}
+        videos={videos}
         onSaved={() => void reload()}
       />
     </div>
@@ -294,6 +298,7 @@ function VideoDialog({
   exercises,
   gyms,
   video,
+  videos,
   onSaved,
 }: {
   open: boolean;
@@ -301,6 +306,7 @@ function VideoDialog({
   exercises: Exercise[];
   gyms: Gym[];
   video: ExerciseVideo | null;
+  videos: ExerciseVideo[];
   onSaved: () => void;
 }) {
   const [exerciseId, setExerciseId] = useState<string>("");
@@ -313,6 +319,9 @@ function VideoDialog({
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [duplicateAllowed, setDuplicateAllowed] = useState(false);
+  const duplicateVideos = matchingVideos(exerciseName, gymId === "geral" ? null : gymId, exercises, videos, video?.id);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -326,6 +335,7 @@ function VideoDialog({
     setNotes(video?.notes ?? "");
     setFile(null);
     setProgress(0);
+    setDuplicateAllowed(false);
   }, [open, video, exercises]);
 
   useEffect(() => {
@@ -338,6 +348,8 @@ function VideoDialog({
     return () => URL.revokeObjectURL(objectUrl);
   }, [file]);
 
+  useEffect(() => { setDuplicateAllowed(false); }, [exerciseName, gymId, file]);
+
   function acceptFile(f: File | null | undefined) {
     if (!f) return;
     if (f.size > MAX_VIDEO_MB * 1024 * 1024) {
@@ -348,6 +360,11 @@ function VideoDialog({
   }
 
   async function submit() {
+    if (busy || analyzing) return;
+    if (duplicateVideos.length > 0 && !duplicateAllowed) {
+      toast.error("Confira o possível duplicado antes de enviar.");
+      return;
+    }
     if (!exerciseId && !exerciseName.trim()) {
       toast.error("Digite o nome do exercício.");
       return;
@@ -368,12 +385,13 @@ function VideoDialog({
 
       let path = video?.video_path;
       if (file) path = await uploadVideoFile(file, setProgress);
+      if (!path) throw new Error("Selecione o arquivo do vídeo.");
       const payload = {
         exercise_id: resolvedId,
         gym_id: gymId === "geral" ? null : gymId,
         title: title.trim() || null,
         notes: notes.trim() || null,
-        video_path: path!,
+        video_path: path,
       };
       if (video) await updateVideo(video.id, payload);
       else await createVideo(payload);
@@ -389,7 +407,7 @@ function VideoDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(value) => { if (!busy && !analyzing) onOpenChange(value); }}>
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{video ? "Editar vídeo" : "Adicionar vídeo"}</DialogTitle>
@@ -467,6 +485,11 @@ function VideoDialog({
             onChange={(e) => acceptFile(e.target.files?.[0])}
           />
 
+          {file ? <VideoIdentification file={file} onBusyChange={setAnalyzing} onIdentified={(result) => {
+            if (result.name) { setExerciseName(result.name); setExerciseId(result.existingExerciseId ?? ""); }
+            if (result.muscleGroup && MUSCLE_GROUPS.some((group) => group === result.muscleGroup)) setNewGroup(result.muscleGroup);
+          }} /> : null}
+
           <div className="space-y-1">
             <Label>Exercício</Label>
             <ExerciseField
@@ -498,6 +521,8 @@ function VideoDialog({
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Leg press 45° – ajuste do banco no 3" />
           </div>
 
+          {duplicateVideos.length > 0 ? <div className="space-y-2 border-l-2 border-primary pl-3 text-sm"><p className="text-primary">Possível duplicado: já existe vídeo deste exercício nesta academia.</p><label className="flex items-center gap-2"><Checkbox checked={duplicateAllowed} onCheckedChange={(value) => setDuplicateAllowed(value === true)} />Salvar como outra gravação</label></div> : null}
+
           <div className="space-y-1">
             <Label>Observações (opcional)</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
@@ -505,10 +530,10 @@ function VideoDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy || analyzing}>
             Cancelar
           </Button>
-          <Button onClick={() => void submit()} disabled={busy}>
+          <Button onClick={() => void submit()} disabled={busy || analyzing || (!exerciseId && !exerciseName.trim()) || (duplicateVideos.length > 0 && !duplicateAllowed)}>
             {busy ? "Enviando..." : "Salvar vídeo"}
           </Button>
         </DialogFooter>

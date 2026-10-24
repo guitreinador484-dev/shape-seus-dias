@@ -1,4 +1,8 @@
 import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { extractExerciseFrames, exerciseKey, matchingVideos } from "@/lib/exercise-identification";
+import { identifyExerciseVideo } from "@/lib/exercise-identification.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Trash2, Upload, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,18 +20,21 @@ import {
   VIDEO_ACCEPT,
   type Exercise,
   type Gym,
+  type ExerciseVideo,
 } from "@/lib/exercise-videos";
 
-type Row = { key: string; file: File; name: string; gymId: string; progress: number; status: "pendente" | "enviando" | "ok" | "erro"; error?: string };
+type Row = { key: string; file: File; name: string; gymId: string; progress: number; status: "pendente" | "enviando" | "ok" | "erro"; error?: string; analysis?: string; duplicateAllowed?: boolean };
 
 function nameFromFile(file: File) {
   return tidyName(file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " "));
 }
 
-export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }: { open: boolean; onOpenChange: (o: boolean) => void; exercises: Exercise[]; gyms: Gym[]; onSaved: () => void }) {
+export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, videos, onSaved }: { open: boolean; onOpenChange: (o: boolean) => void; exercises: Exercise[]; gyms: Gym[]; videos: ExerciseVideo[]; onSaved: () => void }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [defaultGym, setDefaultGym] = useState("geral");
   const [busy, setBusy] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const identify = useServerFn(identifyExerciseVideo);
   const inputRef = useRef<HTMLInputElement>(null);
   const activeGyms = gyms.filter((g) => g.is_active);
 
@@ -42,6 +49,32 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
       next.push({ key: crypto.randomUUID(), file, name: nameFromFile(file), gymId: defaultGym, progress: 0, status: "pendente" });
     });
     setRows((r) => [...r, ...next]);
+    void analyzeFiles(next);
+  }
+
+  async function analyzeFiles(next: Row[]) {
+    setAnalyzing(true);
+    try {
+      for (const row of next) {
+        update(row.key, { analysis: "Identificando exercício..." });
+        try {
+          const frames = await extractExerciseFrames(row.file);
+          const response = await identify({ data: { frames } });
+          if (!response.ok) {
+            update(row.key, { analysis: response.error });
+            next.slice(next.indexOf(row) + 1).forEach((remaining) => update(remaining.key, { analysis: "Análise interrompida. Informe o nome manualmente." }));
+            break;
+          }
+          update(row.key, { ...(response.result.name ? { name: response.result.name } : {}), analysis: `${response.result.name ? `Confiança ${response.result.confidence}. ` : ""}${response.result.reason} Confira o nome antes de enviar.` });
+        } catch (error) {
+          update(row.key, { analysis: error instanceof Error ? error.message : "Informe o nome manualmente." });
+        }
+      }
+    } finally { setAnalyzing(false); }
+  }
+
+  function duplicate(row: Row) {
+    return matchingVideos(row.name, row.gymId === "geral" ? null : row.gymId, exercises, videos).length > 0 || rows.some((other) => other.key !== row.key && other.gymId === row.gymId && exerciseKey(other.name) === exerciseKey(row.name));
   }
 
   function update(key: string, patch: Partial<Row>) {
@@ -50,13 +83,18 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
 
   function applyGymToAll(value: string) {
     setDefaultGym(value);
-    setRows((r) => r.map((row) => (row.status === "ok" ? row : { ...row, gymId: value })));
+    setRows((r) => r.map((row) => (row.status === "ok" ? row : { ...row, gymId: value, duplicateAllowed: false })));
   }
 
   async function sendAll() {
+    if (analyzing || busy) return;
     const pending = rows.filter((r) => r.status !== "ok");
     if (pending.some((r) => !r.name.trim())) {
       toast.error("Preencha o nome do exercício de todos os vídeos.");
+      return;
+    }
+    if (pending.some((row) => duplicate(row) && !row.duplicateAllowed)) {
+      toast.error("Confira os possíveis duplicados antes de enviar.");
       return;
     }
     setBusy(true);
@@ -80,7 +118,7 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
   }
 
   function close(o: boolean) {
-    if (busy) return;
+    if (busy || analyzing) return;
     if (!o) setRows([]);
     onOpenChange(o);
   }
@@ -100,7 +138,7 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <div className="space-y-1.5">
             <Label>Academia para todos</Label>
-            <Select value={defaultGym} onValueChange={applyGymToAll} disabled={busy}>
+            <Select value={defaultGym} onValueChange={applyGymToAll} disabled={busy || analyzing}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="geral">Todas as academias</SelectItem>
@@ -108,7 +146,7 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={busy}>
+          <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={busy || analyzing}>
             <Upload className="mr-2 h-4 w-4" /> Escolher vídeos
           </Button>
           <input ref={inputRef} type="file" accept={VIDEO_ACCEPT} multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }} />
@@ -126,12 +164,12 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
                   {row.status === "ok" ? <CheckCircle2 className="h-4 w-4 text-primary" /> : row.status === "erro" ? <XCircle className="h-4 w-4 text-destructive" /> : row.status === "enviando" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   <span className="min-w-0 flex-1 truncate">{row.file.name} · {(row.file.size / 1024 / 1024).toFixed(1)} MB</span>
                   {row.status !== "enviando" && row.status !== "ok" ? (
-                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Remover" onClick={() => setRows((r) => r.filter((x) => x.key !== row.key))} disabled={busy}><Trash2 className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Remover" onClick={() => setRows((r) => r.filter((x) => x.key !== row.key))} disabled={busy || analyzing}><Trash2 className="h-4 w-4" /></Button>
                   ) : null}
                 </div>
                 <div className="grid gap-2 sm:grid-cols-[1fr_220px]">
-                  <Input list="bulk-exercise-names" value={row.name} onChange={(e) => update(row.key, { name: e.target.value })} placeholder="Nome do exercício" disabled={busy || row.status === "ok"} />
-                  <Select value={row.gymId} onValueChange={(v) => update(row.key, { gymId: v })} disabled={busy || row.status === "ok"}>
+                  <Input aria-label={`Exercício de ${row.file.name}`} list="bulk-exercise-names" value={row.name} onChange={(e) => update(row.key, { name: e.target.value, duplicateAllowed: false })} placeholder="Nome do exercício" disabled={busy || analyzing || row.status === "ok"} />
+                  <Select value={row.gymId} onValueChange={(v) => update(row.key, { gymId: v, duplicateAllowed: false })} disabled={busy || analyzing || row.status === "ok"}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="geral">Todas as academias</SelectItem>
@@ -141,14 +179,16 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, onSaved }
                 </div>
                 {row.status === "enviando" ? <Progress value={row.progress} /> : null}
                 {row.error ? <p className="text-xs text-destructive">{row.error}</p> : null}
+                {row.analysis ? <p className="text-xs text-muted-foreground" aria-live="polite">{row.analysis}</p> : null}
+                {duplicate(row) && row.status !== "ok" ? <div className="space-y-2 text-sm text-primary"><p>Possível duplicado: já existe vídeo deste exercício nesta academia, na biblioteca ou neste envio.</p><label className="flex items-center gap-2"><Checkbox checked={!!row.duplicateAllowed} disabled={busy || analyzing} onCheckedChange={(value) => update(row.key, { duplicateAllowed: value === true })} />Enviar como outra gravação</label></div> : null}
               </div>
             ))}
           </div>
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => close(false)} disabled={busy}>Fechar</Button>
-          <Button onClick={() => void sendAll()} disabled={busy || rows.every((r) => r.status === "ok")}>
+          <Button variant="outline" onClick={() => close(false)} disabled={busy || analyzing}>Fechar</Button>
+          <Button onClick={() => void sendAll()} disabled={busy || analyzing || rows.every((r) => r.status === "ok") || rows.some((r) => r.status !== "ok" && duplicate(r) && !r.duplicateAllowed)}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
             Enviar {rows.filter((r) => r.status !== "ok").length} vídeo(s)
           </Button>
