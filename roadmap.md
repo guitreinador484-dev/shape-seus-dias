@@ -1,5 +1,10 @@
 # Roadmap
 
+## Identificação de vídeos da biblioteca
+- [ ] Identificar exercício por imagens do vídeo no envio individual e em massa
+- [ ] Avisar sobre exercícios e vídeos possivelmente duplicados antes de salvar
+- [ ] Testar identificação real e revisão antes do envio
+
 - [x] Analisar fluxos atuais de cliente, administração, autenticação e pagamentos
 - [x] Criar Críticas e Sugestões para cliente e administrador
 - [x] Melhorar academia, saudação, check-in, logout e navegação da cliente
