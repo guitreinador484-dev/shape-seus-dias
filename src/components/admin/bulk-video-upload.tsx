@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { extractExerciseFrames, exerciseKey, matchingVideos } from "@/lib/exercise-identification";
 import { identifyExerciseVideo } from "@/lib/exercise-identification.functions";
 import { Checkbox } from "@/components/ui/checkbox";
+import { addUploadTask, updateUploadTask } from "@/lib/video-upload-tracker";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Trash2, Upload, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -98,16 +99,19 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, videos, o
       return;
     }
     setBusy(true);
+    const tracked = new Map(pending.map((row) => [row.key, addUploadTask(row.file.name, { exerciseName: row.name, gymName: gyms.find((gym) => gym.id === row.gymId)?.name ?? "Todas as academias" })]));
     let ok = 0;
     for (const row of pending) {
       update(row.key, { status: "enviando", progress: 0, error: undefined });
       try {
         const { exercise } = await findOrCreateExercise(row.name, null);
-        const path = await uploadVideoFile(row.file, (p) => update(row.key, { progress: p }));
+        const path = await uploadVideoFile(row.file, (p) => update(row.key, { progress: p }), tracked.get(row.key));
         await createVideo({ exercise_id: exercise.id, gym_id: row.gymId === "geral" ? null : row.gymId, video_path: path });
         update(row.key, { status: "ok", progress: 100 });
         ok++;
       } catch (e) {
+        const trackedId = tracked.get(row.key);
+        if (trackedId) updateUploadTask(trackedId, { status: "erro", error: e instanceof Error ? e.message : "Falha no envio" });
         update(row.key, { status: "erro", error: e instanceof Error ? e.message : "Falha no envio" });
       }
     }
@@ -118,8 +122,7 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, videos, o
   }
 
   function close(o: boolean) {
-    if (busy || analyzing) return;
-    if (!o) setRows([]);
+    if (analyzing) return;
     onOpenChange(o);
   }
 
@@ -187,7 +190,7 @@ export function BulkVideoDialog({ open, onOpenChange, exercises, gyms, videos, o
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => close(false)} disabled={busy || analyzing}>Fechar</Button>
+          <Button variant="outline" onClick={() => close(false)} disabled={analyzing}>{busy ? "Ocultar janela" : "Fechar"}</Button>
           <Button onClick={() => void sendAll()} disabled={busy || analyzing || rows.every((r) => r.status === "ok") || rows.some((r) => r.status !== "ok" && duplicate(r) && !r.duplicateAllowed)}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
             Enviar {rows.filter((r) => r.status !== "ok").length} vídeo(s)

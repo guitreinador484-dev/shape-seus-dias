@@ -1,5 +1,10 @@
 # Roadmap
 
+## Acompanhamento de envios
+- [x] Criar aba e indicador de progresso fora das janelas de envio
+- [x] Manter progresso ao navegar e avisar antes de fechar a página
+- [x] Verificar envio e conclusão com a janela fechada
+
 ## Identificação de vídeos da biblioteca
 - [x] Identificar exercício por imagens do vídeo no envio individual e em massa
 - [x] Avisar sobre exercícios e vídeos possivelmente duplicados antes de salvar

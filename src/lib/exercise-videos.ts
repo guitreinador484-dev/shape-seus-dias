@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { addUploadTask, finishUploadPath, updateUploadTask } from "@/lib/video-upload-tracker";
 
 export type Exercise = Tables<"exercises">;
 export type Gym = Tables<"gyms">;
@@ -145,6 +146,7 @@ export async function createVideo(input: {
   video_path: string;
 }) {
   const { error } = await supabase.from("exercise_videos").insert(input);
+  finishUploadPath(input.video_path, error?.message);
   if (error) throw error;
 }
 
@@ -153,6 +155,7 @@ export async function updateVideo(
   input: { exercise_id?: string; gym_id?: string | null; title?: string | null; notes?: string | null; video_path?: string },
 ) {
   const { error } = await supabase.from("exercise_videos").update(input).eq("id", id);
+  if (input.video_path) finishUploadPath(input.video_path, error?.message);
   if (error) throw error;
 }
 
@@ -170,7 +173,10 @@ export async function signedVideoUrl(path: string, expiresIn = 60 * 60): Promise
 }
 
 /** Envia o arquivo com barra de progresso real (XHR direto no Storage). */
-export async function uploadVideoFile(file: File, onProgress: (percent: number) => void): Promise<string> {
+export async function uploadVideoFile(file: File, onProgress: (percent: number) => void, taskId?: string): Promise<string> {
+  const trackedId = taskId ?? addUploadTask(file.name);
+  updateUploadTask(trackedId, { status: "enviando" });
+  try {
   const ext = (file.name.split(".").pop() ?? "mp4").toLowerCase();
   const path = `${new Date().getFullYear()}/${crypto.randomUUID()}.${ext}`;
 
@@ -187,7 +193,11 @@ export async function uploadVideoFile(file: File, onProgress: (percent: number) 
     xhr.setRequestHeader("apikey", apiKey);
     xhr.setRequestHeader("x-upsert", "true");
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        onProgress(percent);
+        updateUploadTask(trackedId, { progress: percent });
+      }
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) resolve();
@@ -199,7 +209,12 @@ export async function uploadVideoFile(file: File, onProgress: (percent: number) 
     xhr.send(form);
   });
 
+  updateUploadTask(trackedId, { path, status: "salvando", progress: 100 });
   return path;
+  } catch (error) {
+    updateUploadTask(trackedId, { status: "erro", error: error instanceof Error ? error.message : "Falha no envio." });
+    throw error;
+  }
 }
 
 /* ------------------------------------------------ academia escolhida pelo aluno */

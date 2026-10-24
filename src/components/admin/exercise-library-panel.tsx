@@ -3,6 +3,9 @@ import { BulkVideoDialog } from "@/components/admin/bulk-video-upload";
 import { VideoIdentification } from "@/components/admin/video-identification";
 import { matchingVideos } from "@/lib/exercise-identification";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSearch } from "@tanstack/react-router";
+import { VideoUploadStatus } from "@/components/admin/video-upload-status";
+import { addUploadTask, uploadSummary, useVideoUploads } from "@/lib/video-upload-tracker";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Dumbbell, MapPin, Pencil, Plus, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +63,12 @@ function formatDate(value: string) {
 }
 
 export function ExerciseLibraryPanel() {
+  const search = useSearch({ strict: false }) as { view?: string };
+  const [tab, setTab] = useState(search.view === "uploads" ? "uploads" : "videos");
+  const uploads = useVideoUploads();
+  const uploadCounts = uploadSummary(uploads);
+  const previousDone = useRef(uploadCounts.done);
+  useEffect(() => { if (search.view === "uploads") setTab("uploads"); }, [search.view]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -88,6 +97,11 @@ export function ExerciseLibraryPanel() {
     void reload();
   }, []);
 
+  useEffect(() => {
+    if (uploadCounts.done > previousDone.current) void reload();
+    previousDone.current = uploadCounts.done;
+  }, [uploadCounts.done]);
+
   return (
     <div>
       <AdminPageHeader
@@ -115,11 +129,12 @@ export function ExerciseLibraryPanel() {
       ) : loading ? (
         <LoadingBox />
       ) : (
-        <Tabs defaultValue="videos">
+        <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="videos">Vídeos</TabsTrigger>
             <TabsTrigger value="exercicios">Exercícios</TabsTrigger>
             <TabsTrigger value="academias">Academias</TabsTrigger>
+            <TabsTrigger value="uploads">Envios{uploadCounts.active ? ` (${uploadCounts.active})` : ""}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="videos">
@@ -142,6 +157,7 @@ export function ExerciseLibraryPanel() {
           <TabsContent value="academias">
             <GymsSection gyms={gyms} onChanged={() => void reload()} />
           </TabsContent>
+          <TabsContent value="uploads"><VideoUploadStatus /></TabsContent>
         </Tabs>
       )}
 
@@ -384,7 +400,10 @@ function VideoDialog({
       }
 
       let path = video?.video_path;
-      if (file) path = await uploadVideoFile(file, setProgress);
+      if (file) {
+        const trackedId = addUploadTask(file.name, { exerciseName, gymName: gyms.find((gym) => gym.id === gymId)?.name ?? "Todas as academias" });
+        path = await uploadVideoFile(file, setProgress, trackedId);
+      }
       if (!path) throw new Error("Selecione o arquivo do vídeo.");
       const payload = {
         exercise_id: resolvedId,
@@ -407,7 +426,7 @@ function VideoDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(value) => { if (!busy && !analyzing) onOpenChange(value); }}>
+    <Dialog open={open} onOpenChange={(value) => { if (!analyzing) onOpenChange(value); }}>
       <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{video ? "Editar vídeo" : "Adicionar vídeo"}</DialogTitle>
@@ -530,8 +549,8 @@ function VideoDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy || analyzing}>
-            Cancelar
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={analyzing}>
+            {busy ? "Ocultar janela" : "Cancelar"}
           </Button>
           <Button onClick={() => void submit()} disabled={busy || analyzing || (!exerciseId && !exerciseName.trim()) || (duplicateVideos.length > 0 && !duplicateAllowed)}>
             {busy ? "Enviando..." : "Salvar vídeo"}
