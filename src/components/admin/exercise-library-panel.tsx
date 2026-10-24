@@ -336,7 +336,7 @@ function VideoDialog({
     setFile(null);
     setProgress(0);
     setDuplicateAllowed(false);
-  }, [open, video, exercises]);
+  }, [open, video]);
 
   useEffect(() => {
     if (!file) {
