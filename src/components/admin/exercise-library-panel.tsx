@@ -5,7 +5,7 @@ import { matchingVideos } from "@/lib/exercise-identification";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSearch } from "@tanstack/react-router";
 import { VideoUploadStatus } from "@/components/admin/video-upload-status";
-import { addUploadTask, updateUploadTask, uploadSummary, useVideoUploads } from "@/lib/video-upload-tracker";
+import { addUploadTask, uploadSummary, useVideoUploads } from "@/lib/video-upload-tracker";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Dumbbell, MapPin, Pencil, Plus, Trash2, Upload, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
