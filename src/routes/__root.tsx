@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { VideoUploadIndicator } from "@/components/admin/video-upload-status";
 
 function NotFoundComponent() {
   return (
@@ -87,8 +88,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Personal Trainer — Plataforma" },
       { name: "twitter:description", content: "Plataforma de treino personalizado com acompanhamento profissional." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4f23219-b5c7-4ff4-af3b-6ec8a365370a/id-preview-6547570d--3e72cec3-2bcb-4e1f-ab88-10540eec41e4.lovable.app-1781709345826.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4f23219-b5c7-4ff4-af3b-6ec8a365370a/id-preview-6547570d--3e72cec3-2bcb-4e1f-ab88-10540eec41e4.lovable.app-1781709345826.png" },
     ],
     links: [
       {
@@ -146,6 +145,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <VideoUploadIndicator />
       <Toaster richColors position="bottom-right" theme="dark" />
     </QueryClientProvider>
   );
