@@ -12,3 +12,4 @@
 - Exercise video identification extracts representative frames in the browser and uses an admin-authorized server function; never send large videos to the AI gateway.
 - AI exercise names are reviewable suggestions; duplicate warnings compare exercise and gym without deleting or merging recordings automatically.
 - Video upload progress lives in a browser-session external store shared by the library and root indicator; track completion only after metadata saves and warn before page unload, because uploads cannot survive browser closure.
+- Temporary passwords use a shared browser-safe generator with flow-specific lengths so registration defaults satisfy its server validation without changing password-reset behavior.
