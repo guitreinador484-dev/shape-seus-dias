@@ -32,6 +32,7 @@ import {
   removeStudent,
 } from "@/lib/admin.functions";
 import { resolvePlanTier } from "@/lib/plan-tiers";
+import { generateStudentRegistrationPassword, generateTemporaryPassword } from "@/lib/temporary-password";
 import { AnamneseDialog, EvolutionDialog, fetchStudents, formatDate, formatCurrency, purchaseStatusLabels, type Student } from "@/components/admin/admin-panels";
 import { AdminPageHeader, ConfirmDialog, EmptyBox, ErrorBox, LoadingBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import { Badge } from "@/components/ui/badge";
@@ -88,13 +89,6 @@ export function studentPlanLabel(purchases: Purchase[], student: Student): strin
 
 function initials(student: Student) {
   return (student.full_name || student.email || "?").trim()[0]?.toUpperCase() ?? "?";
-}
-
-function generateTemporaryPassword() {
-  const bytes = new Uint32Array(8);
-  crypto.getRandomValues(bytes);
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  return Array.from(bytes, (value) => alphabet[value % alphabet.length]).join("");
 }
 
 function useStudentsData() {
@@ -818,7 +812,7 @@ export function CreateStudentDialog({
     if (isOpen) {
       setEmail(defaultEmail);
       setFullName(defaultName);
-      setPassword(generateTemporaryPassword());
+      setPassword(generateStudentRegistrationPassword());
       setWhatsapp("");
       setRole("online");
       setHasAccess(true);
@@ -912,7 +906,7 @@ export function CreateStudentDialog({
                   <Label>Senha provisória</Label>
                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                     <Input value={password} onChange={(e) => setPassword(e.target.value)} />
-                    <Button type="button" variant="outline" onClick={() => setPassword(generateTemporaryPassword())}>
+                    <Button type="button" variant="outline" onClick={() => setPassword(generateStudentRegistrationPassword())}>
                       Gerar
                     </Button>
                   </div>
