@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Cadastro manual de alunos
-- [ ] Corrigir bloqueio no cadastro e validar criação e leitura do aluno no painel
+- [x] Corrigir bloqueio no cadastro e validar criação e leitura do aluno no painel
 
 ## Acompanhamento de envios
 - [x] Criar aba e indicador de progresso fora das janelas de envio
