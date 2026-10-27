@@ -138,6 +138,7 @@ function toEmbedUrl(raw: string): string | null {
 function EmptyTraining() {
   const ensureMyPlan = useServerFn(ensureMyPlanFn);
   const [state, setState] = useState<"checking" | "none">("checking");
+  const [reason, setReason] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +157,7 @@ function EmptyTraining() {
           window.location.reload();
           return;
         }
+        if (!result?.ok && result?.message && !result.message.includes("compra aprovada")) setReason(result.message);
       } catch {
         /* mostra o estado vazio abaixo */
       }
@@ -178,7 +180,7 @@ function EmptyTraining() {
         <p className="text-sm text-muted-foreground">
           {state === "checking"
             ? "Estamos montando seu treino com base nas suas respostas. Leva só alguns segundos."
-            : "Seu personal ainda não montou seu plano. Fale com ele para começar."}
+            : reason ?? "Seu personal ainda não montou seu plano. Fale com ele para começar."}
         </p>
       </CardContent>
     </Card>
@@ -426,7 +428,14 @@ function TreinoPanel({
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlatformRoute,
-  head: () => ({ meta: [{ title: "Minha plataforma — Gui Treinador" }, { name: "description", content: "Treinos, evolução e acompanhamento personalizado." }] }),
+  head: () => ({ meta: [
+    { title: "Minha plataforma — Gui Treinador" },
+    { name: "description", content: "Treinos, evolução e acompanhamento personalizado." },
+    { property: "og:title", content: "Minha plataforma — Gui Treinador" },
+    { property: "og:description", content: "Treinos, evolução e acompanhamento personalizado." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
 });
 
 function PlatformRoute() {
