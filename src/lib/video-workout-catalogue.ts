@@ -19,7 +19,8 @@ export function classifyExercise(exercise: CatalogueExercise) {
     : exercise.muscle_group;
   // Conservative technical complexity, not the commercial plan's tier.
   const complexity = /bulgaro|curvada|stiff|terra|agachamento livre|passada|afundo|unilateral|uni lateral|\buni\b|cruzada/.test(name) ? 3
-    : /halteres|polia|barra|prancha|remador|cavalinho|smith|face pull/.test(name) ? 2 : 1;
+    : /halteres|polia|barra|prancha|remador|cavalinho|smith|face pull|martelo|concentrada|abdominal infra/.test(name) ? 2
+    : /maquina|cadeira|mesa flexora|leg[g]? press|hack|articulad|gluteo press|abdutora/.test(name) ? 1 : 3;
   return { ...exercise, group, complexity };
 }
 
@@ -69,7 +70,8 @@ export function immediateVideoPlan(catalogue: VideoExercise[], answers: Record<s
         }
       }
       if (!selected.length) throw new Error('Faltam vídeos para montar uma divisão equilibrada. O treinador precisa completar a biblioteca.');
-      return { day_of_week: week[day], plan_name: `Treino ${String.fromCharCode(65 + day)} — ${profile.days <= 3 ? 'Corpo inteiro' : groups.slice(0, 2).join(' e ')}`, exercises: selected.map(ex => ({
+      const includedGroups = [...new Set(selected.map(ex => ex.group))];
+      return { day_of_week: week[day], plan_name: `Treino ${String.fromCharCode(65 + day)} — ${includedGroups.join(', ')}`, exercises: selected.map(ex => ({
         exercise_id: ex.id, exercise_name: ex.name, sets: profile.complexity === 1 ? '3' : '4', reps: profile.lose ? '12 a 15' : '8 a 12', rest_seconds: ex.complexity > 1 ? 90 : 60,
         load_text: profile.complexity === 1 ? 'Leve, mantendo a execução correta' : 'Moderada, sem perder a execução',
         notes: [ex.description, 'Assista ao vídeo antes de executar. Não treine com dor.'].filter(Boolean).join(' '),
