@@ -23,6 +23,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
 import { MentoriaTab } from "@/components/platform/mentoria-tab";
 import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
+import { ExerciseVideoPreview } from "@/components/platform/exercise-video-preview";
 import { useGymPreference } from "@/hooks/use-gym-preference";
 import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
@@ -338,7 +339,7 @@ function TreinoPanel({
               <div className="min-w-0">
                 <p className="font-semibold text-base text-white truncate">{plan.plan_name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {plan.exercises.length} exercícios{showVideos ? " · todos com vídeo de execução" : ""}
+                  {plan.exercises.length} exercícios{showVideos ? " · vídeos de execução" : ""}
                 </p>
               </div>
             </div>
@@ -364,11 +365,13 @@ function TreinoPanel({
                       {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
                     </button>
                     <div className="flex-1 min-w-0">
+                      <div className={showVideos ? "grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_192px]" : ""}>
+                      <div className="min-w-0">
                       {showVideos ? (
                         <button
                           type="button"
                           onClick={() => setVideoFor(ex)}
-                          className={`group/ex flex items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}
+                          className={`group/ex flex flex-wrap items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-foreground"}`}
                         >
                           <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[11px] font-semibold text-primary transition-colors group-hover/ex:bg-primary group-hover/ex:text-primary-foreground">
@@ -380,15 +383,6 @@ function TreinoPanel({
                       )}
                       {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
                       <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
-                        {showVideos ? (
-                          <button
-                            type="button"
-                            onClick={() => setVideoFor(ex)}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/40 px-3 py-1 font-semibold text-primary backdrop-blur-md transition-colors hover:bg-primary hover:text-primary-foreground"
-                          >
-                            <Play className="h-3.5 w-3.5 fill-current" /> Vídeo da execução
-                          </button>
-                        ) : null}
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
                           <span className="font-display text-sm">{ex.sets}</span>
                           <span className="opacity-60">×</span>
@@ -404,6 +398,9 @@ function TreinoPanel({
                             Carga: {ex.load_text}
                           </span>
                         ) : null}
+                      </div>
+                      </div>
+                      {showVideos && <ExerciseVideoPreview exerciseName={ex.exercise_name} exerciseId={ex.exercise_id} gymId={gymId} onOpen={() => setVideoFor(ex)} />}
                       </div>
                     </div>
                   </li>
