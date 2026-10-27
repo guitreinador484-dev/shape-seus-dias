@@ -1,5 +1,9 @@
 # Roadmap
 
+## Treinos automáticos com vídeos
+- [ ] Restringir IA e treino imediato ao catálogo de exercícios com vídeo e considerar complexidade
+- [ ] Garantir vínculo e reprodução dos vídeos para compradores e testar as regras
+
 ## Cadastro manual de alunos
 - [x] Corrigir bloqueio no cadastro e validar criação e leitura do aluno no painel
 
