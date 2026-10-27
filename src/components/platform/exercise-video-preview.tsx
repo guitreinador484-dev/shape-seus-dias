@@ -28,10 +28,13 @@ export function ExerciseVideoPreview({ exerciseName, exerciseId, gymId, onOpen }
   useEffect(() => {
     setFrame(false);
     setFailed(false);
-    if (!data?.url) return;
+  }, [data?.url]);
+
+  useEffect(() => {
+    if (!data?.url || frame || failed) return;
     const timeout = window.setTimeout(() => setFailed(true), 12000);
     return () => window.clearTimeout(timeout);
-  }, [data?.url]);
+  }, [data?.url, frame, failed]);
 
   const unavailable = isError || (!isPending && !data?.url);
   return (

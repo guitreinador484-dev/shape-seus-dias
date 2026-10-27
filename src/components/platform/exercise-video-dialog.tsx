@@ -1,16 +1,8 @@
-import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VideoOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  normalizeName,
-  pickVideo,
-  signedVideoUrl,
-  type Exercise,
-  type ExerciseVideo,
-} from "@/lib/exercise-videos";
+import { useExerciseVideo } from "@/hooks/use-exercise-video";
 
 type Props = {
   open: boolean;
@@ -26,53 +18,8 @@ type Props = {
 };
 
 export function ExerciseVideoDialog({ open, onOpenChange, exerciseName, exerciseId, gymId, planNotes }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [exercise, setExercise] = useState<Exercise | null>(null);
-  const [video, setVideo] = useState<ExerciseVideo | null>(null);
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    let alive = true;
-    setLoading(true);
-    setExercise(null);
-    setVideo(null);
-    setUrl(null);
-
-    (async () => {
-      let found: Exercise | null = null;
-      if (exerciseId) {
-        const { data } = await supabase.from("exercises").select("*").eq("id", exerciseId).maybeSingle();
-        found = data ?? null;
-      }
-      if (!found) {
-        const { data } = await supabase.from("exercises").select("*");
-        const target = normalizeName(exerciseName);
-        found = (data ?? []).find((e) => normalizeName(e.name) === target) ?? null;
-      }
-      if (!alive) return;
-      setExercise(found);
-
-      if (found) {
-        const { data: videos } = await supabase.from("exercise_videos").select("*").eq("exercise_id", found.id);
-        const chosen = pickVideo(videos ?? [], gymId, true);
-        if (!alive) return;
-        setVideo(chosen);
-        if (chosen) {
-          const signed = await signedVideoUrl(chosen.video_path);
-          if (!alive) return;
-          setUrl(signed);
-        }
-      }
-      if (alive) setLoading(false);
-    })().catch(() => {
-      if (alive) setLoading(false);
-    });
-
-    return () => {
-      alive = false;
-    };
-  }, [open, exerciseId, exerciseName, gymId]);
+  const { data, isPending: loading } = useExerciseVideo(exerciseName, exerciseId, gymId, open);
+  const { exercise = null, video = null, url = null } = data ?? {};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
