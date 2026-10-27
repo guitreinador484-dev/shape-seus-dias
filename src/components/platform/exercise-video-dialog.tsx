@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +21,8 @@ type Props = {
 export function ExerciseVideoDialog({ open, onOpenChange, exerciseName, exerciseId, gymId, planNotes }: Props) {
   const { data, isPending: loading } = useExerciseVideo(exerciseName, exerciseId, gymId, open);
   const { exercise = null, video = null, url = null } = data ?? {};
+  const [playbackError, setPlaybackError] = useState(false);
+  useEffect(() => { setPlaybackError(false); }, [url, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,15 +37,17 @@ export function ExerciseVideoDialog({ open, onOpenChange, exerciseName, exercise
         {loading ? (
           <Skeleton className="aspect-video w-full rounded-xl" />
         ) : url ? (
-          <div className="overflow-hidden rounded-xl border border-border bg-black">
+          <div className="overflow-hidden rounded-xl border border-border bg-background">
             <video
               key={url}
               src={url}
               controls
               playsInline
               preload="metadata"
+              onError={() => setPlaybackError(true)}
               className="aspect-video w-full"
             />
+            {playbackError && <p role="alert" className="p-4 text-sm text-muted-foreground">Não foi possível reproduzir este arquivo neste navegador. Avise o professor para revisar o vídeo.</p>}
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border p-8 text-center">

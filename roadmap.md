@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Prévias nos treinos do aluno
-- [ ] Conferir resolução dos vídeos e adicionar prévia clicável por exercício
-- [ ] Verificar abertura do vídeo e visualização em celular e desktop
+- [x] Conferir resolução dos vídeos e adicionar prévia clicável por exercício
+- [x] Verificar layout e abertura do player com catálogo real em sessão administrativa, sem alterar dados; sem rolagem lateral no celular
+- [ ] Confirmar miniatura/reprodução no acesso de aluno: treinos antigos sem vínculo e gravações incompatíveis no Chromium; depende da revisão dos vídeos e autorização para testar a conta do aluno
 
 ## Treinos automáticos com vídeos
 - [x] Restringir IA e treino imediato ao catálogo de exercícios com vídeo e considerar complexidade
