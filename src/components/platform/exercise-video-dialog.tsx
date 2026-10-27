@@ -55,7 +55,7 @@ export function ExerciseVideoDialog({ open, onOpenChange, exerciseName, exercise
 
       if (found) {
         const { data: videos } = await supabase.from("exercise_videos").select("*").eq("exercise_id", found.id);
-        const chosen = pickVideo(videos ?? [], gymId);
+        const chosen = pickVideo(videos ?? [], gymId, true);
         if (!alive) return;
         setVideo(chosen);
         if (chosen) {
@@ -109,6 +109,9 @@ export function ExerciseVideoDialog({ open, onOpenChange, exerciseName, exercise
 
         {video?.gym_id === null && url ? (
           <Badge variant="secondary" className="w-fit">Vídeo geral (serve para todas as academias)</Badge>
+        ) : null}
+        {video?.gym_id && video.gym_id !== gymId && url ? (
+          <Badge variant="secondary" className="w-fit">Demonstração gravada em outra academia</Badge>
         ) : null}
 
         {video?.title ? <p className="text-sm font-medium">{video.title}</p> : null}

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { addUploadTask, finishUploadPath, updateUploadTask } from "@/lib/video-upload-tracker";
+import { selectExecutionVideo } from "@/lib/exercise-video-selection";
 
 export type Exercise = Tables<"exercises">;
 export type Gym = Tables<"gyms">;
@@ -238,12 +239,8 @@ export async function setMyGym(userId: string, gymId: string | null) {
 /**
  * Escolhe o melhor vídeo: primeiro o da academia do aluno, depois o genérico.
  */
-export function pickVideo(videos: ExerciseVideo[], gymId: string | null): ExerciseVideo | null {
-  if (gymId) {
-    const specific = videos.find((v) => v.gym_id === gymId);
-    if (specific) return specific;
-  }
-  return videos.find((v) => v.gym_id === null) ?? null;
+export function pickVideo(videos: ExerciseVideo[], gymId: string | null, allowOtherGym = false): ExerciseVideo | null {
+  return selectExecutionVideo(videos, gymId, allowOtherGym);
 }
 
 export function normalizeName(value: string) {
