@@ -14,8 +14,14 @@ export function useExerciseVideo(exerciseName: string, exerciseId: string | null
       const normalized = normalizeName(exerciseName);
       let query = supabase.from("exercises").select("*");
       query = exerciseId ? query.eq("id", exerciseId) : query.eq("name_normalized", normalized);
-      const { data: exercise, error } = await query.maybeSingle();
+      const { data: linkedExercise, error } = await query.maybeSingle();
       if (error) throw error;
+      let exercise = linkedExercise;
+      if (!exercise && exerciseId) {
+        const { data, error: lookupError } = await supabase.from("exercises").select("*").eq("name_normalized", normalized).maybeSingle();
+        if (lookupError) throw lookupError;
+        exercise = data;
+      }
       if (!exercise) return { exercise: null, video: null, url: null };
       const { data: videos, error: videoError } = await supabase.from("exercise_videos").select("*").eq("exercise_id", exercise.id);
       if (videoError) throw videoError;
