@@ -3,12 +3,14 @@
 
 import { buildWorkoutPdf, DAY_NAMES } from "./workout-pdf";
 import { resolvePlanTier, type PlanTier } from "./plan-tiers";
+import { buyerProfile, eligibleVideoExercises, immediateVideoPlan, validateVideoPlan, type VideoExercise } from "./video-workout-catalogue";
 
 const BUCKET = "workout-pdfs";
 const PROFESSIONAL = "Gui Treinador";
 
 type AiExercise = {
   exercise_name: string;
+  exercise_id?: string;
   sets: string;
   reps: string;
   rest_seconds: number;
@@ -176,43 +178,20 @@ function buildPrompt(name: string, answers: Record<string, unknown>, tier: PlanT
 
 export type AiPlanResult = { ok: boolean; plans: number; pdf: boolean; message?: string };
 
-const ex = (exercise_name: string, sets = "3", reps = "10 a 12", rest_seconds = 60): AiExercise => ({
-  exercise_name, sets, reps, rest_seconds, load_text: "moderado", notes: null,
-});
-
-/** Treino de musculação padrão, usado na hora se a IA falhar ou demorar. */
-function fallbackPlan(answers: Record<string, unknown>, tier?: PlanTier): AiResult {
-  const text = JSON.stringify(answers).toLowerCase();
-  const m = text.match(/(\d)\s*(x|dias|vezes)/);
-  const days = Math.min(6, Math.max(3, m ? Number(m[1]) : 4));
-  const A = { plan_name: "Treino A — Peito, ombros e tríceps", exercises: [ex("Supino reto com halteres"), ex("Supino inclinado na máquina"), ex("Crucifixo na máquina"), ex("Desenvolvimento com halteres"), ex("Elevação lateral"), ex("Tríceps na polia")] };
-  const B = { plan_name: "Treino B — Costas e bíceps", exercises: [ex("Puxada frontal na polia"), ex("Remada baixa na polia"), ex("Remada curvada com halteres"), ex("Pulldown com braços estendidos"), ex("Rosca direta"), ex("Rosca martelo")] };
-  const C = { plan_name: "Treino C — Pernas e glúteos", exercises: [ex("Agachamento livre"), ex("Leg press 45°"), ex("Cadeira extensora"), ex("Mesa flexora"), ex("Elevação pélvica"), ex("Panturrilha em pé", "4", "15")] };
-  const lose = /emagre|perder|gordura|secar/.test(text);
-  const beginner = /iniciante|nunca|come[cç]ando|sem experi/.test(text);
-  const tune = (p: { plan_name: string; exercises: AiExercise[] }) => ({
-    plan_name: p.plan_name,
-    exercises: [
-      ...p.exercises.map((e) => ({ ...e, sets: beginner ? "3" : "4", reps: lose ? "12 a 15" : "8 a 12", rest_seconds: lose ? 45 : 75, load_text: beginner ? "peso leve, foco na execução" : "moderado" })),
-      ...(lose ? [ex("Esteira ou bicicleta (cardio leve)", "1", "15 min", 0)] : []),
-    ],
-  });
-  const rotation = (days <= 3 ? [
-    { plan_name: "Treino A — Corpo inteiro", exercises: [A.exercises[0], B.exercises[0], C.exercises[0], A.exercises[3], B.exercises[4], C.exercises[4]] },
-    { plan_name: "Treino B — Corpo inteiro", exercises: [C.exercises[1], B.exercises[1], A.exercises[1], A.exercises[4], A.exercises[5], C.exercises[3]] },
-  ] : [A, B, C]).map(tune);
-  const dayMap = [1, 2, 3, 4, 5, 6];
-  return {
-    summary: lose ? "Musculação como base para queimar gordura, com cardio curto no final." : "Musculação para ganhar força e massa muscular com segurança.",
-    goals: tier?.pdf.goals ? ["Treinar com constância toda semana", "Aprender a execução correta", "Aumentar a carga aos poucos"] : null,
-    progression: tier?.pdf.progression ? "Quando fizer todas as repetições com facilidade, aumente um pouco a carga na semana seguinte." : null,
-    plans: Array.from({ length: days }, (_, i) => ({ day_of_week: days <= 3 ? [1, 3, 5][i] : dayMap[i], ...rotation[i % rotation.length] })),
-  };
+async function loadCatalogue(answers: Record<string, unknown>): Promise<VideoExercise[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.from("exercises")
+    .select("id, name, muscle_group, description, exercise_videos!inner(video_path)");
+  if (error) throw new Error("Não foi possível consultar os vídeos de execução.");
+  return eligibleVideoExercises(data ?? [], answers);
 }
 
-async function savePlans(userId: string, studentName: string, tier: PlanTier, ai: AiResult): Promise<AiPlanResult & { planIds: string[] }> {
+async function savePlans(userId: string, studentName: string, tier: PlanTier, ai: AiResult, answers: Record<string, unknown>): Promise<AiPlanResult & { planIds: string[] }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const plans = (ai.plans ?? []).slice(0, 7);
+  // Recheck the current catalogue at the persistence boundary, including late AI results.
+  const checked = validateVideoPlan(ai, await loadCatalogue(answers), answers);
+  if (!checked) return { ok: false, plans: 0, pdf: false, planIds: [], message: "O treino precisa usar somente exercícios disponíveis com vídeo." };
+  const plans = checked.plans.slice(0, 7);
   const planIds: string[] = [];
     let pdfSaved = false;
     let created = 0;
@@ -232,8 +211,6 @@ async function savePlans(userId: string, studentName: string, tier: PlanTier, ai
         console.error("[ai-plan] falha ao criar treino", planError?.message);
         continue;
       }
-      created += 1;
-      planIds.push(planRow.id);
 
       const exercises = (plan.exercises ?? []).slice(0, 12);
       if (exercises.length) {
@@ -241,6 +218,7 @@ async function savePlans(userId: string, studentName: string, tier: PlanTier, ai
           exercises.map((ex, index) => ({
             plan_id: planRow.id,
             exercise_name: ex.exercise_name,
+            exercise_id: ex.exercise_id,
             sets: ex.sets ?? null,
             reps: ex.reps ?? null,
             rest_seconds: Number.isFinite(ex.rest_seconds) ? ex.rest_seconds : null,
@@ -249,8 +227,15 @@ async function savePlans(userId: string, studentName: string, tier: PlanTier, ai
             display_order: index,
           })),
         );
-        if (exError) console.error("[ai-plan] falha ao salvar exercícios", exError.message);
+        if (exError) {
+          console.error("[ai-plan] falha ao salvar exercícios", exError.message);
+          await supabaseAdmin.from("student_plans").delete().eq("id", planRow.id);
+          continue;
+        }
       }
+
+      created += 1;
+      planIds.push(planRow.id);
 
       // PDF do treino, vinculado ao aluno e ao treino
       try {
@@ -344,27 +329,44 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
 
     const studentName = purchase.customer_name || email || "Aluno";
     const tier = resolvePlanTier(purchase.plan_id);
-    const aiPromise = askAiForPlan(buildPrompt(studentName, answers, tier), tier)
-      .then((r) => { if (!r.plans?.length) console.error("[ai-plan] IA sem treinos", JSON.stringify(r).slice(0, 300)); return r.plans?.length ? r : null; })
+    const catalogue = await loadCatalogue(answers);
+    const instantPlan = immediateVideoPlan(catalogue, answers, { maxExercises: tier.exercises[1], goals: tier.pdf.goals, progression: tier.pdf.progression });
+    const profile = buyerProfile(answers);
+    const cataloguePrompt = buildPrompt(studentName, answers, tier) + "\n" +
+      `REGRA OBRIGATÓRIA: use SOMENTE os nomes exatos do catálogo abaixo, todos com vídeo. Não invente, renomeie ou acrescente cardio fora dele. Crie exatamente ${profile.days} dias. Complexidade máxima ${profile.complexity} (1=básica, 2=moderada, 3=alta). Tempo disponível: ${profile.minutes} minutos. O plano comercial não determina experiência. Respeite limitações informadas; não prescreva exercícios que agravem dor ou lesão.\n` +
+      JSON.stringify(catalogue.map(ex => ({ name: ex.name, group: ex.group, complexity: ex.complexity, description: ex.description })));
+    const aiPromise = askAiForPlan(cataloguePrompt, tier)
+      .then(r => validateVideoPlan(r, catalogue, answers))
       .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
 
     // Espera no máximo 2,5s pela IA; se demorar, libera na hora um treino montado pelas respostas.
     const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 2500))]);
     if (quick && quick !== "timeout") {
-      return await savePlans(userId, studentName, tier, quick);
+      const saved = await savePlans(userId, studentName, tier, quick, answers);
+      if (saved.ok) return saved;
     }
 
-    const instant = await savePlans(userId, studentName, tier, fallbackPlan(answers, tier));
+    const instant = await savePlans(userId, studentName, tier, instantPlan, answers);
     // Continua esperando a IA e troca pelo treino personalizado quando ficar pronto.
+    const studentId = userId;
     const upgrade = aiPromise.then(async (ai) => {
-      if (!ai) return;
+      if (!ai || !instant.ok) return;
       const { data: done } = await supabaseAdmin.from("student_plan_exercises").select("id")
         .in("plan_id", instant.planIds).not("completed_at", "is", null).limit(1);
       if (done?.length) return; // aluno já começou a usar: não mexe
+      const replacement = await savePlans(studentId, studentName, tier, ai, answers);
+      if (!replacement.ok || replacement.plans !== ai.plans.length) {
+        if (replacement.planIds.length) {
+          await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", replacement.planIds);
+          await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", replacement.planIds);
+          await supabaseAdmin.from("student_plans").delete().in("id", replacement.planIds);
+        }
+        return;
+      }
       await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", instant.planIds);
       await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", instant.planIds);
       await supabaseAdmin.from("student_plans").delete().in("id", instant.planIds);
-      await savePlans(userId!, studentName, tier, ai);
+
     }).catch((e) => console.error("[ai-plan] falha ao trocar pelo treino da IA", e));
     await Promise.race([upgrade, new Promise((r) => setTimeout(r, 90000))]);
     return instant;
