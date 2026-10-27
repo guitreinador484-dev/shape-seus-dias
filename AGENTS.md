@@ -13,3 +13,4 @@
 - AI exercise names are reviewable suggestions; duplicate warnings compare exercise and gym without deleting or merging recordings automatically.
 - Video upload progress lives in a browser-session external store shared by the library and root indicator; track completion only after metadata saves and warn before page unload, because uploads cannot survive browser closure.
 - Temporary passwords use a shared browser-safe generator with flow-specific lengths so registration defaults satisfy its server validation without changing password-reset behavior.
+- Purchased automatic workouts share a browser-safe video catalogue policy for immediate generation and AI validation; recheck eligibility before saving and persist canonical exercise IDs so private video access resolves correctly. Complexity inferred from exercise names is conservative, not a reviewed clinical assessment.

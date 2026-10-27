@@ -24,11 +24,13 @@ export function classifyExercise(exercise: CatalogueExercise) {
 }
 
 export function buyerProfile(answers: Record<string, unknown>) {
-  const level = exerciseNameKey(String(answers.nivel ?? answers.experiencia ?? 'iniciante'));
+  const measurements = answers.measurements as Record<string, unknown> | undefined;
+  const broad = answers.broad as Record<string, unknown> | undefined;
+  const level = exerciseNameKey(String(measurements?.nivel ?? answers.nivel ?? broad?.experiencia ?? answers.experiencia ?? 'iniciante'));
   const complexity = /avancado/.test(level) ? 3 : /intermediario|com frequencia/.test(level) ? 2 : 1;
-  const dayText = String(answers.dias ?? answers.frequencia ?? '4');
+  const dayText = String(measurements?.dias ?? answers.dias ?? answers.frequencia ?? '4');
   const days = Math.min(6, Math.max(2, Number(dayText.match(/[2-6]/)?.[0] ?? 4)));
-  const time = String(answers.tempo ?? '45');
+  const time = String(broad?.tempo ?? answers.tempo ?? '45');
   const minutes = /20/.test(time) ? 20 : /30/.test(time) ? 30 : /hora|60/.test(time) ? 60 : 45;
   const lose = /emagre|perder|gordura|secar/.test(exerciseNameKey(JSON.stringify(answers)));
   return { complexity, days, minutes, lose };
