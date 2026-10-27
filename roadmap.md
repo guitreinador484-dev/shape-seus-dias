@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Treinos automáticos com vídeos
-- [ ] Restringir IA e treino imediato ao catálogo de exercícios com vídeo e considerar complexidade
-- [ ] Garantir vínculo e reprodução dos vídeos para compradores e testar as regras
+- [x] Restringir IA e treino imediato ao catálogo de exercícios com vídeo e considerar complexidade
+- [x] Garantir vínculo aos vídeos, fallback de outra academia e testar geração/gravação e seleção com catálogo real
+- [ ] Confirmar reprodução de todos os arquivos: vídeo real abriu com URL assinada, mas Chromium rejeitou formato/codecs (erro 4); exige revisão/conversão da mídia
 
 ## Cadastro manual de alunos
 - [x] Corrigir bloqueio no cadastro e validar criação e leitura do aluno no painel
