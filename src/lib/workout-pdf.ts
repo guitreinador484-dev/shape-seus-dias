@@ -103,8 +103,8 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     const badges: string[] = [];
-    if (isIntercalado) badges.push("⚡ MÉTODO INTERCALADO (PARES ALTERNADOS)");
-    if (emphasisMatch) badges.push(`⭐ ÊNFASE: ${emphasisMatch.toUpperCase()}`);
+    if (isIntercalado) badges.push("MÉTODO INTERCALADO (PARES ALTERNADOS)");
+    if (emphasisMatch) badges.push(`ÊNFASE: ${emphasisMatch.toUpperCase()}`);
     doc.setTextColor(255, 200, 100);
     doc.text(badges.join("   |   "), marginX, currentY);
     doc.setFont("helvetica", "normal");
@@ -190,7 +190,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     const noteLines = exercise.notes ? (doc.splitTextToSize(clean(exercise.notes), contentWidth - (textX - marginX) - cardPad) as string[]) : [];
-    const cardH = cardPad + nameLines.length * 14 + 8 + 30 + (noteLines.length ? 8 + noteLines.length * 11 : 0) + cardPad;
+    const cardH = cardPad + nameLines.length * 14 + 8 + 38 + (noteLines.length ? 8 + noteLines.length * 11 : 0) + cardPad;
 
     if (y + cardH > pageHeight - 56) {
       doc.addPage();
@@ -232,17 +232,17 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     values.forEach(([label, value], i) => {
       const sx = textX + i * (statW + statGap);
       doc.setFillColor(...PALE);
-      doc.roundedRect(sx, cy, statW, 30, 4, 4, "F");
+      doc.roundedRect(sx, cy, statW, 38, 4, 4, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(6.5);
       doc.setTextColor(...GRAY);
       doc.text(label!, sx + 7, cy + 10);
-      doc.setFontSize(9.5);
+      doc.setFontSize(8.5);
       doc.setTextColor(...INK);
       const v = doc.splitTextToSize(clean(value!), statW - 12) as string[];
-      doc.text(v[0] + (v.length > 1 ? "…" : ""), sx + 7, cy + 23);
+      doc.text(v.slice(0, 2), sx + 7, cy + 21);
     });
-    cy += 30;
+    cy += 38;
 
     if (noteLines.length) {
       cy += 14;
