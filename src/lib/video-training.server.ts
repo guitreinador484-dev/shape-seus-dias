@@ -4,6 +4,8 @@ type SmartTrainingPlanInput = {
   workout_type: "tradicional" | "intercalado" | "circuito";
   emphasis?: string | null;
   level?: "iniciante" | "intermediario" | "avancado";
+  answers?: Record<string, unknown>;
+  planTierId?: string;
 };
 
 
@@ -11,7 +13,9 @@ type SmartTrainingPlanInput = {
 export async function generateVideoTrainingGrid(data: SmartTrainingPlanInput) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { eligibleVideoExercises, immediateVideoPlan, validateVideoPlan, buyerProfile } = await import("./video-workout-catalogue");
-    const { buildWorkoutPdf, DAY_NAMES } = await import("./workout-pdf");
+    const { buildWorkoutPdf } = await import("./workout-pdf");
+    const { resolvePlanTier } = await import("./plan-tiers");
+    const tier = data.planTierId ? resolvePlanTier(data.planTierId) : null;
 
 
     // Consulta os dados do aluno
@@ -29,7 +33,7 @@ export async function generateVideoTrainingGrid(data: SmartTrainingPlanInput) {
       .select("id, name, muscle_group, description, exercise_videos!inner(video_path)");
     if (catalogueError) throw new Error("Não foi possível carregar a biblioteca de vídeos.");
 
-    // Se houver exercícios cadastrados, filtra os elegíveis; senão, monta lista de referência
+    // Only real recordings are eligible; never fabricate video availability.
     const rows = (rawCatalogue ?? []).map((r) => ({
       id: r.id,
       name: r.name,
@@ -38,7 +42,7 @@ export async function generateVideoTrainingGrid(data: SmartTrainingPlanInput) {
       exercise_videos: (r.exercise_videos as { video_path: string }[] | null) ?? [],
     }));
 
-    const mockAnswers = {
+    const mockAnswers = data.answers ?? {
       measurements: {
         nivel: data.level || "intermediario",
         dias: `${data.days_count}x na semana`,
@@ -53,9 +57,9 @@ export async function generateVideoTrainingGrid(data: SmartTrainingPlanInput) {
     if (!eligible.length) throw new Error("Ainda não há exercícios com vídeo adequados ao nível escolhido. Complete a Biblioteca.");
 
     const generated = immediateVideoPlan(eligible, mockAnswers, {
-      maxExercises: 7,
-      goals: true,
-      progression: true,
+      maxExercises: tier?.exercises[1] ?? 7,
+      goals: tier?.pdf.goals ?? true,
+      progression: tier?.pdf.progression ?? true,
       workoutType: data.workout_type,
       emphasis: buyerProfile(mockAnswers).emphasis,
     });
@@ -83,7 +87,7 @@ export async function generateVideoTrainingGrid(data: SmartTrainingPlanInput) {
           dayOfWeek: day,
           professional: "Gui Treinador",
           exercises: plan.exercises,
-          tierLabel: data.workout_type === "intercalado" ? "Método Intercalado" : "Musculação Personalizada",
+          tierLabel: tier?.name ?? (data.workout_type === "intercalado" ? "Método Intercalado" : "Musculação Personalizada"),
           summary: generated.summary,
           goals: generated.goals,
           progression: generated.progression,

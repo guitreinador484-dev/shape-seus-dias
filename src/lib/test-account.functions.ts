@@ -47,6 +47,8 @@ export const runTestWorkoutFn = createServerFn({ method: "POST" })
       level: data.nivel as "iniciante" | "intermediario" | "avancado",
       workout_type: data.workout_type as "tradicional" | "intercalado" | "circuito",
       emphasis: data.objetivo,
+      planTierId: data.tier,
+      answers: { nivel: data.nivel, dias: data.dias, tempo: data.tempo, objetivo: data.objetivo, workout_type: data.workout_type, limitacoes: data.limitacoes ?? "" },
     });
     return { ok: result.ok, plans: result.plansCount, pdf: result.pdfCount > 0, message: "Treino salvo com vídeos de execução.", email: TEST_ACCOUNT_EMAIL, password };
   });
