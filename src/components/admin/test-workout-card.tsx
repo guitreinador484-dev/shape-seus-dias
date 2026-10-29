@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FlaskConical, Loader2, Copy } from "lucide-react";
+import { FlaskConical, Loader2, Copy, MonitorPlay } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,15 @@ export function TestWorkoutCard() {
   const [limitacoes, setLimitacoes] = useState("");
   const [loading, setLoading] = useState(false);
   const [creds, setCreds] = useState<{ email: string; password: string; message: string } | null>(null);
+
+  const [opening, setOpening] = useState(false);
+  async function openAsStudent() {
+    if (!creds) return;
+    setOpening(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: creds.email, password: creds.password });
+    if (error) { setOpening(false); toast.error("Não foi possível entrar na conta de teste.", { description: error.message }); return; }
+    window.location.href = "/plataforma";
+  }
 
   async function submit() {
     setLoading(true);
@@ -62,7 +72,8 @@ export function TestWorkoutCard() {
             <p>E-mail: <span className="font-mono">{creds.email}</span></p>
             <p>Senha: <span className="font-mono">{creds.password}</span>{" "}
               <Button size="sm" variant="ghost" onClick={() => { void navigator.clipboard.writeText(`${creds.email} / ${creds.password}`); toast.success("Copiado"); }}><Copy className="h-3.5 w-3.5" /> Copiar</Button></p>
-            <p className="text-xs text-muted-foreground">A senha muda a cada novo teste. {creds.message}</p>
+            <Button className="w-full sm:w-auto" onClick={() => void openAsStudent()} disabled={opening}>{opening ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />} Abrir painel do aluno de teste</Button>
+            <p className="text-xs text-muted-foreground">Ao abrir, você sai da conta de administrador e entra como o aluno de teste. Para voltar, saia e entre com sua conta. A senha muda a cada novo teste. {creds.message}</p>
           </div>
         ) : null}
       </CardContent>
