@@ -164,6 +164,13 @@ export function immediateVideoPlan(
           }
         }
       }
+      // Biblioteca sem vídeos para os grupos do dia: usa os vídeos disponíveis para ninguém ficar sem treino.
+      if (!selected.length) {
+        for (let i = 0; selected.length < count && i < catalogue.length; i++) {
+          const item = catalogue[(i + day * count) % catalogue.length]!;
+          if (!selected.some(ex => ex.id === item.id)) selected.push(item);
+        }
+      }
       if (!selected.length) throw new Error('Faltam vídeos para montar uma divisão equilibrada. O treinador precisa completar a biblioteca.');
 
       // Se for treino intercalado, organiza em pares complementares (ex: Peito + Costas, Superior + Inferior)

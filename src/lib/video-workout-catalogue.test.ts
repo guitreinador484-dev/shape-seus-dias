@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buyerProfile, eligibleVideoExercises, immediateVideoPlan, validateVideoPlan, type CatalogueExercise } from './video-workout-catalogue';
+import { buyerProfile, eligibleVideoExercises, immediateVideoPlan, dailySplits, validateVideoPlan, type CatalogueExercise } from './video-workout-catalogue';
 import { selectExecutionVideo } from './exercise-video-selection';
 
 const row = (name: string, video = true): CatalogueExercise => ({ id: name, name, muscle_group: 'Outros', description: null, exercise_videos: video ? [{ video_path: `${name}.mp4` }] : [] });
@@ -38,9 +38,15 @@ describe('treinos de compradores com vídeos', () => {
   it('vincula o nome canônico ao identificador que libera o vídeo privado', () => {
     const catalogue = eligibleVideoExercises(rows, answers);
     const result = immediateVideoPlan(catalogue, answers, options);
+    const expected = result.plans[0].exercises[0].exercise_id;
     for (const plan of result.plans) for (const ex of plan.exercises) delete ex.exercise_id;
     const checked = validateVideoPlan(result, catalogue, answers);
-    expect(checked?.plans[0].exercises[0].exercise_id).toBe('Cadeira Extensora');
+    expect(checked?.plans[0].exercises[0].exercise_id).toBe(expected);
+  });
+  it('divide em braço, perna e costas e repete o dia do foco', () => {
+    expect(dailySplits(3).map(d => d.label)).toEqual(['Braços', 'Pernas', 'Costas']);
+    expect(dailySplits(5, 'Glúteos').map(d => d.label)).toEqual(['Braços', 'Pernas', 'Costas', 'Pernas', 'Pernas']);
+    expect(dailySplits(4, 'Costas').map(d => d.label)).toEqual(['Braços', 'Pernas', 'Costas', 'Costas']);
   });
   it('não cria treino vazio nem inventa exercícios quando faltam vídeos', () => {
     expect(() => immediateVideoPlan([], answers, options)).toThrow('Ainda não há exercícios com vídeo');
