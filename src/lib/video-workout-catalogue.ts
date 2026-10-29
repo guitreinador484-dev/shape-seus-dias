@@ -82,6 +82,30 @@ export type ImmediatePlanOptions = {
   emphasis?: WorkoutEmphasis | null;
 };
 
+const SPLIT_DAYS = {
+  Braços: ['Bíceps', 'Tríceps', 'Ombros'],
+  Pernas: ['Pernas', 'Glúteos', 'Abdômen'],
+  Costas: ['Costas', 'Peito'],
+} as const;
+type SplitDay = keyof typeof SPLIT_DAYS;
+
+function emphasisDay(emphasis: WorkoutEmphasis | null | undefined): SplitDay | null {
+  if (!emphasis) return null;
+  if (emphasis === 'Braços' || emphasis === 'Ombros') return 'Braços';
+  if (emphasis === 'Pernas' || emphasis === 'Glúteos' || emphasis === 'Abdômen') return 'Pernas';
+  return 'Costas';
+}
+
+/** One day arms, one legs, one back; extra days repeat the emphasised day (or keep rotating). */
+export function dailySplits(days: number, emphasis?: WorkoutEmphasis | null): { label: SplitDay; groups: string[] }[] {
+  const order: SplitDay[] = ['Braços', 'Pernas', 'Costas'];
+  const focus = emphasisDay(emphasis);
+  return Array.from({ length: days }, (_, i) => {
+    const label = i < 3 ? order[i]! : focus ?? order[i % 3]!;
+    return { label, groups: [...SPLIT_DAYS[label]] };
+  });
+}
+
 export function immediateVideoPlan(
   catalogue: VideoExercise[],
   answers: Record<string, unknown>,
@@ -94,10 +118,7 @@ export function immediateVideoPlan(
   const effectiveEmphasis = options.emphasis !== undefined ? options.emphasis : profile.emphasis;
 
   const count = Math.min(options.maxExercises, profile.minutes <= 20 ? 4 : profile.minutes <= 30 ? 5 : 7);
-  const full = ['Pernas', 'Costas', 'Peito', 'Glúteos', 'Ombros', 'Abdômen', 'Bíceps', 'Tríceps'];
-  const splits = profile.days <= 3 ? [full] : profile.days === 4
-    ? [['Peito', 'Costas', 'Ombros', 'Bíceps', 'Tríceps'], ['Pernas', 'Glúteos', 'Abdômen']]
-    : [['Peito', 'Ombros', 'Tríceps'], ['Costas', 'Bíceps', 'Abdômen'], ['Pernas', 'Glúteos']];
+  const splits = dailySplits(profile.days, effectiveEmphasis);
   const week = profile.days === 2 ? [1, 4] : profile.days === 3 ? [1, 3, 5] : profile.days === 4 ? [1, 2, 4, 5] : [1, 2, 3, 4, 5, 6];
 
   const summaryText = effectiveType === 'intercalado'
