@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 type Feedback = Tables<"feedbacks">;
 
 const typeLabels: Record<string, string> = {
-  sugestao: "Sugestão",
+  sugestao: "Sugestão de melhoria",
   critica: "Crítica",
   elogio: "Elogio",
   outro: "Outro",
@@ -60,7 +60,7 @@ export function FeedbackTab({ userId }: { userId: string }) {
         <CardContent className="space-y-5 pt-6">
           <div className="flex items-start gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary"><MessageSquareText className="h-5 w-5" /></span>
-            <div><h2 className="font-display text-2xl">Críticas e sugestões</h2><p className="text-sm text-muted-foreground">Conte como podemos melhorar sua experiência e acompanhamento.</p></div>
+            <div><h2 className="font-display text-2xl">Sugestões de melhoria</h2><p className="text-sm text-muted-foreground">O que podemos melhorar na plataforma? Sua ideia vai direto para o treinador.</p></div>
           </div>
           <div className="grid gap-2 sm:max-w-xs"><Label>Tipo de feedback</Label><Select value={type} onValueChange={setType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(typeLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-2"><Label htmlFor="feedback-message">Sua mensagem</Label><Textarea id="feedback-message" value={message} maxLength={2000} rows={6} onChange={(event) => setMessage(event.target.value)} placeholder="Escreva sua sugestão, crítica ou elogio..." /><p className="text-right text-xs text-muted-foreground">{message.length}/2000</p></div>
