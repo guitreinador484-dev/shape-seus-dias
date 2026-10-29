@@ -40,12 +40,17 @@ export type WorkoutPdfInput = {
   progression?: string | null;
   /** Ex.: "Atualização a cada 15 dias". */
   updateNote?: string | null;
+  /** Membro de ênfase (ex.: "Glúteos", "Peitoral"). */
+  emphasis?: string | null;
+  /** Tipo de treino ("tradicional", "intercalado", "circuito"). */
+  workoutType?: string | null;
 };
 
 const BLUE: [number, number, number] = [230, 0, 0];
 const GRAY: [number, number, number] = [110, 116, 128];
 const INK: [number, number, number] = [5, 5, 5];
 const PALE: [number, number, number] = [245, 245, 245];
+const GOLD: [number, number, number] = [217, 119, 6];
 
 /** Gera o PDF do treino e devolve o conteúdo em base64 (sem prefixo data:). */
 export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileName: string } {
@@ -55,8 +60,19 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   const marginX = 36;
   let y = 0;
 
+  // Extrai tags e ênfase do título se não passados diretamente
+  const isIntercalado = input.workoutType === "intercalado" || /\[intercalado\]/i.test(input.planName);
+  const emphasisMatch = input.emphasis || input.planName.match(/\[(?:ênfase|enfase|foco):\s*([^\]]+)\]/i)?.[1];
+  const cleanPlanName = input.planName
+    .replace(/\[intercalado\]/gi, "")
+    .replace(/\[circuito\]/gi, "")
+    .replace(/\[tradicional\]/gi, "")
+    .replace(/\[(?:ênfase|enfase|foco):[^\]]+\]/gi, "")
+    .trim() || "Treino";
+
   // Cabeçalho
-  const headerHeight = input.tierLabel ? 126 : 108;
+  const hasExtraBadges = isIntercalado || !!emphasisMatch;
+  const headerHeight = input.tierLabel ? (hasExtraBadges ? 142 : 126) : (hasExtraBadges ? 124 : 108);
   doc.setFillColor(...INK);
   doc.rect(0, 0, pageWidth, headerHeight, "F");
   doc.setFillColor(...BLUE);
@@ -77,17 +93,32 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   doc.setTextColor(210, 218, 230);
   doc.text(`Aluno: ${input.studentName}`, marginX, 78);
   doc.text(
-    `${input.planName || "Treino"} · ${DAY_NAMES[input.dayOfWeek] ?? ""} · ${new Date().toLocaleDateString("pt-BR")}`,
+    `${cleanPlanName} · ${DAY_NAMES[input.dayOfWeek] ?? ""} · ${new Date().toLocaleDateString("pt-BR")}`,
     marginX,
     96,
   );
+
+  let currentY = 114;
+  if (hasExtraBadges) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    const badges: string[] = [];
+    if (isIntercalado) badges.push("⚡ MÉTODO INTERCALADO (PARES ALTERNADOS)");
+    if (emphasisMatch) badges.push(`⭐ ÊNFASE: ${emphasisMatch.toUpperCase()}`);
+    doc.setTextColor(255, 200, 100);
+    doc.text(badges.join("   |   "), marginX, currentY);
+    doc.setFont("helvetica", "normal");
+    currentY += 16;
+  }
+
   if (input.tierLabel) {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(9);
+    doc.setTextColor(200, 210, 225);
     doc.text(
       input.updateNote ? `${input.tierLabel} · ${input.updateNote}` : input.tierLabel,
       marginX,
-      115,
+      currentY,
     );
     doc.setFont("helvetica", "normal");
   }

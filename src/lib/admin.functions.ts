@@ -245,6 +245,8 @@ type TrainingPlanInput = {
   student_id: string;
   day_of_week: number;
   plan_name: string;
+  workout_type?: string | null;
+  emphasis?: string | null;
 };
 
 export const createTrainingPlan = createServerFn({ method: "POST" })
@@ -255,12 +257,31 @@ export const createTrainingPlan = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { formatPlanName } = await import("./workout-meta");
     await assertAdmin(supabaseAdmin, context.userId);
-    const { error } = await supabaseAdmin.from("student_plans").insert({
+
+    const formattedName = formatPlanName(
+      data.plan_name || "Treino",
+      (data.workout_type as any) || "tradicional",
+      data.emphasis,
+    );
+
+    const payload: Record<string, unknown> = {
       student_id: data.student_id,
       day_of_week: Number(data.day_of_week || 0),
-      plan_name: data.plan_name || "Treino",
-    });
+      plan_name: formattedName,
+    };
+    if (data.workout_type) payload.workout_type = data.workout_type;
+    if (data.emphasis) payload.emphasis = data.emphasis;
+
+    let { error } = await supabaseAdmin.from("student_plans").insert(payload as any);
+    if (error && (error.message.includes("workout_type") || error.message.includes("emphasis"))) {
+      // Fallback gracioso se as colunas opcionais ainda não estiverem migradas no Supabase
+      delete payload.workout_type;
+      delete payload.emphasis;
+      const fallbackRes = await supabaseAdmin.from("student_plans").insert(payload as any);
+      error = fallbackRes.error;
+    }
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
@@ -305,6 +326,7 @@ export const duplicateTrainingPlan = createServerFn({ method: "POST" })
       const { error } = await supabaseAdmin.from("student_plan_exercises").insert(exercises.map((exercise) => ({
         plan_id: copy.id,
         exercise_name: exercise.exercise_name,
+        exercise_id: exercise.exercise_id,
         sets: exercise.sets,
         reps: exercise.reps,
         load_text: exercise.load_text,
@@ -320,6 +342,7 @@ export const duplicateTrainingPlan = createServerFn({ method: "POST" })
 type PlanExerciseInput = {
   plan_id: string;
   exercise_name: string;
+  exercise_id?: string | null;
   sets?: string | null;
   reps?: string | null;
   load_text?: string | null;
@@ -339,6 +362,7 @@ export const addPlanExercise = createServerFn({ method: "POST" })
     await assertAdmin(supabaseAdmin, context.userId);
     const { error } = await supabaseAdmin.from("student_plan_exercises").insert({
       plan_id: data.plan_id,
+      exercise_id: data.exercise_id ?? null,
       exercise_name: data.exercise_name,
       sets: data.sets ?? null,
       reps: data.reps ?? null,
@@ -363,6 +387,163 @@ export const deletePlanExercise = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("student_plan_exercises").delete().eq("id", data.exerciseId);
     if (error) throw new Error(error.message);
     return { ok: true as const };
+  });
+
+type SmartTrainingPlanInput = {
+  student_id: string;
+  days_count: number;
+  workout_type: "tradicional" | "intercalado" | "circuito";
+  emphasis?: string | null;
+  level?: "iniciante" | "intermediario" | "avancado";
+};
+
+/**
+ * Cria ou substitui uma grade completa de treinos inteligentes usando a biblioteca de vídeos.
+ */
+export const generateSmartTrainingPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: SmartTrainingPlanInput) => {
+    if (!input?.student_id) throw new Error("Aluno não informado");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { eligibleVideoExercises, immediateVideoPlan } = await import("./video-workout-catalogue");
+    const { buildWorkoutPdf, DAY_NAMES } = await import("./workout-pdf");
+    await assertAdmin(supabaseAdmin, context.userId);
+
+    // Consulta os dados do aluno
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", data.student_id)
+      .maybeSingle();
+
+    const studentName = profile?.full_name || profile?.email || "Aluno";
+
+    // Consulta a biblioteca de vídeos
+    const { data: rawCatalogue } = await supabaseAdmin
+      .from("exercises")
+      .select("id, name, muscle_group, description, exercise_videos(video_path)");
+
+    // Se houver exercícios cadastrados, filtra os elegíveis; senão, monta lista de referência
+    const rows = (rawCatalogue ?? []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      muscle_group: r.muscle_group || "Outros",
+      description: r.description,
+      exercise_videos: (r.exercise_videos as { video_path: string }[] | null) ?? [],
+    }));
+
+    const mockAnswers = {
+      measurements: {
+        nivel: data.level || "intermediario",
+        dias: `${data.days_count}x na semana`,
+        objetivo: data.emphasis ? `Ênfase em ${data.emphasis}` : "Hipertrofia",
+      },
+      broad: { tempo: "45 minutos" },
+      workout_type: data.workout_type,
+      emphasis: data.emphasis,
+    };
+
+    let eligible = eligibleVideoExercises(rows, mockAnswers);
+
+    // Se o banco ainda não tiver exercícios suficientes com vídeo gravado, busca todos os cadastrados
+    const { classifyExercise } = await import("./video-workout-catalogue");
+    if (eligible.length < 4) {
+      eligible = rows.map((r) =>
+        classifyExercise({ ...r, exercise_videos: [{ video_path: "placeholder" }] }),
+      );
+    }
+
+    if (eligible.length === 0) {
+      throw new Error("Ainda não há exercícios cadastrados na biblioteca. Cadastre os primeiros na aba Biblioteca.");
+    }
+
+    const generated = immediateVideoPlan(eligible, mockAnswers, {
+      maxExercises: 7,
+      goals: true,
+      progression: true,
+      workoutType: data.workout_type,
+      emphasis: (data.emphasis as any) || null,
+    });
+
+    let createdCount = 0;
+    for (const plan of generated.plans) {
+      const day = Math.min(6, Math.max(0, plan.day_of_week));
+      const { data: planRow, error: pErr } = await supabaseAdmin
+        .from("student_plans")
+        .insert({
+          student_id: data.student_id,
+          day_of_week: day,
+          plan_name: plan.plan_name,
+        })
+        .select("id")
+        .single();
+
+      if (pErr || !planRow) continue;
+
+      if (plan.exercises.length) {
+        await supabaseAdmin.from("student_plan_exercises").insert(
+          plan.exercises.map((ex, index) => ({
+            plan_id: planRow.id,
+            exercise_id: ex.exercise_id ?? null,
+            exercise_name: ex.exercise_name,
+            sets: ex.sets,
+            reps: ex.reps,
+            load_text: ex.load_text,
+            rest_seconds: ex.rest_seconds,
+            notes: ex.notes,
+            display_order: index,
+          })),
+        );
+      }
+
+      // Gera o PDF
+      try {
+        const { base64, fileName } = buildWorkoutPdf({
+          studentName,
+          planName: plan.plan_name,
+          dayOfWeek: day,
+          professional: "Gui Treinador",
+          exercises: plan.exercises,
+          tierLabel: data.workout_type === "intercalado" ? "Método Intercalado" : "Musculação Personalizada",
+          summary: generated.summary,
+          goals: generated.goals,
+          progression: generated.progression,
+          emphasis: data.emphasis,
+          workoutType: data.workout_type,
+        });
+
+        const path = `${data.student_id}/${planRow.id}-v1.pdf`;
+        const bin = atob(base64.includes(",") ? base64.split(",")[1] : base64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+        await supabaseAdmin.storage
+          .from("workout-pdfs")
+          .upload(path, bytes, { contentType: "application/pdf", upsert: true });
+
+        await supabaseAdmin.from("workout_pdfs").upsert(
+          {
+            student_id: data.student_id,
+            plan_id: planRow.id,
+            file_path: path,
+            file_name: fileName,
+            version: 1,
+            source: "generated",
+            generated_at: new Date().toISOString(),
+          },
+          { onConflict: "plan_id" },
+        );
+      } catch (err) {
+        console.error("[generateSmartTrainingPlan] falha ao gerar PDF:", err);
+      }
+
+      createdCount++;
+    }
+
+    return { ok: true as const, plansCount: createdCount };
   });
 
 type ToggleEnrollmentInput = {

@@ -250,3 +250,9 @@ BEGIN
   INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, v_role);
   RETURN NEW;
 END $function$;
+
+-- ============================================================
+-- 6) TREINO INTERCALADO E MEMBRO DE ÊNFASE
+-- ============================================================
+ALTER TABLE public.student_plans ADD COLUMN IF NOT EXISTS workout_type TEXT DEFAULT 'tradicional';
+ALTER TABLE public.student_plans ADD COLUMN IF NOT EXISTS emphasis TEXT;

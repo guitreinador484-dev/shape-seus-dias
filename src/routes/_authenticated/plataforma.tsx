@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList, Library } from "lucide-react";
+import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList, Library, Zap, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
 import LeftSidebar from "@/components/ui/left-sidebar";
@@ -30,6 +30,8 @@ import { MobileNav } from "@/components/platform/mobile-nav";
 import { FeedbackTab } from "@/components/platform/feedback-tab";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
 import { BrandLogo } from "@/components/brand-logo";
+import { parsePlanMetadata, isExerciseInEmphasis } from "@/lib/workout-meta";
+import { RestTimer } from "@/components/platform/rest-timer";
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -208,6 +210,7 @@ function TreinoPanel({
   const [selectedDay, setSelectedDay] = useState<number>(initial);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [videoFor, setVideoFor] = useState<StudentPlanExercise | null>(null);
+  const [activeTimer, setActiveTimer] = useState<{ seconds: number; exerciseName: string } | null>(null);
   const { byPlan: pdfByPlan } = useWorkoutPdfs();
 
   useEffect(() => {
@@ -231,13 +234,24 @@ function TreinoPanel({
   const completed = dayPlans.reduce((acc, p) => acc + p.exercises.filter((e) => done.has(e.id)).length, 0);
   const progress = totalEx ? Math.round((completed / totalEx) * 100) : 0;
 
-  function toggle(id: string) {
+  const primaryPlan = dayPlans[0];
+  const primaryMeta = primaryPlan
+    ? parsePlanMetadata(primaryPlan.plan_name, (primaryPlan as any).workout_type, (primaryPlan as any).emphasis)
+    : null;
+
+  function toggle(id: string, ex?: StudentPlanExercise) {
     const wasDone = done.has(id);
     setDone((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+
+    // Se marcou como feito e tem descanso definido, abre timer de descanso automaticamente
+    if (!wasDone && ex?.rest_seconds) {
+      setActiveTimer({ seconds: ex.rest_seconds, exerciseName: ex.exercise_name });
+    }
+
     // Persiste no banco (optimistic; reverte em caso de erro).
     supabase
       .from("student_plan_exercises")
@@ -256,6 +270,8 @@ function TreinoPanel({
         }
       });
   }
+
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
   return (
     <div className="space-y-6">
@@ -296,8 +312,30 @@ function TreinoPanel({
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">{WEEKDAYS[selectedDay]}</p>
             <h3 className="font-display text-3xl sm:text-5xl mt-1 tracking-tight text-white drop-shadow">
-              {dayPlans.map((p) => p.plan_name).join(" + ") || "Descanso"}
+              {dayPlans.map((p) => {
+                const m = parsePlanMetadata(p.plan_name, (p as any).workout_type, (p as any).emphasis);
+                return m.cleanName;
+              }).join(" + ") || "Descanso"}
             </h3>
+
+            {/* Badges de Método Intercalado e Membro de Ênfase */}
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {primaryMeta?.workoutType === "intercalado" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 border border-primary/40 px-3 py-1 text-xs font-bold text-primary shadow-sm backdrop-blur-md">
+                  <Zap className="h-3.5 w-3.5 fill-current" /> Método Intercalado (Pares Alternados)
+                </span>
+              )}
+              {primaryMeta?.workoutType === "circuito" && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 border border-orange-500/40 px-3 py-1 text-xs font-bold text-orange-400 shadow-sm backdrop-blur-md">
+                  <Flame className="h-3.5 w-3.5" /> Circuito Metabólico
+                </span>
+              )}
+              {primaryMeta?.emphasis && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/35 px-3 py-1 text-xs font-bold text-amber-300 shadow-sm backdrop-blur-md">
+                  <Sparkles className="h-3.5 w-3.5 fill-current" /> Foco de Ênfase: {primaryMeta.emphasis}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex gap-4 sm:gap-6 text-sm">
             <div className="glass-pill rounded-2xl px-4.5 py-3 text-center min-w-[85px]">
@@ -329,87 +367,168 @@ function TreinoPanel({
             Nenhum treino programado para {WEEKDAYS[selectedDay].toLowerCase()}. Aproveite para descansar.
           </CardContent>
         </Card>
-      ) : dayPlans.map((plan) => (
-        <div key={plan.id} className="glass-block rounded-3xl overflow-hidden shadow-2xl">
-          <div className="flex items-center justify-between px-6 py-4.5 border-b border-white/10 bg-white/[0.03]">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/20 border border-primary/30 text-primary grid place-items-center shadow-lg shadow-primary/20">
-                <Flame className="h-5 w-5" />
+      ) : dayPlans.map((plan) => {
+        const meta = parsePlanMetadata(plan.plan_name, (plan as any).workout_type, (plan as any).emphasis);
+
+        return (
+          <div key={plan.id} className="glass-block rounded-3xl overflow-hidden shadow-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4.5 border-b border-white/10 bg-white/[0.03]">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-10 w-10 shrink-0 rounded-2xl bg-primary/20 border border-primary/30 text-primary grid place-items-center shadow-lg shadow-primary/20">
+                  {meta.workoutType === "intercalado" ? <Zap className="h-5 w-5 fill-current" /> : <Flame className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-base text-white truncate">{meta.cleanName}</p>
+                    {meta.workoutType === "intercalado" && (
+                      <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                        Intercalado
+                      </Badge>
+                    )}
+                    {meta.emphasis && (
+                      <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                        ⭐ Ênfase {meta.emphasis}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {plan.exercises.length} exercícios{showVideos ? " · com vídeos de execução" : ""}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-base text-white truncate">{plan.plan_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {plan.exercises.length} exercícios{showVideos ? " · vídeos de execução" : ""}
-                </p>
-              </div>
+              {pdfByPlan[plan.id] ? <WorkoutPdfButton planId={plan.id} /> : null}
             </div>
-            {pdfByPlan[plan.id] ? <WorkoutPdfButton planId={plan.id} /> : null}
-          </div>
-          {plan.exercises.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
-          ) : (
-            <ol className="divide-y divide-white/5">
-              {plan.exercises.map((ex, i) => {
-                const isDone = done.has(ex.id);
-                return (
-                  <li key={ex.id} className={`group flex items-start gap-4 p-4 sm:p-5 transition-all duration-200 ${isDone ? "bg-primary/8" : "hover:bg-white/[0.04]"}`}>
-                    <button
-                      onClick={() => toggle(ex.id)}
-                      className={`shrink-0 h-10 w-10 rounded-2xl grid place-items-center font-display text-sm transition-all duration-200 ${
-                        isDone
-                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
-                          : "bg-white/5 text-muted-foreground border border-white/10 group-hover:border-primary/50 group-hover:text-white"
+
+            {meta.workoutType === "intercalado" && (
+              <div className="px-6 py-2.5 bg-primary/10 border-b border-primary/20 flex items-center gap-2 text-xs text-white/90">
+                <Zap className="h-4 w-4 text-primary shrink-0 fill-current" />
+                <span>
+                  <strong>Treino Intercalado:</strong> Execute cada par de exercícios alternadamente descansando entre eles para queimar mais calorias e otimizar seu tempo.
+                </span>
+              </div>
+            )}
+
+            {plan.exercises.length === 0 ? (
+              <p className="p-6 text-sm text-muted-foreground">Nenhum exercício adicionado ainda.</p>
+            ) : (
+              <ol className="divide-y divide-white/5">
+                {plan.exercises.map((ex, i) => {
+                  const isDone = done.has(ex.id);
+                  const isEmphasis = isExerciseInEmphasis(ex.exercise_name, meta.emphasis);
+                  const pairIndex = Math.floor(i / 2);
+                  const pairLetter = letters[pairIndex] || String(pairIndex + 1);
+                  const isInterleavedSecond = meta.workoutType === "intercalado" && i % 2 === 1;
+
+                  return (
+                    <li
+                      key={ex.id}
+                      className={`group flex items-start gap-4 p-4 sm:p-5 transition-all duration-200 ${
+                        isDone ? "bg-primary/8" : isInterleavedSecond ? "bg-white/[0.015]" : "hover:bg-white/[0.04]"
                       }`}
-                      aria-label={isDone ? "Desmarcar" : "Marcar como feito"}
                     >
-                      {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className={showVideos ? "grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_192px]" : ""}>
-                      <div className="min-w-0">
-                      {showVideos ? (
-                        <button
-                          type="button"
-                          onClick={() => setVideoFor(ex)}
-                          className={`group/ex flex flex-wrap items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-foreground"}`}
-                        >
-                          <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2 py-0.5 text-[11px] font-semibold text-primary transition-colors group-hover/ex:bg-primary group-hover/ex:text-primary-foreground">
-                            <Play className="h-3 w-3 fill-current" /> Assistir
-                          </span>
-                        </button>
-                      ) : (
-                        <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>{ex.exercise_name}</p>
-                      )}
-                      {ex.notes && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{ex.notes}</p>}
-                      <div className="flex flex-wrap gap-2 mt-2.5 text-xs">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
-                          <span className="font-display text-sm">{ex.sets}</span>
-                          <span className="opacity-60">×</span>
-                          <span className="font-display text-sm">{ex.reps}</span>
-                        </span>
-                        {ex.rest_seconds ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
-                            <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s
-                          </span>
-                        ) : null}
-                        {ex.load_text ? (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
-                            Carga: {ex.load_text}
-                          </span>
-                        ) : null}
+                      <button
+                        onClick={() => toggle(ex.id, ex)}
+                        className={`shrink-0 h-10 w-10 rounded-2xl grid place-items-center font-display text-sm transition-all duration-200 ${
+                          isDone
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
+                            : "bg-white/5 text-muted-foreground border border-white/10 group-hover:border-primary/50 group-hover:text-white"
+                        }`}
+                        aria-label={isDone ? "Desmarcar" : "Marcar como feito"}
+                      >
+                        {isDone ? <CheckCircle2 className="h-5 w-5" /> : String(i + 1).padStart(2, "0")}
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className={showVideos ? "grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_192px]" : ""}>
+                          <div className="min-w-0">
+                            {/* Badges de Par Intercalado e Ênfase no Exercício */}
+                            <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                              {meta.workoutType === "intercalado" && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-white/90">
+                                  <Zap className="h-3 w-3 text-primary fill-current" />
+                                  {isInterleavedSecond ? `Par ${pairLetter}2 • Intercalado` : `Par ${pairLetter}1`}
+                                </span>
+                              )}
+                              {isEmphasis && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                                  <Sparkles className="h-3 w-3 fill-current" /> Foco de Ênfase
+                                </span>
+                              )}
+                            </div>
+
+                            {showVideos ? (
+                              <button
+                                type="button"
+                                onClick={() => setVideoFor(ex)}
+                                className={`group/ex flex flex-wrap items-center gap-2 text-left font-medium text-sm sm:text-base leading-tight ${
+                                  isDone ? "line-through text-muted-foreground/60" : "text-white"
+                                }`}
+                              >
+                                <span className="underline-offset-4 group-hover/ex:underline">{ex.exercise_name}</span>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/20 border border-primary/40 px-2.5 py-0.5 text-[11px] font-semibold text-primary transition-colors group-hover/ex:bg-primary group-hover/ex:text-primary-foreground">
+                                  <Play className="h-3 w-3 fill-current" /> Assistir execução
+                                </span>
+                              </button>
+                            ) : (
+                              <p className={`font-medium text-sm sm:text-base leading-tight ${isDone ? "line-through text-muted-foreground/60" : "text-white"}`}>
+                                {ex.exercise_name}
+                              </p>
+                            )}
+
+                            {ex.notes && <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{ex.notes}</p>}
+
+                            <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 border border-primary/20 text-primary px-3 py-1 font-semibold tabular-nums backdrop-blur-md">
+                                <span className="font-display text-sm">{ex.sets}</span>
+                                <span className="opacity-60">×</span>
+                                <span className="font-display text-sm">{ex.reps}</span>
+                              </span>
+
+                              {ex.rest_seconds ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveTimer({ seconds: ex.rest_seconds || 60, exerciseName: ex.exercise_name })}
+                                  className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 hover:border-primary/40 hover:bg-primary/10 px-3 py-1 text-muted-foreground hover:text-primary transition cursor-pointer backdrop-blur-md"
+                                  title="Clique para iniciar o cronômetro de descanso"
+                                >
+                                  <Timer className="h-3 w-3 text-primary" /> {ex.rest_seconds}s (iniciar pausa)
+                                </button>
+                              ) : null}
+
+                              {ex.load_text ? (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-md">
+                                  Carga: {ex.load_text}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          {showVideos && (
+                            <ExerciseVideoPreview
+                              exerciseName={ex.exercise_name}
+                              exerciseId={ex.exercise_id}
+                              gymId={gymId}
+                              onOpen={() => setVideoFor(ex)}
+                            />
+                          )}
+                        </div>
                       </div>
-                      </div>
-                      {showVideos && <ExerciseVideoPreview exerciseName={ex.exercise_name} exerciseId={ex.exercise_id} gymId={gymId} onOpen={() => setVideoFor(ex)} />}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </div>
-      ))}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
+        );
+      })}
+
+      {activeTimer && (
+        <RestTimer
+          initialSeconds={activeTimer.seconds}
+          exerciseName={activeTimer.exerciseName}
+          onClose={() => setActiveTimer(null)}
+        />
+      )}
 
       <ExerciseVideoDialog
         open={!!videoFor}
