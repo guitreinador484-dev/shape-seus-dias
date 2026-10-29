@@ -39,7 +39,7 @@ export const runTestWorkoutFn = createServerFn({ method: "POST" })
       userId = created.user.id;
     }
     const now = new Date().toISOString();
-    await supabaseAdmin.from("profiles").upsert({ id: userId, email: TEST_ACCOUNT_EMAIL, full_name: "Aluno Teste", is_active: true, has_class_access: true, welcome_completed_at: now, updated_at: now });
+    await supabaseAdmin.from("profiles").upsert({ id: userId, email: TEST_ACCOUNT_EMAIL, full_name: "Aluno Teste", is_active: true, has_class_access: true, welcome_completed_at: now, updated_at: now, referral_code: "TESTE" + userId.slice(0, 6).toUpperCase() });
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "online" });
     if (roleError && !/duplicate|unique/i.test(roleError.message)) throw new Error(roleError.message);
 
