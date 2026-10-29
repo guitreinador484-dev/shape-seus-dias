@@ -80,8 +80,10 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(1);
   doc.circle(pageWidth - 60, 42, 22, "S");
-  doc.setFontSize(8);
-  doc.text("GT", pageWidth - 60, 45, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(255, 255, 255);
+  doc.text("GT", pageWidth - 60, 46, { align: "center" });
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -190,7 +192,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     const noteLines = exercise.notes ? (doc.splitTextToSize(clean(exercise.notes), contentWidth - (textX - marginX) - cardPad) as string[]) : [];
-    const cardH = cardPad + nameLines.length * 14 + 8 + 38 + (noteLines.length ? 8 + noteLines.length * 11 : 0) + cardPad;
+    const cardH = cardPad + nameLines.length * 14 + 4 + 38 + (noteLines.length ? 6 + noteLines.length * 11 : 0) + cardPad;
 
     if (y + cardH > pageHeight - 56) {
       doc.addPage();
@@ -245,7 +247,7 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     cy += 38;
 
     if (noteLines.length) {
-      cy += 14;
+      cy += 12;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...GRAY);
