@@ -72,7 +72,6 @@ import {
   type EmphasisSelection,
 } from "@/lib/workout-meta";
 import { saveWorkoutPdf, deleteWorkoutPdf, getWorkoutPdfUrl } from "@/lib/workout-pdf.functions";
-import { buildWorkoutPdf, fileToBase64 } from "@/lib/workout-pdf";
 import { useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import { Badge } from "@/components/ui/badge";
@@ -378,7 +377,7 @@ export function AdminDashboardPanel() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Dashboard</h2>
+          <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Visão geral</h2>
           <p className="text-muted-foreground mt-1">Um resumo do que está acontecendo com seus alunos e vendas.</p>
         </div>
         <Button variant="outline" onClick={() => load()}><RefreshCw className="h-4 w-4 mr-2" /> Atualizar</Button>
@@ -1710,6 +1709,7 @@ function PlanCard({
     }
     try {
       setBusy("pdf");
+      const { buildWorkoutPdf } = await import("@/lib/workout-pdf");
       const { base64, fileName } = buildWorkoutPdf({
         studentName: student?.full_name || student?.email || "Aluno",
         planName: plan.plan_name || "Treino",
@@ -1736,6 +1736,7 @@ function PlanCard({
     }
     try {
       setBusy("pdf");
+      const { fileToBase64 } = await import("@/lib/workout-pdf");
       const base64 = await fileToBase64(file);
       await savePdfFn({ data: { planId: plan.id, studentId: plan.student_id, fileBase64: base64, fileName: file.name, source: "upload" } });
       toast.success("PDF enviado e vinculado ao treino");
