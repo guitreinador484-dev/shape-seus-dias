@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Velocidade e coerência da navegação
-- [ ] Reduzir carregamentos repetidos e o peso inicial das páginas
-- [ ] Alinhar menu lateral e títulos com o conteúdo de cada página
-- [ ] Verificar navegação autenticada e carregamento em computador e celular
+- [x] Reduzir carregamentos repetidos e o peso inicial: autenticação compartilhada, PDFs e abas opcionais sob demanda, treinos com exercícios vinculados e assinaturas de aulas em lote
+- [x] Alinhar menu lateral e títulos com o conteúdo: Visão geral, Críticas e sugestões, Ofertas extras e título da página atual
+- [x] Verificar navegação administrativa autenticada, leitura do treino real de teste, carregamento seletivo de aulas e celular sem rolagem lateral; 12 testes passaram
 
 ## Correção do gerador administrativo
 - [x] Corrigir geração e salvar somente exercícios com vídeos reais
