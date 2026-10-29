@@ -80,8 +80,10 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(1);
   doc.circle(pageWidth - 60, 42, 22, "S");
-  doc.setFontSize(8);
-  doc.text("GT", pageWidth - 60, 45, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(255, 255, 255);
+  doc.text("GT", pageWidth - 60, 46, { align: "center" });
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
@@ -103,8 +105,8 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     const badges: string[] = [];
-    if (isIntercalado) badges.push("⚡ MÉTODO INTERCALADO (PARES ALTERNADOS)");
-    if (emphasisMatch) badges.push(`⭐ ÊNFASE: ${emphasisMatch.toUpperCase()}`);
+    if (isIntercalado) badges.push("MÉTODO INTERCALADO (PARES ALTERNADOS)");
+    if (emphasisMatch) badges.push(`ÊNFASE: ${emphasisMatch.toUpperCase()}`);
     doc.setTextColor(255, 200, 100);
     doc.text(badges.join("   |   "), marginX, currentY);
     doc.setFont("helvetica", "normal");
@@ -155,83 +157,111 @@ export function buildWorkoutPdf(input: WorkoutPdfInput): { base64: string; fileN
   if (input.goals?.length) drawBlock("Metas do treino", input.goals.map((g) => `- ${g}`));
   if (input.progression) drawBlock("Progressão de cargas", [input.progression]);
 
-  const cols = [
-    { label: "Exercício", x: marginX + 8, w: 156 },
-    { label: "Séries", x: marginX + 170, w: 43 },
-    { label: "Reps", x: marginX + 218, w: 48 },
-    { label: "Carga", x: marginX + 272, w: 74 },
-    { label: "Pausa", x: marginX + 352, w: 52 },
-    { label: "Feito", x: marginX + 420, w: 42 },
-  ];
+  // Remove emoji/símbolos que a fonte padrão do PDF não suporta.
+  const clean = (text: string) => text.replace(/[^\u0000-\u024F•·—–\s]/gu, "").replace(/\s{2,}/g, " ").trim();
 
-  function drawHeader() {
-    doc.setFillColor(...INK);
-    doc.roundedRect(marginX, y - 15, contentWidth, 25, 4, 4, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    cols.forEach((col) => doc.text(col.label, col.x, y + 2));
-    doc.setTextColor(20, 20, 20);
-    y += 26;
-  }
-
-  drawHeader();
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  // Título da seção de exercícios
+  if (y + 40 > pageHeight - 56) { doc.addPage(); y = 64; }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(...INK);
+  doc.text(`EXERCÍCIOS (${input.exercises.length})`, marginX, y);
+  doc.setFillColor(...BLUE);
+  doc.rect(marginX, y + 6, 40, 2.5, "F");
+  y += 26;
 
   if (input.exercises.length === 0) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
     doc.setTextColor(...GRAY);
     doc.text("Nenhum exercício cadastrado neste treino.", marginX, y + 4);
   }
 
+  const cardPad = 12;
+  const badge = 26;
+  const textX = marginX + cardPad + badge + 12;
+  const textW = contentWidth - (textX - marginX) - cardPad - 20;
+  const stats = 4;
+  const statGap = 6;
+  const statW = (contentWidth - (textX - marginX) - cardPad - statGap * (stats - 1)) / stats;
+
   input.exercises.forEach((exercise, index) => {
-    const nameLines = doc.splitTextToSize(exercise.exercise_name || "-", cols[0]!.w);
-    const noteLines = exercise.notes ? doc.splitTextToSize(`Obs.: ${exercise.notes}`, pageWidth - marginX * 2) : [];
-    const rowHeight = Math.max(nameLines.length, 1) * 14 + noteLines.length * 12 + 18;
-
-    if (y + rowHeight > pageHeight - 56) {
-      doc.addPage();
-      y = 64;
-      drawHeader();
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-    }
-
-    if (index % 2 === 1) {
-      doc.setFillColor(247, 249, 252);
-      doc.rect(marginX, y - 12, contentWidth, rowHeight, "F");
-    }
-
-    doc.setTextColor(...INK);
     doc.setFont("helvetica", "bold");
-    doc.text(nameLines, cols[0]!.x, y);
+    doc.setFontSize(11.5);
+    const nameLines = doc.splitTextToSize(clean(exercise.exercise_name || "-"), textW) as string[];
     doc.setFont("helvetica", "normal");
-    doc.text(exercise.sets || "-", cols[1]!.x, y);
-    doc.text(exercise.reps || "-", cols[2]!.x, y);
-    doc.text(exercise.load_text || "-", cols[3]!.x, y);
-    doc.text(exercise.rest_seconds ? `${exercise.rest_seconds}s` : "-", cols[4]!.x, y);
-    doc.setDrawColor(150, 160, 175);
-    doc.rect(cols[5]!.x + 5, y - 8, 10, 10, "S");
+    doc.setFontSize(8.5);
+    const noteLines = exercise.notes ? (doc.splitTextToSize(clean(exercise.notes), contentWidth - (textX - marginX) - cardPad) as string[]) : [];
+    const cardH = cardPad + nameLines.length * 14 + 4 + 38 + (noteLines.length ? 6 + noteLines.length * 11 : 0) + cardPad;
 
-    const rowStart = y;
-    let innerY = y + Math.max(nameLines.length, 1) * 14;
-    if (noteLines.length) {
-      doc.setTextColor(...GRAY);
-      doc.setFontSize(9);
-      doc.text(noteLines, cols[0]!.x, innerY);
-      innerY += noteLines.length * 12;
-      doc.setFontSize(10);
+    if (y + cardH > pageHeight - 56) {
+      doc.addPage();
+      y = 56;
     }
-    y = rowStart + rowHeight;
+
+    const top = y;
+    doc.setDrawColor(225, 225, 225);
+    doc.setFillColor(255, 255, 255);
+    doc.setLineWidth(0.8);
+    doc.roundedRect(marginX, top, contentWidth, cardH, 6, 6, "FD");
+    doc.setFillColor(...BLUE);
+    doc.rect(marginX, top + 6, 3, cardH - 12, "F");
+
+    // Número
+    doc.setFillColor(...INK);
+    doc.roundedRect(marginX + cardPad, top + cardPad, badge, badge, 5, 5, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text(String(index + 1).padStart(2, "0"), marginX + cardPad + badge / 2, top + cardPad + 17, { align: "center" });
+
+    // Nome + caixa "feito"
+    let cy = top + cardPad + 11;
+    doc.setFontSize(11.5);
+    doc.setTextColor(...INK);
+    doc.text(nameLines, textX, cy);
+    doc.setDrawColor(150, 150, 150);
+    doc.roundedRect(marginX + contentWidth - cardPad - 13, top + cardPad, 13, 13, 2, 2, "S");
+    cy += nameLines.length * 14 - 4;
+
+    // Métricas
+    const values = [
+      ["SÉRIES", exercise.sets || "-"],
+      ["REPETIÇÕES", exercise.reps || "-"],
+      ["CARGA", exercise.load_text || "-"],
+      ["DESCANSO", exercise.rest_seconds ? `${exercise.rest_seconds}s` : "-"],
+    ];
+    values.forEach(([label, value], i) => {
+      const sx = textX + i * (statW + statGap);
+      doc.setFillColor(...PALE);
+      doc.roundedRect(sx, cy, statW, 38, 4, 4, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.setTextColor(...GRAY);
+      doc.text(label!, sx + 7, cy + 10);
+      doc.setFontSize(8.5);
+      doc.setTextColor(...INK);
+      const v = doc.splitTextToSize(clean(value!), statW - 12) as string[];
+      doc.text(v.slice(0, 2), sx + 7, cy + 21);
+    });
+    cy += 38;
+
+    if (noteLines.length) {
+      cy += 12;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.text(noteLines, textX, cy);
+    }
+    y = top + cardH + 10;
   });
 
-  if (input.exercises.length > 0 && y + 48 < pageHeight - 44) {
-    y += 8;
-    doc.setDrawColor(215, 220, 228);
-    doc.line(marginX, y, pageWidth - marginX, y);
-    doc.setFontSize(8);
+  if (input.exercises.length > 0 && y + 40 < pageHeight - 44) {
+    y += 4;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
     doc.setTextColor(...GRAY);
-    doc.text("Anote suas cargas e marque cada exercício concluído. Priorize a técnica antes de aumentar o peso.", marginX, y + 18);
+    doc.text("Anote suas cargas e marque cada exercício concluído. Priorize a técnica antes de aumentar o peso.", marginX, y + 10);
   }
 
   // Rodapé
