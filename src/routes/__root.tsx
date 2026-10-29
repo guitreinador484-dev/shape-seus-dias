@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoUploadIndicator } from "@/components/admin/video-upload-status";
+import { AuthProvider } from "@/hooks/auth-provider";
 
 function NotFoundComponent() {
   return (
@@ -125,28 +126,20 @@ function RootComponent() {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") queryClient.clear();
+      else queryClient.invalidateQueries();
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  // Remove Lovable badge injected by hosting platform
-  useEffect(() => {
-    const removeBadge = () => {
-      document.querySelectorAll('[id*="lovable"], [class*="lovable"], a[href*="lovable"]').forEach((el) => el.remove());
-    };
-    removeBadge();
-    const observer = new MutationObserver(removeBadge);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <VideoUploadIndicator />
       <Toaster richColors position="bottom-right" theme="dark" />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

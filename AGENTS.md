@@ -16,3 +16,6 @@
 - Purchased automatic workouts share a browser-safe video catalogue policy for immediate generation and AI validation; recheck eligibility before saving and persist canonical exercise IDs so private video access resolves correctly. Complexity inferred from exercise names is conservative, not a reviewed clinical assessment.
 - Workout previews and the exercise player share a cached video resolver; load preview media only near the viewport and preserve signed private access, because a workout can contain many large recordings.
 - Administrative and test workout generation share a video-only server helper and a service-role-only transactional grid saver; update existing day rows atomically so uniqueness conflicts never produce empty or falsely successful workouts.
+- Browser auth consumers share one root AuthProvider so session restoration and role reads are not duplicated; server and route authorization remain independent.
+- The student workout screen fetches exercises nested under the student's plans and loads optional tabs and class media on demand to keep initial training access lightweight.
+- Administrative PDF code is dynamically imported only when generating or uploading a PDF so navigation does not load the PDF engine.

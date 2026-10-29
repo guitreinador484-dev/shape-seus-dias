@@ -53,15 +53,13 @@ type NavGroup = { label: string; items: NavItem[] };
 export const navGroups: NavGroup[] = [
   {
     label: "Visão geral",
-    items: [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true }],
+    items: [{ title: "Visão geral", url: "/admin", icon: LayoutDashboard, exact: true }],
   },
   {
     label: "Alunos",
     items: [
       { title: "Alunos", url: "/admin/alunos", icon: Users },
       { title: "Plataforma do aluno", url: "/admin/plataforma", icon: LayoutGrid },
-      { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
-      { title: "Feedbacks", url: "/admin/feedbacks", icon: MessageSquareText },
     ],
   },
   {
@@ -72,6 +70,13 @@ export const navGroups: NavGroup[] = [
       { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
       { title: "Cursos", url: "/admin/cursos", icon: BookOpen },
       { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
+    ],
+  },
+  {
+    label: "Relacionamento",
+    items: [
+      { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
+      { title: "Críticas e sugestões", url: "/admin/feedbacks", icon: MessageSquareText },
     ],
   },
   {
@@ -129,6 +134,8 @@ function AdminLayout() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pageTitle = navItems.find((item) => item.exact ? pathname === item.url : pathname === item.url || pathname.startsWith(item.url + "/"))?.title ?? "Painel Gui Treinador";
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -157,7 +164,7 @@ function AdminLayout() {
           <header className="sticky top-0 z-30 grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-popover/95 px-3 backdrop-blur-xl sm:gap-3">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0">
-              <h1 className="truncate font-display text-lg">Painel Gui Treinador</h1>
+              <p className="truncate font-display text-lg">{pageTitle}</p>
               <span className="hidden rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:inline">Administrador</span>
             </div>
             <div className="ml-auto flex items-center gap-3 text-sm">

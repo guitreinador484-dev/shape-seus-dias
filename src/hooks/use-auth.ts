@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -20,7 +20,15 @@ export interface AuthState {
   loading: boolean;
 }
 
+export const AuthContext = createContext<AuthState | null>(null);
+
 export function useAuth(): AuthState {
+  const auth = useContext(AuthContext);
+  if (!auth) throw new Error("AuthProvider is required");
+  return auth;
+}
+
+export function useAuthState(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -29,6 +37,8 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let mounted = true;
+    let revision = 0;
+    let currentUserId: string | null = null;
 
     async function loadRoles(uid: string): Promise<AppRole[]> {
       const { data, error } = await supabase
@@ -55,9 +65,16 @@ export function useAuth(): AuthState {
       if (!mounted) return;
       setSession(s);
       setUser(s?.user ?? null);
+      if (s?.user.id === currentUserId) {
+        return;
+      }
+      const request = ++revision;
+      currentUserId = s?.user.id ?? null;
+      setRole(null);
+      setRoles([]);
       if (s?.user) {
         const list = await loadRoles(s.user.id);
-        if (!mounted) return;
+        if (!mounted || request !== revision) return;
         if (isAdminEmail(s.user.email)) {
           setRoles(list.includes("admin") ? list : [...list, "admin"]);
           setRole("admin");
@@ -82,8 +99,9 @@ export function useAuth(): AuthState {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (!mounted) return;
       if (event === "INITIAL_SESSION") return; // handled by getSession above
-      setLoading(true);
-      void applySession(s);
+      if ((s?.user.id ?? null) !== currentUserId) setLoading(true);
+      // Defer async reads outside the auth callback to avoid locking token refresh.
+      window.setTimeout(() => { if (mounted) void applySession(s); }, 0);
     });
 
     return () => {

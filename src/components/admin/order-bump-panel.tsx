@@ -54,7 +54,7 @@ export function AdminOrderBumpPanel() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Order bump</h1>
+        <h1 className="text-2xl font-bold">Ofertas extras</h1>
         <p className="text-sm text-muted-foreground">
           Ofertas extras no checkout que liberam as abas Dieta e Aulas em vídeo para os alunos online.
         </p>

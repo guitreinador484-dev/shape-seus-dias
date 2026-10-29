@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { createNutritionPlan, deleteNutritionPlan, saveNutritionPlan } from "@/lib/admin.functions";
 import { countNutritionAccess, deleteNutritionPdf, getNutritionPdf, getNutritionPdfUrl, saveNutritionPdf } from "@/lib/nutrition-pdf.functions";
-import { fileToBase64 } from "@/lib/workout-pdf";
 import type { AppRole } from "@/hooks/use-auth";
 import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -85,6 +84,7 @@ export function AdminNutritionPanel() {
     if (pdfFile.type !== "application/pdf" || pdfFile.size > 20 * 1024 * 1024) { toast.error("Envie um PDF de até 20 MB."); return; }
     setPdfBusy(true);
     try {
+      const { fileToBase64 } = await import("@/lib/workout-pdf");
       const result = await savePdfFn({ data: { title: pdfTitle, fileName: pdfFile.name, fileBase64: await fileToBase64(pdfFile) } });
       toast.success(`PDF alimentar liberado para ${result.eligibleStudents} aluno(s)`);
       setPdfFile(null);
