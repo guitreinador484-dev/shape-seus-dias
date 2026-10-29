@@ -1,5 +1,10 @@
 # Roadmap
 
+## Velocidade e coerência da navegação
+- [ ] Reduzir carregamentos repetidos e o peso inicial das páginas
+- [ ] Alinhar menu lateral e títulos com o conteúdo de cada página
+- [ ] Verificar navegação autenticada e carregamento em computador e celular
+
 ## Correção do gerador administrativo
 - [x] Corrigir geração e salvar somente exercícios com vídeos reais
 - [x] Testar criação, regeneração e leitura na conta de teste: quatro dias e 28 exercícios vinculados; player abriu com vídeo assinado
