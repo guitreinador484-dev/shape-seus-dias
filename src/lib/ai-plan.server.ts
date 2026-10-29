@@ -281,6 +281,52 @@ async function savePlans(userId: string, studentName: string, tier: PlanTier, ai
  * Gera (uma única vez) o treino com IA para o comprador de uma venda aprovada.
  * Nunca lança: falhas são registradas e a compra/acesso seguem normalmente.
  */
+/** Núcleo compartilhado: monta e salva o treino (imediato + troca pela IA). */
+export async function buildAndSavePlans(userId: string, studentName: string, tier: PlanTier, answers: Record<string, unknown>, upgradeWaitMs = 90000): Promise<AiPlanResult> {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const catalogue = await loadCatalogue(answers);
+    const instantPlan = immediateVideoPlan(catalogue, answers, { maxExercises: tier.exercises[1], goals: tier.pdf.goals, progression: tier.pdf.progression });
+    const profile = buyerProfile(answers);
+    const cataloguePrompt = buildPrompt(studentName, answers, tier) + "\n" +
+      `REGRA OBRIGATÓRIA: use SOMENTE os nomes exatos do catálogo abaixo, todos com vídeo. Não invente, renomeie ou acrescente cardio fora dele. Crie exatamente ${profile.days} dias. Complexidade máxima ${profile.complexity} (1=básica, 2=moderada, 3=alta). Tempo disponível: ${profile.minutes} minutos. O plano comercial não determina experiência. Respeite limitações informadas; não prescreva exercícios que agravem dor ou lesão.\n` +
+      JSON.stringify(catalogue.map(ex => ({ name: ex.name, group: ex.group, complexity: ex.complexity, description: ex.description })));
+    const aiPromise = askAiForPlan(cataloguePrompt, tier)
+      .then(r => validateVideoPlan(r, catalogue, answers))
+      .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
+
+    // Espera no máximo 2,5s pela IA; se demorar, libera na hora um treino montado pelas respostas.
+    const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 2500))]);
+    if (quick && quick !== "timeout") {
+      const saved = await savePlans(userId, studentName, tier, quick, answers);
+      if (saved.ok) return saved;
+    }
+
+    const instant = await savePlans(userId, studentName, tier, instantPlan, answers);
+    // Continua esperando a IA e troca pelo treino personalizado quando ficar pronto.
+    const studentId = userId;
+    const upgrade = aiPromise.then(async (ai) => {
+      if (!ai || !instant.ok) return;
+      const { data: done } = await supabaseAdmin.from("student_plan_exercises").select("id")
+        .in("plan_id", instant.planIds).not("completed_at", "is", null).limit(1);
+      if (done?.length) return; // aluno já começou a usar: não mexe
+      const replacement = await savePlans(studentId, studentName, tier, ai, answers);
+      if (!replacement.ok || replacement.plans !== ai.plans.length) {
+        if (replacement.planIds.length) {
+          await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", replacement.planIds);
+          await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", replacement.planIds);
+          await supabaseAdmin.from("student_plans").delete().in("id", replacement.planIds);
+        }
+        return;
+      }
+      await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", instant.planIds);
+      await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", instant.planIds);
+      await supabaseAdmin.from("student_plans").delete().in("id", instant.planIds);
+
+    }).catch((e) => console.error("[ai-plan] falha ao trocar pelo treino da IA", e));
+    await Promise.race([upgrade, new Promise((r) => setTimeout(r, upgradeWaitMs))]);
+    return instant;
+}
+
 export async function generateAiPlanForPurchase(reference: string): Promise<AiPlanResult> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -328,48 +374,7 @@ export async function generateAiPlanForPurchase(reference: string): Promise<AiPl
     }
 
     const studentName = purchase.customer_name || email || "Aluno";
-    const tier = resolvePlanTier(purchase.plan_id);
-    const catalogue = await loadCatalogue(answers);
-    const instantPlan = immediateVideoPlan(catalogue, answers, { maxExercises: tier.exercises[1], goals: tier.pdf.goals, progression: tier.pdf.progression });
-    const profile = buyerProfile(answers);
-    const cataloguePrompt = buildPrompt(studentName, answers, tier) + "\n" +
-      `REGRA OBRIGATÓRIA: use SOMENTE os nomes exatos do catálogo abaixo, todos com vídeo. Não invente, renomeie ou acrescente cardio fora dele. Crie exatamente ${profile.days} dias. Complexidade máxima ${profile.complexity} (1=básica, 2=moderada, 3=alta). Tempo disponível: ${profile.minutes} minutos. O plano comercial não determina experiência. Respeite limitações informadas; não prescreva exercícios que agravem dor ou lesão.\n` +
-      JSON.stringify(catalogue.map(ex => ({ name: ex.name, group: ex.group, complexity: ex.complexity, description: ex.description })));
-    const aiPromise = askAiForPlan(cataloguePrompt, tier)
-      .then(r => validateVideoPlan(r, catalogue, answers))
-      .catch((e) => { console.error("[ai-plan] IA falhou:", e instanceof Error ? e.message : e); return null; });
-
-    // Espera no máximo 2,5s pela IA; se demorar, libera na hora um treino montado pelas respostas.
-    const quick = await Promise.race([aiPromise, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), 2500))]);
-    if (quick && quick !== "timeout") {
-      const saved = await savePlans(userId, studentName, tier, quick, answers);
-      if (saved.ok) return saved;
-    }
-
-    const instant = await savePlans(userId, studentName, tier, instantPlan, answers);
-    // Continua esperando a IA e troca pelo treino personalizado quando ficar pronto.
-    const studentId = userId;
-    const upgrade = aiPromise.then(async (ai) => {
-      if (!ai || !instant.ok) return;
-      const { data: done } = await supabaseAdmin.from("student_plan_exercises").select("id")
-        .in("plan_id", instant.planIds).not("completed_at", "is", null).limit(1);
-      if (done?.length) return; // aluno já começou a usar: não mexe
-      const replacement = await savePlans(studentId, studentName, tier, ai, answers);
-      if (!replacement.ok || replacement.plans !== ai.plans.length) {
-        if (replacement.planIds.length) {
-          await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", replacement.planIds);
-          await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", replacement.planIds);
-          await supabaseAdmin.from("student_plans").delete().in("id", replacement.planIds);
-        }
-        return;
-      }
-      await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", instant.planIds);
-      await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", instant.planIds);
-      await supabaseAdmin.from("student_plans").delete().in("id", instant.planIds);
-
-    }).catch((e) => console.error("[ai-plan] falha ao trocar pelo treino da IA", e));
-    await Promise.race([upgrade, new Promise((r) => setTimeout(r, 90000))]);
-    return instant;
+    return await buildAndSavePlans(userId, studentName, resolvePlanTier(purchase.plan_id), answers, 90000);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error("[ai-plan] erro", message);
