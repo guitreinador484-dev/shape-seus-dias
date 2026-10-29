@@ -693,8 +693,8 @@ function PlataformaPage() {
       const videoUrls = new Map((videos.data ?? []).map((v) => [v.path, v.signedUrl]));
       const thumbUrls = new Map((thumbs.data ?? []).map((v) => [v.path, v.signedUrl]));
       const entries = workouts.map((w) => [w.id, {
-        video: w.video_path ? videoUrls.get(w.video_path) : undefined,
-        thumb: w.thumbnail_path ? thumbUrls.get(w.thumbnail_path) : undefined,
+        video: w.video_path ? videoUrls.get(w.video_path) ?? undefined : undefined,
+        thumb: w.thumbnail_path ? thumbUrls.get(w.thumbnail_path) ?? undefined : undefined,
       }] as const);
       if (cancelled) return;
       setSignedUrls(Object.fromEntries(entries));

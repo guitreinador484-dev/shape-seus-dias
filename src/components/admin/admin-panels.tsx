@@ -270,8 +270,6 @@ export function AdminDashboardPanel() {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [anamneses, setAnamneses] = useState<Anamnese[]>([]);
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [plans, setPlans] = useState<StudentPlan[]>([]);
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
@@ -281,23 +279,17 @@ export function AdminDashboardPanel() {
 
   async function load() {
     setLoading(true);
-    const [studentRows, purchaseRows, anamneseRows, workoutRows, planRows, measRows] = await Promise.all([
+    const [studentRows, purchaseRows, planRows, measRows] = await Promise.all([
       fetchStudents(),
       supabase.from("purchases").select("*").order("created_at", { ascending: false }),
-      supabase.from("anamnese").select("*").order("created_at", { ascending: false }),
-      supabase.from("workouts").select("*").order("display_order", { ascending: true }),
       supabase.from("student_plans").select("*").order("created_at", { ascending: false }),
       supabase.from("body_measurements").select("*").order("measured_at", { ascending: true }),
     ]);
     if (purchaseRows.error) throw purchaseRows.error;
-    if (anamneseRows.error) throw anamneseRows.error;
-    if (workoutRows.error) throw workoutRows.error;
     if (planRows.error) throw planRows.error;
     if (measRows.error) throw measRows.error;
     setStudents(studentRows);
     setPurchases(purchaseRows.data ?? []);
-    setAnamneses(anamneseRows.data ?? []);
-    setWorkouts(workoutRows.data ?? []);
     setPlans(planRows.data ?? []);
     setMeasurements(measRows.data ?? []);
     setLoading(false);
