@@ -140,16 +140,16 @@ function toEmbedUrl(raw: string): string | null {
  */
 function EmptyTraining() {
   const ensureMyPlan = useServerFn(ensureMyPlanFn);
+  const { user } = useAuth();
   const [state, setState] = useState<"checking" | "none">("checking");
   const [reason, setReason] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     // Mostra o treino assim que ele for salvo (em poucos segundos), sem esperar a IA terminar.
     const poll = setInterval(async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { count } = await supabase.from("student_plans").select("id", { count: "exact", head: true }).eq("student_id", u.user.id);
+      const { count } = await supabase.from("student_plans").select("id", { count: "exact", head: true }).eq("student_id", user.id);
       if (!cancelled && count) window.location.reload();
     }, 1500);
     (async () => {
@@ -167,7 +167,7 @@ function EmptyTraining() {
       if (!cancelled) { clearInterval(poll); setState("none"); }
     })();
     return () => { cancelled = true; clearInterval(poll); };
-  }, [ensureMyPlan]);
+  }, [ensureMyPlan, user?.id]);
 
   return (
     <Card className="border-dashed">
@@ -684,18 +684,18 @@ function PlataformaPage() {
     if (!hasClassAccess || !isActive || workouts.length === 0) return;
     let cancelled = false;
     (async () => {
-      const entries = await Promise.all(workouts.map(async (w) => {
-        const result: { video?: string; thumb?: string } = {};
-        if (w.video_path) {
-          const { data } = await supabase.storage.from("workout-videos").createSignedUrl(w.video_path, 3600);
-          if (data?.signedUrl) result.video = data.signedUrl;
-        }
-        if (w.thumbnail_path) {
-          const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(w.thumbnail_path, 3600);
-          if (data?.signedUrl) result.thumb = data.signedUrl;
-        }
-        return [w.id, result] as const;
-      }));
+      const videoPaths = [...new Set(workouts.flatMap((w) => w.video_path ? [w.video_path] : []))];
+      const thumbPaths = [...new Set(workouts.flatMap((w) => w.thumbnail_path ? [w.thumbnail_path] : []))];
+      const [videos, thumbs] = await Promise.all([
+        videoPaths.length ? supabase.storage.from("workout-videos").createSignedUrls(videoPaths, 3600) : Promise.resolve({ data: [] }),
+        thumbPaths.length ? supabase.storage.from("workout-thumbnails").createSignedUrls(thumbPaths, 3600) : Promise.resolve({ data: [] }),
+      ]);
+      const videoUrls = new Map((videos.data ?? []).map((v) => [v.path, v.signedUrl]));
+      const thumbUrls = new Map((thumbs.data ?? []).map((v) => [v.path, v.signedUrl]));
+      const entries = workouts.map((w) => [w.id, {
+        video: w.video_path ? videoUrls.get(w.video_path) : undefined,
+        thumb: w.thumbnail_path ? thumbUrls.get(w.thumbnail_path) : undefined,
+      }] as const);
       if (cancelled) return;
       setSignedUrls(Object.fromEntries(entries));
     })();
