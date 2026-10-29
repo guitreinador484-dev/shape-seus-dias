@@ -1354,7 +1354,7 @@ export function AdminTrainingPanel() {
                   {WORKOUT_TYPES.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       <span className="font-medium">{type.label}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">({type.description})</span>
+                      <span className="ml-2 inline-block max-w-full truncate align-bottom text-xs text-muted-foreground">({type.description})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
