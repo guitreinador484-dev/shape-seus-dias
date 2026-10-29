@@ -12,8 +12,12 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Definir senha — Plataforma do Personal" },
+      { title: "Definir senha — Gui Treinador" },
       { name: "description", content: "Crie a senha de acesso da sua conta de aluno." },
+      { property: "og:title", content: "Definir senha — Gui Treinador" },
+      { property: "og:description", content: "Crie a senha de acesso da sua conta de aluno." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

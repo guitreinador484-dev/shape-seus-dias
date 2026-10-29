@@ -27,7 +27,7 @@ export const Route = createFileRoute("/funil")({
   component: FunnelPage,
   head: () => ({
     meta: [
-      { title: "Monte seu treino personalizado — Shape Seus Dias" },
+      { title: "Monte seu treino personalizado — Gui Treinador" },
       {
         name: "description",
         content:
