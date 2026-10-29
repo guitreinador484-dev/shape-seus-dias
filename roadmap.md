@@ -1,5 +1,10 @@
 # Roadmap
 
+## Correção do gerador administrativo
+- [x] Corrigir geração e salvar somente exercícios com vídeos reais
+- [x] Testar criação, regeneração e leitura na conta de teste: quatro dias e 28 exercícios vinculados; player abriu com vídeo assinado
+- [ ] Reprodução do arquivo testado: navegador rejeitou formato (erro 4); requer conversão dos arquivos para formato compatível
+
 ## Prévias nos treinos do aluno
 - [x] Conferir resolução dos vídeos e adicionar prévia clicável por exercício
 - [x] Verificar layout e abertura do player com catálogo real em sessão administrativa, sem alterar dados; sem rolagem lateral no celular

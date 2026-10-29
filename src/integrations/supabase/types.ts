@@ -1319,6 +1319,10 @@ export type Database = {
       initcap_first: { Args: { _txt: string }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       normalize_exercise_name: { Args: { _name: string }; Returns: string }
+      save_video_training_grid: {
+        Args: { _plans: Json; _student_id: string }
+        Returns: Json
+      }
       unaccent_safe: { Args: { _txt: string }; Returns: string }
     }
     Enums: {

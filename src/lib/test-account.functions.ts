@@ -24,8 +24,7 @@ export const runTestWorkoutFn = createServerFn({ method: "POST" })
     if (!isAdmin?.length) throw new Error("Apenas administradores podem usar a conta de teste.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { buildAndSavePlans } = await import("./ai-plan.server");
-    const { resolvePlanTier } = await import("./plan-tiers");
+    const { generateVideoTrainingGrid } = await import("./video-training.server");
 
     const password = generateTemporaryPassword(10);
     const { data: existing } = await supabaseAdmin.from("profiles").select("id").eq("email", TEST_ACCOUNT_EMAIL).maybeSingle();
@@ -43,16 +42,13 @@ export const runTestWorkoutFn = createServerFn({ method: "POST" })
     const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "online" });
     if (roleError && !/duplicate|unique/i.test(roleError.message)) throw new Error(roleError.message);
 
-    // Apaga os treinos anteriores da conta de teste (somente dela).
-    const { data: oldPlans } = await supabaseAdmin.from("student_plans").select("id").eq("student_id", userId);
-    const oldIds = (oldPlans ?? []).map((p) => p.id);
-    if (oldIds.length) {
-      await supabaseAdmin.from("workout_pdfs").delete().in("plan_id", oldIds);
-      await supabaseAdmin.from("student_plan_exercises").delete().in("plan_id", oldIds);
-      await supabaseAdmin.from("student_plans").delete().in("id", oldIds);
-    }
-
-    const answers = { nivel: data.nivel, dias: data.dias, tempo: data.tempo, objetivo: data.objetivo, workout_type: data.workout_type, limitacoes: data.limitacoes ?? "" };
-    const result = await buildAndSavePlans(userId, "Aluno Teste", resolvePlanTier(data.tier), answers, 25000);
-    return { ...result, email: TEST_ACCOUNT_EMAIL, password };
+    const result = await generateVideoTrainingGrid({
+      student_id: userId, days_count: Number(data.dias),
+      level: data.nivel as "iniciante" | "intermediario" | "avancado",
+      workout_type: data.workout_type as "tradicional" | "intercalado" | "circuito",
+      emphasis: data.objetivo,
+      planTierId: data.tier,
+      answers: { nivel: data.nivel, dias: data.dias, tempo: data.tempo, objetivo: data.objetivo, workout_type: data.workout_type, limitacoes: data.limitacoes ?? "" },
+    });
+    return { ok: result.ok, plans: result.plansCount, pdf: result.pdfCount > 0, message: "Treino salvo com vídeos de execução.", email: TEST_ACCOUNT_EMAIL, password };
   });
