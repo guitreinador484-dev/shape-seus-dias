@@ -136,7 +136,10 @@ export function immediateVideoPlan(
       ? 'Aumente a carga gradualmente apenas quando completar as repetições com boa execução e sem dor.'
       : null,
     plans: Array.from({ length: profile.days }, (_, day) => {
-      const groups = [...splits[day % splits.length]];
+      const split = splits[day]!;
+      const groups = [...split.groups];
+      // Repeated days (focused day) rotate to different exercises of the same group.
+      const repeat = splits.slice(0, day).filter(s => s.label === split.label).length;
 
       // Se há membro de ênfase correspondente, prioriza no início da lista de grupos
       if (effectiveEmphasis) {
@@ -155,7 +158,7 @@ export function immediateVideoPlan(
       for (let round = 0; selected.length < count && round < catalogue.length; round++) {
         for (const group of groups) {
           const pool = catalogue.filter(ex => ex.group === group);
-          const item = pool.length ? pool[(round + Math.floor(day / splits.length)) % pool.length] : undefined;
+          const item = pool.length ? pool[(round + repeat * 2) % pool.length] : undefined;
           if (item && !selected.some(ex => ex.id === item.id) && selected.length < count) {
             selected.push(item);
           }
@@ -183,7 +186,7 @@ export function immediateVideoPlan(
       }
 
       const includedGroups = [...new Set(selected.map(ex => ex.group))];
-      const basePlanName = `Treino ${String.fromCharCode(65 + day)} — ${includedGroups.join(', ')}`;
+      const basePlanName = `Treino ${String.fromCharCode(65 + day)} — ${split.label}${repeat ? ' (foco)' : ''} · ${includedGroups.join(', ')}`;
       const planNameFormatted = formatPlanName(basePlanName, effectiveType, effectiveEmphasis);
 
       const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
