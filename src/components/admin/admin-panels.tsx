@@ -1277,7 +1277,7 @@ export function AdminTrainingPanel() {
 
       {/* Modal do Gerador Inteligente de Treinos */}
       <Dialog open={smartOpen} onOpenChange={setSmartOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[92vh] overflow-y-auto overflow-x-hidden sm:max-w-xl">
           <DialogHeader>
             <div className="flex items-center gap-2 text-red-400">
               <Zap className="h-5 w-5" />
