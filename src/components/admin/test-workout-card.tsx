@@ -21,7 +21,7 @@ const fields = {
 
 type Key = keyof typeof fields;
 
-export function TestWorkoutCard() {
+export function TestWorkoutCard({ onGenerated }: { onGenerated?: () => void }) {
   const run = useServerFn(runTestWorkoutFn);
   const [values, setValues] = useState<Record<Key, string>>({ tier: "basico", nivel: "iniciante", dias: "4", tempo: "45", objetivo: "hipertrofia", workout_type: "tradicional" });
   const [limitacoes, setLimitacoes] = useState("");
@@ -42,7 +42,7 @@ export function TestWorkoutCard() {
     try {
       const r = await run({ data: { ...(values as any), limitacoes } });
       setCreds({ email: r.email, password: r.password, message: r.message ?? "" });
-      if (r.ok) toast.success(`Treino de teste criado (${r.plans} dias).`);
+      if (r.ok) { toast.success(`Treino de teste criado (${r.plans} dias).`); onGenerated?.(); }
       else toast.error("Não foi possível gerar o treino de teste.", { description: r.message });
     } catch (e) {
       toast.error("Erro ao gerar treino de teste.", { description: e instanceof Error ? e.message : String(e) });

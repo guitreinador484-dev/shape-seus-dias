@@ -1226,7 +1226,7 @@ export function AdminTrainingPanel() {
         },
       });
       toast.success("Grade de treinos inteligentes gerada com sucesso!", {
-        description: `${res.plansCount} treinos criados com vídeos do banco de dados e PDFs atualizados.`,
+        description: `${res.plansCount} dias salvos com vídeos de execução. ${res.pdfCount} PDFs atualizados.`,
       });
       setSmartOpen(false);
       if (filterStudent === "all") {
@@ -1395,7 +1395,7 @@ export function AdminTrainingPanel() {
                 <span>Integração direta com o Banco de Vídeos</span>
               </p>
               <p>
-                Os treinos gerados usam prioritariamente exercícios com demonstrações gravadas pelo Gui Treinador, incluindo carga sugerida, contagem de repetições e timer de descanso adaptado.
+                Somente exercícios com vídeo de execução entram na grade. Ao gerar novamente, os dias e exercícios do aluno são atualizados.
               </p>
             </div>
           </div>

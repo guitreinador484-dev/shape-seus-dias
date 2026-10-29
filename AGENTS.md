@@ -15,3 +15,4 @@
 - Temporary passwords use a shared browser-safe generator with flow-specific lengths so registration defaults satisfy its server validation without changing password-reset behavior.
 - Purchased automatic workouts share a browser-safe video catalogue policy for immediate generation and AI validation; recheck eligibility before saving and persist canonical exercise IDs so private video access resolves correctly. Complexity inferred from exercise names is conservative, not a reviewed clinical assessment.
 - Workout previews and the exercise player share a cached video resolver; load preview media only near the viewport and preserve signed private access, because a workout can contain many large recordings.
+- Administrative and test workout generation share a video-only server helper and a service-role-only transactional grid saver; update existing day rows atomically so uniqueness conflicts never produce empty or falsely successful workouts.
