@@ -1288,8 +1288,8 @@ export function AdminTrainingPanel() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2">
-            <div>
+          <div className="grid min-w-0 gap-4 py-2">
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Aluno
               </Label>
@@ -1307,8 +1307,8 @@ export function AdminTrainingPanel() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
+            <div className="grid min-w-0 grid-cols-2 gap-3">
+              <div className="min-w-0">
                 <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Frequência Semanal
                 </Label>
@@ -1325,7 +1325,7 @@ export function AdminTrainingPanel() {
                 </Select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Nível de Treinamento
                 </Label>
@@ -1342,7 +1342,7 @@ export function AdminTrainingPanel() {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Método de Treino
               </Label>
@@ -1366,7 +1366,7 @@ export function AdminTrainingPanel() {
               )}
             </div>
 
-            <div>
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Membro de Ênfase Prioritário
               </Label>
