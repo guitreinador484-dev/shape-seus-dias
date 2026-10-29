@@ -1,5 +1,9 @@
 # Roadmap
 
+## Correção do gerador administrativo
+- [ ] Corrigir geração e salvar somente exercícios com vídeos reais
+- [ ] Testar geração e leitura na conta de teste, incluindo abertura do vídeo
+
 ## Prévias nos treinos do aluno
 - [x] Conferir resolução dos vídeos e adicionar prévia clicável por exercício
 - [x] Verificar layout e abertura do player com catálogo real em sessão administrativa, sem alterar dados; sem rolagem lateral no celular
