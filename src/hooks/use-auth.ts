@@ -63,13 +63,12 @@ export function useAuthState(): AuthState {
 
     async function applySession(s: Session | null) {
       if (!mounted) return;
-      const request = ++revision;
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user.id === currentUserId) {
-        setLoading(false);
         return;
       }
+      const request = ++revision;
       currentUserId = s?.user.id ?? null;
       setRole(null);
       setRoles([]);

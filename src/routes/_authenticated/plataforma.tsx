@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,26 +12,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LogOut, Loader2, Dumbbell, Video, Play, Info, Timer, Flame, CheckCircle2, X, Menu, Megaphone, ListVideo, Lock, Ban, AlertCircle, RefreshCw, Apple, TrendingUp, ClipboardList, Library, Zap, Sparkles, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/platform/video-player";
-import LeftSidebar from "@/components/ui/left-sidebar";
-import { NutritionTab } from "@/components/platform/nutrition-tab";
-import { EvolutionTab } from "@/components/platform/evolution-tab";
 import { CheckinCard } from "@/components/platform/checkin-card";
-import { AnamneseTab } from "@/components/platform/anamnese-tab";
 import { ReferralCard } from "@/components/platform/referral-card";
 import { WorkoutPdfButton, useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { useServerFn } from "@tanstack/react-start";
 import { ensureMyPlanFn } from "@/lib/ai-plan.functions";
-import { MentoriaTab } from "@/components/platform/mentoria-tab";
 import { ExerciseVideoDialog } from "@/components/platform/exercise-video-dialog";
 import { ExerciseVideoPreview } from "@/components/platform/exercise-video-preview";
 import { useGymPreference } from "@/hooks/use-gym-preference";
 import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
-import { FeedbackTab } from "@/components/platform/feedback-tab";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
 import { BrandLogo } from "@/components/brand-logo";
 import { parsePlanMetadata, isExerciseInEmphasis } from "@/lib/workout-meta";
 import { RestTimer } from "@/components/platform/rest-timer";
+
+const NutritionTab = lazy(() => import("@/components/platform/nutrition-tab").then((m) => ({ default: m.NutritionTab })));
+const EvolutionTab = lazy(() => import("@/components/platform/evolution-tab").then((m) => ({ default: m.EvolutionTab })));
+const AnamneseTab = lazy(() => import("@/components/platform/anamnese-tab").then((m) => ({ default: m.AnamneseTab })));
+const MentoriaTab = lazy(() => import("@/components/platform/mentoria-tab").then((m) => ({ default: m.MentoriaTab })));
+const FeedbackTab = lazy(() => import("@/components/platform/feedback-tab").then((m) => ({ default: m.FeedbackTab })));
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -585,6 +585,8 @@ function PlataformaPage() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [welcomeReady, setWelcomeReady] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [classesLoading, setClassesLoading] = useState(false);
+  const [classesError, setClassesError] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -620,25 +622,19 @@ function PlataformaPage() {
           setDataLoading(false);
           return;
         }
-        const [plansRes, exRes, workoutsRes, cfgRes, progRes] = await Promise.all([
-          supabase.from("student_plans").select("*").eq("student_id", user.id).order("day_of_week", { ascending: true }),
-          supabase.from("student_plan_exercises").select("*").order("display_order", { ascending: true }),
-          supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+        const [plansRes, cfgRes] = await Promise.all([
+          supabase.from("student_plans").select("*, exercises:student_plan_exercises(*)").eq("student_id", user.id).order("day_of_week", { ascending: true }),
           supabase.from("quiz_config").select("content").eq("section", "configuracoes").order("updated_at", { ascending: false }).limit(1),
-          supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
         ]);
         if (cancelled) return;
-        const firstError = [plansRes, exRes, workoutsRes, cfgRes, progRes].find((r) => r.error);
+        const firstError = [plansRes, cfgRes].find((r) => r.error);
         if (firstError?.error) {
           const err = firstError.error;
           throw new Error(err.message || err.details || err.hint || "Erro ao carregar dados da plataforma");
         }
         const allPlans = plansRes.data ?? [];
-        const allEx = exRes.data ?? [];
-        setPlans(allPlans.map((p) => ({ ...p, exercises: allEx.filter((e) => e.plan_id === p.id) })));
-        setWorkouts(workoutsRes.data ?? []);
+        setPlans(allPlans.map((p) => ({ ...p, exercises: p.exercises.sort((a, b) => a.display_order - b.display_order) })));
         setConfig(readConfig(cfgRes.data?.[0]?.content ?? null));
-        setWorkoutProgress(Object.fromEntries((progRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
       } catch (e) {
         if (!cancelled) setDataError(e instanceof Error ? e.message : String(e) || "Erro ao carregar a plataforma");
       } finally {
@@ -646,17 +642,43 @@ function PlataformaPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [loading, user, role]);
+  }, [loading, user?.id, role]);
 
   useEffect(() => {
-    if (!hasClassAccess || !isActive || !config.hero_image_path) { setHeroBannerUrl(""); return; }
+    const privileged = role === "presencial" || role === "admin" || isAdminEmail(user?.email);
+    if (activeTab !== "aulas" || !user || !hasClassAccess || !isActive || isExpired || !(hasVideoAccess || privileged)) return;
+    let cancelled = false;
+    setClassesLoading(true);
+    setClassesError(null);
+    (async () => {
+      try {
+        const [workoutsRes, progressRes] = await Promise.all([
+          supabase.from("workouts").select("*").order("display_order", { ascending: true }),
+          supabase.from("workout_progress").select("workout_id, watched_seconds, completed_at").eq("user_id", user.id),
+        ]);
+        if (workoutsRes.error) throw workoutsRes.error;
+        if (progressRes.error) throw progressRes.error;
+        if (cancelled) return;
+        setWorkouts(workoutsRes.data ?? []);
+        setWorkoutProgress(Object.fromEntries((progressRes.data ?? []).map((p) => [p.workout_id, { watched_seconds: p.watched_seconds, completed_at: p.completed_at }])));
+      } catch (error) {
+        if (!cancelled) setClassesError(error instanceof Error ? error.message : "Não foi possível carregar as aulas.");
+      } finally {
+        if (!cancelled) setClassesLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, user?.id, role, hasClassAccess, isActive, isExpired, hasVideoAccess]);
+
+  useEffect(() => {
+    if (activeTab !== "aulas" || !hasClassAccess || !isActive || !config.hero_image_path) { setHeroBannerUrl(""); return; }
     let cancelled = false;
     (async () => {
       const { data } = await supabase.storage.from("workout-thumbnails").createSignedUrl(config.hero_image_path, 3600);
       if (!cancelled && data?.signedUrl) setHeroBannerUrl(data.signedUrl);
     })();
     return () => { cancelled = true; };
-  }, [hasClassAccess, isActive, config.hero_image_path]);
+  }, [activeTab, hasClassAccess, isActive, config.hero_image_path]);
 
   useEffect(() => {
     if (!hasClassAccess || !isActive || workouts.length === 0) return;
@@ -914,7 +936,7 @@ function PlataformaPage() {
                 </CardContent>
               </Card>
             ) : (
-            <>
+            <Suspense fallback={<Skeleton className="h-64 w-full" />}>
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-3xl sm:text-4xl text-white tracking-tight">{firstName ? `Olá, ${firstName} 👋` : "Olá 👋"}</h2>
@@ -988,7 +1010,9 @@ function PlataformaPage() {
 
           {showVideos && (
             <TabsContent value="aulas" className="mt-0 -mx-4 sm:-mx-4">
-              {dataLoading ? <Skeleton className="h-64 mx-4" /> : workouts.length === 0 ? (
+              {dataLoading || classesLoading ? <Skeleton className="h-64 mx-4" /> : classesError ? (
+                <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">{classesError}</CardContent></Card>
+              ) : workouts.length === 0 ? (
                 <Card className="mx-4"><CardContent className="py-12 text-center text-muted-foreground">Nenhuma aula disponível ainda.</CardContent></Card>
               ) : (
                 <div className="space-y-10 pb-12 -mt-2 bg-background text-foreground">
@@ -1160,7 +1184,7 @@ function PlataformaPage() {
               )}
             </TabsContent>
           )}
-            </>
+            </Suspense>
             )}
           </main>
         </div>
