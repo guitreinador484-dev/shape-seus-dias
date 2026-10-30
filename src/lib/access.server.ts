@@ -94,7 +94,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
         email,
         full_name: input.name ?? undefined,
         whatsapp: input.whatsapp ?? undefined,
-        has_class_access: true,
+        ...(input.subscription ? {} : { has_class_access: true }),
         ...(input.subscription ? {} : { is_active: true }),
         updated_at: new Date().toISOString(),
       })
@@ -105,7 +105,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       email,
       full_name: input.name ?? null,
       whatsapp: input.whatsapp ?? null,
-      has_class_access: true,
+      has_class_access: !input.subscription,
       is_active: true,
       referral_code: makeReferralCode(email),
     });
@@ -132,7 +132,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       .select("order_bump, order_bump_ids, unlock_nutrition, unlock_videos")
       .eq("provider_reference", input.reference)
       .maybeSingle();
-    if (purchaseRow?.order_bump) {
+    if (purchaseRow?.order_bump && !input.subscription) {
       const legacyAccess = purchaseRow.order_bump_ids.length === 0;
       await supabaseAdmin.from("profiles").update({
         has_order_bump: true,

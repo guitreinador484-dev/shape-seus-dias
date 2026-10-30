@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Assinaturas mensais Mercado Pago
-- [ ] Adaptar novas compras dos três planos e adicionais para cobrança mensal autorizada no cartão
-- [ ] Sincronizar primeira cobrança, renovações e cancelamentos sem duplicar contas ou alterar compras antigas
-- [ ] Validar checkout, acesso e segurança antes de disponibilizar as assinaturas
+- [x] Preparar checkout mensal com preço conferido no servidor, consentimento e telas de assinatura; PIX permanece avulso
+- [ ] Validar primeira cobrança, renovações e cancelamentos com o Mercado Pago: depende da confirmação do mecanismo de notificações para assinaturas e de uma contratação de teste; nenhuma cobrança real foi executada
+- [ ] Ativar assinaturas somente após validação: notificações de assinatura e credenciais de teste ainda pendentes; fluxo permanece desligado, compras antigas preservadas
+- [x] Verificar telas administrativas e área do aluno em desktop/mobile, bloqueio de ativação, retorno pendente e recusa do webhook não configurado; 15 testes passaram
 
 ## Velocidade e coerência da navegação
 - [x] Reduzir carregamentos repetidos e o peso inicial: autenticação compartilhada, PDFs e abas opcionais sob demanda, treinos com exercícios vinculados e assinaturas de aulas em lote

@@ -54,9 +54,8 @@ export async function syncSubscriptionEvent(type: string, id: string, token: str
   }
   const { error: applyError } = await db.rpc('apply_subscription_payment', { _subscription_id: subscription.id, _payment_id: String(payment.id), _amount: Number(payment.transaction_amount), _paid_at: payment.date_approved });
   if (applyError) throw applyError;
-  // A notificação assinada com parcela real aprovada é evidência para liberar a ativação administrativa.
-  const { error: settingsError } = await db.from('billing_settings').upsert({ id: true, verified_at: new Date().toISOString(), test_subscription_id: providerId }, { onConflict: 'id' });
-  if (settingsError) throw settingsError;
+  // Receber uma parcela não comprova um teste controlado. A ativação exige
+  // validação independente da configuração e do fluxo de teste do provedor.
   const { generateAiPlanForPurchase } = await import('./ai-plan.server');
   await generateAiPlanForPurchase(subscription.reference);
 }
