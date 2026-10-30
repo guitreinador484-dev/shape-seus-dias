@@ -19,3 +19,4 @@
 - Browser auth consumers share one root AuthProvider so session restoration and role reads are not duplicated; server and route authorization remain independent.
 - The student workout screen fetches exercises nested under the student's plans and loads optional tabs and class media on demand to keep initial training access lightweight.
 - Administrative PDF code is dynamically imported only when generating or uploading a PDF so navigation does not load the PDF engine.
+- Monthly Mercado Pago subscriptions use separate lifecycle/payment records, server-priced offers and a service-role-only idempotent installment RPC; legacy purchases retain their existing access logic and subscription activation stays gated until verified notifications and an approved test installment exist.

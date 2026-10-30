@@ -56,6 +56,30 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_settings: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          test_subscription_id: string | null
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          test_subscription_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          test_subscription_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       body_measurements: {
         Row: {
           arm_cm: number | null
@@ -904,6 +928,7 @@ export type Database = {
         Row: {
           amount: number
           appmax_order_id: string | null
+          billing_type: string
           created_at: string
           customer_email: string | null
           customer_name: string | null
@@ -925,6 +950,7 @@ export type Database = {
         Insert: {
           amount: number
           appmax_order_id?: string | null
+          billing_type?: string
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -946,6 +972,7 @@ export type Database = {
         Update: {
           amount?: number
           appmax_order_id?: string | null
+          billing_type?: string
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -1070,6 +1097,145 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subscription_access_baselines: {
+        Row: {
+          captured_at: string
+          expires_at: string | null
+          had_access: boolean
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          expires_at?: string | null
+          had_access: boolean
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          expires_at?: string | null
+          had_access?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string
+          period_end: string | null
+          provider_payment_id: string
+          status: string
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at: string
+          period_end?: string | null
+          provider_payment_id: string
+          status: string
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string
+          period_end?: string | null
+          provider_payment_id?: string
+          status?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          account_created: boolean
+          amount: number
+          canceled_at: string | null
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          customer_email: string
+          customer_name: string | null
+          id: string
+          order_bump_ids: string[]
+          plan_id: string
+          plan_name: string
+          provider_id: string | null
+          purchase_id: string | null
+          reference: string
+          status: string
+          unlock_nutrition: boolean
+          unlock_videos: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_created?: boolean
+          amount: number
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          customer_email: string
+          customer_name?: string | null
+          id?: string
+          order_bump_ids?: string[]
+          plan_id: string
+          plan_name: string
+          provider_id?: string | null
+          purchase_id?: string | null
+          reference: string
+          status?: string
+          unlock_nutrition?: boolean
+          unlock_videos?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_created?: boolean
+          amount?: number
+          canceled_at?: string | null
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          customer_email?: string
+          customer_name?: string | null
+          id?: string
+          order_bump_ids?: string[]
+          plan_id?: string
+          plan_name?: string
+          provider_id?: string | null
+          purchase_id?: string | null
+          reference?: string
+          status?: string
+          unlock_nutrition?: boolean
+          unlock_videos?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_gym_preference: {
         Row: {
@@ -1291,6 +1457,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_subscription_payment: {
+        Args: {
+          _amount: number
+          _paid_at: string
+          _payment_id: string
+          _subscription_id: string
+        }
+        Returns: boolean
+      }
       find_or_create_exercise: {
         Args: { _muscle_group?: string; _name: string }
         Returns: {

@@ -1,4 +1,4 @@
-import { User, LogOut, Apple, ClipboardList, Library, ChevronRight, MessageSquareText, Video } from "lucide-react";
+import { User, LogOut, Apple, ClipboardList, Library, ChevronRight, MessageSquareText, Video, CreditCard } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -21,6 +21,7 @@ export function ProfileMore({ userEmail, onTabChange, onLogout, isMentoria }: Pr
     { id: "ficha", label: "Minha Ficha", icon: ClipboardList },
     ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
     { id: "feedback", label: "Críticas e sugestões", icon: MessageSquareText },
+    { id: 'assinatura', label: 'Minha assinatura', icon: CreditCard },
   ];
 
   return (

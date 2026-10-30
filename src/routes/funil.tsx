@@ -22,6 +22,8 @@ import {
 import { provisionAccessFn } from "@/lib/access.functions";
 import { generateAiPlanFn } from "@/lib/ai-plan.functions";
 import { BrandLogo } from "@/components/brand-logo";
+import { Button } from '@/components/ui/button';
+import { createSubscriptionFn, getSubscriptionAvailabilityFn } from '@/lib/subscriptions.functions';
 
 export const Route = createFileRoute("/funil")({
   component: FunnelPage,
@@ -79,6 +81,11 @@ function FunnelPage() {
   const submitLead = useServerFn(submitLeadFn);
   const createCheckout = useServerFn(createMercadoPagoCheckoutFn);
   const createPix = useServerFn(createPixPaymentFn);
+  const createSubscription = useServerFn(createSubscriptionFn);
+  const availability = useServerFn(getSubscriptionAvailabilityFn);
+  const [recurringEnabled, setRecurringEnabled] = useState(false);
+  const [recurringConsent, setRecurringConsent] = useState(false);
+  useEffect(() => { availability().then((r) => setRecurringEnabled(r.enabled)).catch(() => {}); }, [availability]);
   const getPaymentStatus = useServerFn(getPaymentStatusFn);
   const provisionAccess = useServerFn(provisionAccessFn);
   const generateAiPlan = useServerFn(generateAiPlanFn);
@@ -209,6 +216,12 @@ function FunnelPage() {
     }).catch((e) => console.error("[funil] falha ao salvar lead no servidor", e));
 
     try {
+      if (method === 'card' && recurringEnabled) {
+        if (!recurringConsent) throw new Error('Autorize a cobrança mensal para continuar.');
+        const result = await createSubscription({ data: { planId: selectedPlan.id, bumpIds: chosenBumps.map((b) => b.id), email: contact.email, name: contact.name, consent: true } });
+        window.location.href = result.checkoutUrl;
+        return;
+      }
       if (method === "pix") {
         const data = await createPix({
           data: {
@@ -255,8 +268,7 @@ function FunnelPage() {
         return;
       }
       setSubmitting(false);
-      setStage("done");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setPixError(e instanceof Error ? e.message : 'Não foi possível iniciar o pagamento. Tente novamente.');
     }
   };
 
@@ -727,7 +739,7 @@ function FunnelPage() {
                       : "border-border bg-card text-muted-foreground"
                   }`}
                 >
-                  {m === "pix" ? "✚ PIX" : "💳 Cartão"}
+                  {m === "pix" ? "✚ PIX · avulso" : recurringEnabled ? "💳 Assinatura mensal" : "💳 Cartão"}
                 </button>
               ))}
             </div>
@@ -740,7 +752,7 @@ function FunnelPage() {
                 <span className="text-sm font-medium text-foreground/80 flex items-center gap-2">
                   {method === "pix" ? "✚ Pagamento via PIX" : "💳 Pagamento via Cartão"}
                 </span>
-                <span className="text-lg font-bold text-primary">{formatBRL(totalPrice)}</span>
+                <span className="text-lg font-bold text-primary">{formatBRL(totalPrice)}{method === 'card' && recurringEnabled ? '/mês' : ''}</span>
               </div>
               {activeBumps.map((b) => (
                 <label
@@ -759,7 +771,7 @@ function FunnelPage() {
                   />
                   <span className="text-left">
                     <span className="block text-sm font-bold text-foreground">
-                      Sim! Quero adicionar: {b.title} — +{formatBRL(b.price)}
+                      Sim! Quero adicionar: {b.title} — +{formatBRL(b.price)}{method === 'card' && recurringEnabled ? '/mês' : ''}
                     </span>
                     <span className="mt-1 block text-xs text-muted-foreground">{b.description}</span>
                   </span>
@@ -803,9 +815,11 @@ function FunnelPage() {
               {pixError && (
                 <p className="mt-3 text-center text-xs font-medium text-red-600">{pixError}</p>
               )}
-              <button
+              {method === 'card' && recurringEnabled && <label className="mt-4 flex gap-3 text-sm"><input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-primary" checked={recurringConsent} onChange={(e) => setRecurringConsent(e.target.checked)} /><span>Autorizo a cobrança automática de {formatBRL(totalPrice)} por mês, incluindo os adicionais selecionados, até cancelar. O acesso é liberado após a primeira cobrança aprovada.</span></label>}
+              {method === 'pix' && recurringEnabled && <p className="mt-3 text-xs text-muted-foreground">PIX é uma compra avulsa, sem renovação automática.</p>}
+              <Button
                 onClick={handleFinish}
-                disabled={!contact.email || submitting || (unlockNutrition && (!nutrition.goal || !nutrition.routine))}
+                disabled={!contact.email || submitting || (method === 'card' && recurringEnabled && (!recurringConsent || !contact.name.trim())) || (unlockNutrition && (!nutrition.goal || !nutrition.routine))}
                 className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
@@ -813,9 +827,9 @@ function FunnelPage() {
                 ) : method === "pix" ? (
                   <>Gerar PIX 🎯</>
                 ) : (
-                  <>Finalizar pagamento →</>
+                  <>{recurringEnabled ? 'Autorizar assinatura mensal →' : 'Finalizar pagamento →'}</>
                 )}
-              </button>
+              </Button>
             </div>
           </Card>
         )}

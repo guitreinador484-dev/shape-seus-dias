@@ -10,7 +10,7 @@ export const provisionAccessFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: purchase } = await supabaseAdmin
       .from("purchases")
-      .select("status, customer_email, customer_name, customer_whatsapp")
+      .select("status, customer_email, customer_name, customer_whatsapp,billing_type")
       .eq("provider_reference", data.reference)
       .maybeSingle();
 
@@ -26,5 +26,6 @@ export const provisionAccessFn = createServerFn({ method: "POST" })
       whatsapp: purchase.customer_whatsapp,
       reference: data.reference,
       origin,
+      subscription: purchase.billing_type === 'subscription',
     });
   });

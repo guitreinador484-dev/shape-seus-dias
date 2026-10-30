@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AssinaturaRouteImport } from './routes/assinatura'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CriarSenhaRouteImport } from './routes/criar-senha'
 import { Route as FunilRouteImport } from './routes/funil'
@@ -36,6 +37,7 @@ import { Route as AuthenticatedAdminAlunosIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminAlunosIdRouteImport } from './routes/_authenticated/admin.alunos.$id'
 import { Route as AuthenticatedAdminCursosIdRouteImport } from './routes/_authenticated/admin.cursos.$id'
 import { Route as AuthenticatedPlataformaCursosSlugRouteImport } from './routes/_authenticated/plataforma.cursos.$slug'
+import { Route as ApiPublicMercadopagoSubscriptionsRouteImport } from './routes/api/public/mercadopago/subscriptions'
 import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -45,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssinaturaRoute = AssinaturaRouteImport.update({
+  id: '/assinatura',
+  path: '/assinatura',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -189,6 +196,12 @@ const AuthenticatedPlataformaCursosSlugRoute =
     path: '/$slug',
     getParentRoute: () => AuthenticatedPlataformaCursosRoute,
   } as any)
+const ApiPublicMercadopagoSubscriptionsRoute =
+  ApiPublicMercadopagoSubscriptionsRouteImport.update({
+    id: '/api/public/mercadopago/subscriptions',
+    path: '/api/public/mercadopago/subscriptions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMercadopagoWebhookRoute =
   ApiPublicMercadopagoWebhookRouteImport.update({
     id: '/api/public/mercadopago/webhook',
@@ -198,6 +211,7 @@ const ApiPublicMercadopagoWebhookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
@@ -222,11 +236,13 @@ export interface FileRoutesByFullPath {
   '/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
+  '/api/public/mercadopago/subscriptions': typeof ApiPublicMercadopagoSubscriptionsRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/admin/alunos/': typeof AuthenticatedAdminAlunosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
@@ -249,6 +265,7 @@ export interface FileRoutesByTo {
   '/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
+  '/api/public/mercadopago/subscriptions': typeof ApiPublicMercadopagoSubscriptionsRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/admin/alunos': typeof AuthenticatedAdminAlunosIndexRoute
 }
@@ -256,6 +273,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/assinatura': typeof AssinaturaRoute
   '/auth': typeof AuthRoute
   '/criar-senha': typeof CriarSenhaRoute
   '/funil': typeof FunilRoute
@@ -280,6 +298,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/alunos/$id': typeof AuthenticatedAdminAlunosIdRoute
   '/_authenticated/admin/cursos/$id': typeof AuthenticatedAdminCursosIdRoute
   '/_authenticated/plataforma/cursos/$slug': typeof AuthenticatedPlataformaCursosSlugRoute
+  '/api/public/mercadopago/subscriptions': typeof ApiPublicMercadopagoSubscriptionsRoute
   '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
   '/_authenticated/admin/alunos/': typeof AuthenticatedAdminAlunosIndexRoute
 }
@@ -287,6 +306,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/assinatura'
     | '/auth'
     | '/criar-senha'
     | '/funil'
@@ -311,11 +331,13 @@ export interface FileRouteTypes {
     | '/admin/alunos/$id'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
+    | '/api/public/mercadopago/subscriptions'
     | '/api/public/mercadopago/webhook'
     | '/admin/alunos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assinatura'
     | '/auth'
     | '/criar-senha'
     | '/funil'
@@ -338,12 +360,14 @@ export interface FileRouteTypes {
     | '/admin/alunos/$id'
     | '/admin/cursos/$id'
     | '/plataforma/cursos/$slug'
+    | '/api/public/mercadopago/subscriptions'
     | '/api/public/mercadopago/webhook'
     | '/admin/alunos'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/assinatura'
     | '/auth'
     | '/criar-senha'
     | '/funil'
@@ -368,6 +392,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/alunos/$id'
     | '/_authenticated/admin/cursos/$id'
     | '/_authenticated/plataforma/cursos/$slug'
+    | '/api/public/mercadopago/subscriptions'
     | '/api/public/mercadopago/webhook'
     | '/_authenticated/admin/alunos/'
   fileRoutesById: FileRoutesById
@@ -375,10 +400,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AssinaturaRoute: typeof AssinaturaRoute
   AuthRoute: typeof AuthRoute
   CriarSenhaRoute: typeof CriarSenhaRoute
   FunilRoute: typeof FunilRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicMercadopagoSubscriptionsRoute: typeof ApiPublicMercadopagoSubscriptionsRoute
   ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
@@ -396,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assinatura': {
+      id: '/assinatura'
+      path: '/assinatura'
+      fullPath: '/assinatura'
+      preLoaderRoute: typeof AssinaturaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -573,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlataformaCursosSlugRouteImport
       parentRoute: typeof AuthenticatedPlataformaCursosRoute
     }
+    '/api/public/mercadopago/subscriptions': {
+      id: '/api/public/mercadopago/subscriptions'
+      path: '/api/public/mercadopago/subscriptions'
+      fullPath: '/api/public/mercadopago/subscriptions'
+      preLoaderRoute: typeof ApiPublicMercadopagoSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mercadopago/webhook': {
       id: '/api/public/mercadopago/webhook'
       path: '/api/public/mercadopago/webhook'
@@ -696,10 +737,13 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AssinaturaRoute: AssinaturaRoute,
   AuthRoute: AuthRoute,
   CriarSenhaRoute: CriarSenhaRoute,
   FunilRoute: FunilRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicMercadopagoSubscriptionsRoute:
+    ApiPublicMercadopagoSubscriptionsRoute,
   ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport

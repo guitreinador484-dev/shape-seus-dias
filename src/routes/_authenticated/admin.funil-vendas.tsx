@@ -27,6 +27,7 @@ import {
 import { LEAD_STAGES, listLeadsFn, updateLeadStageFn, type LeadRow, type LeadStage } from "@/lib/leads.functions";
 import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { toast } from "sonner";
+import { SubscriptionsPanel } from '@/components/subscriptions-panel';
 
 /** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
 function FunnelImage({ src, className }: { src?: string; className?: string }) {
@@ -723,6 +724,7 @@ function AdminFunnelPage() {
       </Section>
 
       {/* Order bumps */}
+      <SubscriptionsPanel admin />
       <Section title="Ofertas extras no checkout (order bump)">
         <OrderBumpEditor />
       </Section>

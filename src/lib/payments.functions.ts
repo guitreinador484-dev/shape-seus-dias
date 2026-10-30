@@ -205,14 +205,14 @@ export const getPaymentStatusFn = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("purchases")
-      .select("status")
+      .select("status,billing_type")
       .eq("provider_reference", data.reference)
       .maybeSingle();
 
     let status = row?.status ?? "pending";
 
     // Fallback: consulta direta na API caso o webhook ainda não tenha chegado.
-    if (status === "pending") {
+    if (status === "pending" && row?.billing_type !== 'subscription') {
       const token = process.env["MERCADOPAGO_ACCESS_TOKEN"];
       if (token) {
         const res = await fetch(
