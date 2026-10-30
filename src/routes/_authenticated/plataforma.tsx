@@ -32,6 +32,7 @@ const EvolutionTab = lazy(() => import("@/components/platform/evolution-tab").th
 const AnamneseTab = lazy(() => import("@/components/platform/anamnese-tab").then((m) => ({ default: m.AnamneseTab })));
 const MentoriaTab = lazy(() => import("@/components/platform/mentoria-tab").then((m) => ({ default: m.MentoriaTab })));
 const FeedbackTab = lazy(() => import("@/components/platform/feedback-tab").then((m) => ({ default: m.FeedbackTab })));
+const SubscriptionsPanel = lazy(() => import('@/components/subscriptions-panel').then((m) => ({ default: m.SubscriptionsPanel })));
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -854,6 +855,7 @@ function PlataformaPage() {
               <TabsTrigger value="feedback" className="rounded-full px-5 py-2 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/35 transition-all">
                 <Lightbulb className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Sugestões</span>
               </TabsTrigger>
+              <TabsTrigger value="assinatura" className="rounded-full px-5 py-2 text-xs font-semibold">Assinatura</TabsTrigger>
             </TabsList>
 
             <div className="hidden sm:flex items-center gap-2 min-w-0">
@@ -998,6 +1000,7 @@ function PlataformaPage() {
           <TabsContent value="feedback" className="mt-0">
             {user ? <FeedbackTab userId={user.id} /> : null}
           </TabsContent>
+          <TabsContent value="assinatura" className="mt-0"><SubscriptionsPanel /></TabsContent>
 
           {!canSeeVideos && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">

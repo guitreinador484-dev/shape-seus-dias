@@ -88,6 +88,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { SubscriptionsPanel } from '@/components/subscriptions-panel';
 
 type Profile = Tables<"profiles">;
 type Purchase = Tables<"purchases">;
@@ -2181,6 +2182,7 @@ export function AdminSalesPanel() {
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader title="Vendas" description="Registre vendas, acompanhe pagamentos e ajuste status de acesso." />
+      <SubscriptionsPanel admin />
       <Card className="mb-6">
         <CardHeader><CardTitle>Registrar venda manual</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-6">
