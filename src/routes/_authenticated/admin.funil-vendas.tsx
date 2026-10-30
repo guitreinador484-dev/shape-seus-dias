@@ -28,6 +28,9 @@ import { LEAD_STAGES, listLeadsFn, updateLeadStageFn, type LeadRow, type LeadSta
 import { OrderBumpEditor } from "@/components/admin/order-bump-editor";
 import { toast } from "sonner";
 import { SubscriptionsPanel } from '@/components/subscriptions-panel';
+import { FunnelBannerImage } from '@/components/funnel-banner-image';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /** Exibe imagens do funil, resolvendo referências funnel:// para URLs assinadas */
 function FunnelImage({ src, className }: { src?: string; className?: string }) {
@@ -96,6 +99,7 @@ export const Route = createFileRoute("/_authenticated/admin/funil-vendas")({
 function AdminFunnelPage() {
   const [cfg, setCfg] = useState<FunnelConfig>(DEFAULT_FUNNEL);
   const [saving, setSaving] = useState(false);
+  const [bannerDevice, setBannerDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [movingLead, setMovingLead] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -349,8 +353,30 @@ function AdminFunnelPage() {
           </Field>
         </Row>
         {cfg.banner?.image && (
-          <div className="overflow-hidden rounded-xl border border-border">
-            <FunnelImage src={cfg.banner.image} className="h-32 w-full object-cover" />
+          <div className="min-w-0 space-y-5">
+            <Tabs value={bannerDevice} onValueChange={(value) => setBannerDevice(value === 'mobile' ? 'mobile' : 'desktop')}>
+              <TabsList><TabsTrigger value="desktop">Computador</TabsTrigger><TabsTrigger value="mobile">Celular</TabsTrigger></TabsList>
+            </Tabs>
+            <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+              <div className={`relative mx-auto w-full overflow-hidden rounded-lg border border-border ${bannerDevice === 'mobile' ? 'max-w-[343px]' : 'max-w-[736px]'}`}>
+                <FunnelBannerImage banner={cfg.banner} device={bannerDevice} />
+                <div className="pointer-events-none absolute inset-0 flex items-center bg-linear-to-r from-background/90 via-background/65 to-transparent">
+                  <div className="min-w-0 max-w-md px-6 py-4 text-foreground">
+                    <h2 className="break-words text-2xl font-extrabold leading-tight">{cfg.banner.title}</h2>
+                    <p className="mt-1 break-words text-sm text-foreground/80">{cfg.banner.subtitle}</p>
+                    {cfg.banner.ctaLabel && <div className="mt-3 inline-block rounded-lg bg-card px-4 py-2 text-xs font-bold text-primary">{cfg.banner.ctaLabel}</div>}
+                  </div>
+                </div>
+              </div>
+              <div className="min-w-0 space-y-5">
+                {([{ key: 'x', label: 'Posição horizontal', min: 0, max: 100 }, { key: 'y', label: 'Posição vertical', min: 0, max: 100 }, { key: 'zoom', label: 'Zoom', min: 100, max: 200 }] as const).map((control) => {
+                  const frameKey = bannerDevice === 'mobile' ? 'mobileFrame' : 'desktopFrame';
+                  const frame = cfg.banner?.[frameKey] ?? { x: 50, y: 50, zoom: 100 };
+                  return <div key={control.key} className="space-y-3"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 text-sm"><Label>{control.label}</Label><span className="text-muted-foreground">{frame[control.key]}%</span></div><Slider aria-label={`${control.label} do banner ${bannerDevice === 'mobile' ? 'celular' : 'computador'}`} min={control.min} max={control.max} step={1} value={[frame[control.key]]} onValueChange={([value]) => { if (value !== undefined) updateBanner({ [frameKey]: { ...frame, [control.key]: value } }); }} /></div>;
+                })}
+                <Button variant="outline" size="sm" onClick={() => updateBanner({ [bannerDevice === 'mobile' ? 'mobileFrame' : 'desktopFrame']: { x: 50, y: 50, zoom: 100 } })}>Restaurar enquadramento</Button>
+              </div>
+            </div>
           </div>
         )}
       </Section>
