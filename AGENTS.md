@@ -20,3 +20,4 @@
 - The student workout screen fetches exercises nested under the student's plans and loads optional tabs and class media on demand to keep initial training access lightweight.
 - Administrative PDF code is dynamically imported only when generating or uploading a PDF so navigation does not load the PDF engine.
 - Monthly Mercado Pago subscriptions use separate lifecycle/payment records, server-priced offers and a service-role-only idempotent installment RPC; legacy purchases retain their existing access logic and subscription activation stays gated until verified notifications and an approved test installment exist.
+- Funnel banner framing is stored separately for desktop and mobile in the existing funnel configuration and rendered by one shared image component so the editor and public funnel use the same crop.

@@ -1,5 +1,9 @@
 # Roadmap
 
+## Enquadramento do banner do funil
+- [x] Adicionar posição e zoom independentes para computador e celular com prévia e salvamento na configuração existente
+- [ ] Verificar controles e enquadramento nas duas larguras
+
 ## Assinaturas mensais Mercado Pago
 - [x] Preparar checkout mensal com preço conferido no servidor, consentimento e telas de assinatura; PIX permanece avulso
 - [ ] Validar primeira cobrança, renovações e cancelamentos com o Mercado Pago: depende da confirmação do mecanismo de notificações para assinaturas e de uma contratação de teste; nenhuma cobrança real foi executada

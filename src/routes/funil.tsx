@@ -22,6 +22,7 @@ import {
 import { provisionAccessFn } from "@/lib/access.functions";
 import { generateAiPlanFn } from "@/lib/ai-plan.functions";
 import { BrandLogo } from "@/components/brand-logo";
+import { FunnelBannerImage } from '@/components/funnel-banner-image';
 import { Button } from '@/components/ui/button';
 import { createSubscriptionFn, getSubscriptionAvailabilityFn } from '@/lib/subscriptions.functions';
 
@@ -367,7 +368,7 @@ function FunnelPage() {
           <>
             {cfg.banner?.enabled && cfg.banner.image && (
               <section className="relative overflow-hidden rounded-lg shadow-lg">
-                <img src={cfg.banner.image} alt="" className="h-56 w-full object-cover" />
+                <FunnelBannerImage banner={cfg.banner} />
                 <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/65 to-transparent flex items-center">
                   <div className="px-6 py-4 text-white max-w-md">
                     <h2 className="text-2xl font-extrabold leading-tight">{cfg.banner.title}</h2>
