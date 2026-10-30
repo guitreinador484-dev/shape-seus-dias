@@ -9,6 +9,7 @@
 ## Compra e acesso
 - Encaminhar o cliente à autorização segura da assinatura no Mercado Pago; a plataforma não armazenará dados de cartão.
 - Liberar conta, treino e adicionais somente após confirmar a primeira cobrança aprovada — autorizar uma assinatura não significa que o pagamento já foi recebido.
+- Mostrar “Aguardando primeira cobrança” se necessário: o Mercado Pago informa que a primeira parcela pode ser cobrada aproximadamente uma hora após criar a assinatura. O treino será preparado após a aprovação, não após apenas autorizar o cartão.
 - Manter o fluxo de criação de senha para novos compradores e reutilizar a conta de quem já é aluno, sem recriar conta ou reenviar senha a cada renovação.
 - Registrar as cobranças seguintes e renovar o período de acesso uma única vez por pagamento aprovado.
 - Permitir consultar e cancelar a assinatura na área do aluno e no painel de vendas. Cancelar interrompe cobranças futuras, mantendo o período já pago; cobrança recusada não renova o acesso.
@@ -24,5 +25,6 @@
 - Adicionar registros de assinaturas e cobranças com permissões de leitura para o próprio aluno e administradores; gravações de pagamento somente pelo servidor.
 - Conferir as regras atuais de liberação automática de acesso no banco e combinar acesso mensal com concessões antigas, sem substituir ou revogar direitos já adquiridos.
 - Integrar a API de Assinaturas do Mercado Pago e suas notificações ao provisionamento existente, preservando o pagamento avulso.
+- Criar uma assinatura sem plano associado por contratação, com valor total fixo de plano mais adicionais; não depender de itens separados na fatura nem alterar assinaturas antigas ao editar preços. Confirmar esse fluxo em teste antes de ativar.
 - Usar testes para recorrência de um mês, soma dos adicionais, confirmação da primeira cobrança, renovação idempotente e cancelamento sem perda do período pago.
 - Conferir o fluxo no computador e celular e informar claramente qualquer etapa que dependa de configuração ou teste no Mercado Pago antes de publicar.
