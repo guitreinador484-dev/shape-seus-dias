@@ -15,6 +15,13 @@
       "when": 1793296306048,
       "tag": "0001_disambiguate_video_grid_plan_identifier",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793323370072,
+      "tag": "0002_mercadopago_monthly_subscriptions",
+      "breakpoints": true
     }
   ]
 }
