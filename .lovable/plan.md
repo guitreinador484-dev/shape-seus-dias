@@ -22,6 +22,7 @@
 
 ## Detalhes técnicos
 - Adicionar registros de assinaturas e cobranças com permissões de leitura para o próprio aluno e administradores; gravações de pagamento somente pelo servidor.
+- Conferir as regras atuais de liberação automática de acesso no banco e combinar acesso mensal com concessões antigas, sem substituir ou revogar direitos já adquiridos.
 - Integrar a API de Assinaturas do Mercado Pago e suas notificações ao provisionamento existente, preservando o pagamento avulso.
 - Usar testes para recorrência de um mês, soma dos adicionais, confirmação da primeira cobrança, renovação idempotente e cancelamento sem perda do período pago.
 - Conferir o fluxo no computador e celular e informar claramente qualquer etapa que dependa de configuração ou teste no Mercado Pago antes de publicar.
