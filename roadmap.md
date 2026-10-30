@@ -1,5 +1,10 @@
 # Roadmap
 
+## Assinaturas mensais Mercado Pago
+- [ ] Adaptar novas compras dos três planos e adicionais para cobrança mensal autorizada no cartão
+- [ ] Sincronizar primeira cobrança, renovações e cancelamentos sem duplicar contas ou alterar compras antigas
+- [ ] Validar checkout, acesso e segurança antes de disponibilizar as assinaturas
+
 ## Velocidade e coerência da navegação
 - [x] Reduzir carregamentos repetidos e o peso inicial: autenticação compartilhada, PDFs e abas opcionais sob demanda, treinos com exercícios vinculados e assinaturas de aulas em lote
 - [x] Alinhar menu lateral e títulos com o conteúdo: Visão geral, Críticas e sugestões, Ofertas extras e título da página atual
