@@ -2,7 +2,7 @@
 
 ## Enquadramento do banner do funil
 - [x] Adicionar posição e zoom independentes para computador e celular com prévia e salvamento na configuração existente
-- [ ] Verificar controles e enquadramento nas duas larguras
+- [x] Verificar controles independentes, zoom aplicado, restauração e prévia em computador e celular sem vazamento; configuração publicada mantida intacta
 
 ## Assinaturas mensais Mercado Pago
 - [x] Preparar checkout mensal com preço conferido no servidor, consentimento e telas de assinatura; PIX permanece avulso
