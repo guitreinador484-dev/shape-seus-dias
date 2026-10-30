@@ -897,6 +897,8 @@ function PlataformaPage() {
                   </Button>
                 </CardContent>
               </Card>
+            ) : activeTab === 'assinatura' ? (
+              <Suspense fallback={<Skeleton className="h-48 w-full" />}><SubscriptionsPanel /></Suspense>
             ) : !isActive && !dataLoading ? (
               <Card className="border-red-500/30 bg-red-500/5">
                 <CardContent className="py-12 text-center space-y-3">
@@ -1000,7 +1002,6 @@ function PlataformaPage() {
           <TabsContent value="feedback" className="mt-0">
             {user ? <FeedbackTab userId={user.id} /> : null}
           </TabsContent>
-          <TabsContent value="assinatura" className="mt-0"><SubscriptionsPanel /></TabsContent>
 
           {!canSeeVideos && hasClassAccess && isActive && (
             <TabsContent value="aulas" className="mt-0">
