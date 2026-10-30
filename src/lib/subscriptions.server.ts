@@ -40,7 +40,7 @@ export async function syncSubscriptionEvent(type: string, id: string, token: str
       if (approveError) throw approveError;
     }
     const { provisionAccess } = await import('./access.server');
-    const provision = await provisionAccess({ email: subscription.customer_email, name: subscription.customer_name, reference: subscription.reference, origin });
+    const provision = await provisionAccess({ email: subscription.customer_email, name: subscription.customer_name, reference: subscription.reference, origin, subscription: true });
     if (!provision.ok) throw new Error('Não foi possível liberar a conta.');
     const { data: linked } = await db.from('purchases').select('user_id').eq('id', subscription.purchase_id ?? '').maybeSingle();
     userId = linked?.user_id ?? null;
@@ -49,7 +49,7 @@ export async function syncSubscriptionEvent(type: string, id: string, token: str
       const { error: baselineError } = await db.from('subscription_access_baselines').upsert({ user_id: userId, had_access: false, expires_at: null }, { onConflict: 'user_id', ignoreDuplicates: true });
       if (baselineError) throw baselineError;
     }
-    const { error: linkError } = await db.from('subscriptions').update({ user_id: userId }).eq('id', subscription.id);
+    const { error: linkError } = await db.from('subscriptions').update({ user_id: userId, account_created: provision.created }).eq('id', subscription.id);
     if (linkError) throw linkError;
   }
   const { error: applyError } = await db.rpc('apply_subscription_payment', { _subscription_id: subscription.id, _payment_id: String(payment.id), _amount: Number(payment.transaction_amount), _paid_at: payment.date_approved });

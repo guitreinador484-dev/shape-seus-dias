@@ -49,8 +49,8 @@ export const createSubscriptionFn = createServerFn({ method: 'POST' }).inputVali
 
 export const getSubscriptionReturnFn = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ reference: z.string().uuid() }).parse(input)).handler(async ({ data }) => {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-  const { data: row } = await supabaseAdmin.from('subscriptions').select('status,current_period_end').eq('reference', data.reference).maybeSingle();
-  return { status: row?.status ?? 'pending', paid: Boolean(row?.current_period_end) };
+  const { data: row } = await supabaseAdmin.from('subscriptions').select('status,current_period_end,account_created').eq('reference', data.reference).maybeSingle();
+  return { status: row?.status ?? 'pending', paid: Boolean(row?.current_period_end), newAccount: Boolean(row?.account_created) };
 });
 
 export const listSubscriptionsFn = createServerFn({ method: 'GET' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {

@@ -13,7 +13,7 @@ export const Route = createFileRoute('/api/public/mercadopago/subscriptions')({ 
   const timestamp = Number(parts.ts);
   if (Math.abs(Date.now() - (timestamp < 1e12 ? timestamp * 1000 : timestamp)) > 300000) return new Response('expired', { status: 401 });
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
-  const bytes = Uint8Array.from(parts.v1.match(/.{2}/g) ?? [], (v) => parseInt(v, 16));
+  const bytes = new Uint8Array((parts.v1.match(/.{2}/g) ?? []).map((v: string) => parseInt(v, 16)));
   const verified = await crypto.subtle.verify('HMAC', key, bytes, new TextEncoder().encode(`id:${id.toLowerCase()};request-id:${requestId};ts:${parts.ts};`));
   if (!verified) return new Response('unauthorized', { status: 401 });
   const parsed = z.object({ type: z.enum(['subscription_preapproval', 'subscription_authorized_payment']), data: z.object({ id: z.union([z.string().max(200), z.number()]) }) }).safeParse(await request.json().catch(() => null));

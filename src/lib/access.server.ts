@@ -7,6 +7,7 @@ export type ProvisionInput = {
   whatsapp?: string | null;
   origin: string;
   reference?: string | null;
+  subscription?: boolean;
 };
 
 export type ProvisionResult = {
@@ -94,7 +95,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
         full_name: input.name ?? undefined,
         whatsapp: input.whatsapp ?? undefined,
         has_class_access: true,
-        is_active: true,
+        ...(input.subscription ? {} : { is_active: true }),
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
@@ -176,6 +177,9 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     .from("leads")
     .update({ status: "aluno", student_id: userId, stage_updated_at: new Date().toISOString() })
     .ilike("email", email);
+
+  // Assinantes existentes conservam a senha: renovação nunca envia recuperação.
+  if (input.subscription && !created) return { ok: true, created: false, emailSent: false };
 
   // Envia o e-mail para o cliente definir a senha de acesso (reserva)
   let emailSent = false;
