@@ -1162,6 +1162,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          account_created: boolean
           amount: number
           canceled_at: string | null
           created_at: string
@@ -1183,6 +1184,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          account_created?: boolean
           amount: number
           canceled_at?: string | null
           created_at?: string
@@ -1204,6 +1206,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          account_created?: boolean
           amount?: number
           canceled_at?: string | null
           created_at?: string
