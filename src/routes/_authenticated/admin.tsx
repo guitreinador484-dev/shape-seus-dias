@@ -57,15 +57,13 @@ type NavGroup = { label: string; items: NavItem[] };
 export const navGroups: NavGroup[] = [
   {
     label: "Visão geral",
-    items: [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard, exact: true }],
+    items: [{ title: "Visão geral", url: "/admin", icon: LayoutDashboard, exact: true }],
   },
   {
     label: "Alunos",
     items: [
       { title: "Alunos", url: "/admin/alunos", icon: Users },
       { title: "Plataforma do aluno", url: "/admin/plataforma", icon: LayoutGrid },
-      { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
-      { title: "Feedbacks", url: "/admin/feedbacks", icon: MessageSquareText },
     ],
   },
   {
@@ -76,6 +74,13 @@ export const navGroups: NavGroup[] = [
       { title: "Nutrição", url: "/admin/nutricao", icon: Apple },
       { title: "Cursos", url: "/admin/cursos", icon: BookOpen },
       { title: "Aulas em vídeo", url: "/admin/aulas", icon: Video },
+    ],
+  },
+  {
+    label: "Relacionamento",
+    items: [
+      { title: "Engajamento", url: "/admin/engajamento", icon: Flame },
+      { title: "Críticas e sugestões", url: "/admin/feedbacks", icon: MessageSquareText },
     ],
   },
   {

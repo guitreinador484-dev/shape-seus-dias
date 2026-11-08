@@ -31,6 +31,8 @@ export type FunnelBanner = {
   title: string;
   subtitle: string;
   ctaLabel: string;
+  desktopFrame?: { x: number; y: number; zoom: number };
+  mobileFrame?: { x: number; y: number; zoom: number };
 };
 
 export type FunnelVideo = {

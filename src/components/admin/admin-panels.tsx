@@ -90,6 +90,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { SubscriptionsPanel } from '@/components/subscriptions-panel';
 
 type Purchase = Tables<"purchases">;
 type Anamnese = Tables<"anamnese">;
@@ -774,7 +775,7 @@ export function AdminTrainingPanel() {
         },
       });
       toast.success("Grade de treinos inteligentes gerada com sucesso!", {
-        description: `${res.plansCount} treinos criados com vídeos do banco de dados e PDFs atualizados.`,
+        description: `${res.plansCount} dias salvos com vídeos de execução. ${res.pdfCount} PDFs atualizados.`,
       });
       setSmartOpen(false);
       if (filterStudent === "all") {
@@ -825,7 +826,7 @@ export function AdminTrainingPanel() {
 
       {/* Modal do Gerador Inteligente de Treinos */}
       <Dialog open={smartOpen} onOpenChange={setSmartOpen}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[92vh] overflow-y-auto overflow-x-hidden sm:max-w-xl">
           <DialogHeader>
             <div className="flex items-center gap-2 text-destructive">
               <Zap className="h-5 w-5" />
@@ -836,8 +837,8 @@ export function AdminTrainingPanel() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-2">
-            <div>
+          <div className="grid min-w-0 gap-4 py-2">
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Aluno
               </Label>
@@ -855,8 +856,8 @@ export function AdminTrainingPanel() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
+            <div className="grid min-w-0 grid-cols-2 gap-3">
+              <div className="min-w-0">
                 <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Frequência Semanal
                 </Label>
@@ -873,7 +874,7 @@ export function AdminTrainingPanel() {
                 </Select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Nível de Treinamento
                 </Label>
@@ -890,7 +891,7 @@ export function AdminTrainingPanel() {
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Método de Treino
               </Label>
@@ -902,7 +903,7 @@ export function AdminTrainingPanel() {
                   {WORKOUT_TYPES.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       <span className="font-medium">{type.label}</span>
-                      <span className="ml-2 text-xs text-muted-foreground">({type.description})</span>
+                      <span className="ml-2 inline-block max-w-full truncate align-bottom text-xs text-muted-foreground">({type.description})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -914,7 +915,7 @@ export function AdminTrainingPanel() {
               )}
             </div>
 
-            <div>
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Membro de Ênfase Prioritário
               </Label>
@@ -943,7 +944,7 @@ export function AdminTrainingPanel() {
                 <span>Integração direta com o Banco de Vídeos</span>
               </p>
               <p>
-                Os treinos gerados usam prioritariamente exercícios com demonstrações gravadas pelo Gui Treinador, incluindo carga sugerida, contagem de repetições e timer de descanso adaptado.
+                Somente exercícios com vídeo de execução entram na grade. Ao gerar novamente, os dias e exercícios do aluno são atualizados.
               </p>
             </div>
           </div>
@@ -978,8 +979,8 @@ export function AdminTrainingPanel() {
             <DialogTitle>Novo dia de treino</DialogTitle>
             <DialogDescription>Escolha o aluno, o nome, método e o dia deste treino.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-2">
-            <div>
+          <div className="grid min-w-0 gap-4 py-2">
+            <div className="min-w-0">
               <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Aluno
               </Label>
@@ -994,8 +995,8 @@ export function AdminTrainingPanel() {
               </Label>
               <Input value={planName} onChange={(event) => setPlanName(event.target.value)} placeholder="Ex: Treino A - Superior & Core" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
+            <div className="grid min-w-0 grid-cols-2 gap-3">
+              <div className="min-w-0">
                 <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Dia da semana
                 </Label>
@@ -1737,6 +1738,7 @@ export function AdminSalesPanel() {
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader title="Vendas" description="Registre vendas, acompanhe pagamentos e ajuste status de acesso." />
+      <SubscriptionsPanel admin />
       <Card className="mb-6">
         <CardHeader><CardTitle>Registrar venda manual</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-6">

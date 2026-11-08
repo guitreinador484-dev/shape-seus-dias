@@ -7,6 +7,7 @@ export type ProvisionInput = {
   whatsapp?: string | null;
   origin: string;
   reference?: string | null;
+  subscription?: boolean;
 };
 
 export type ProvisionResult = {
@@ -93,8 +94,8 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
         email,
         full_name: input.name ?? undefined,
         whatsapp: input.whatsapp ?? undefined,
-        has_class_access: true,
-        is_active: true,
+        ...(input.subscription ? {} : { has_class_access: true }),
+        ...(input.subscription ? {} : { is_active: true }),
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
@@ -104,7 +105,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       email,
       full_name: input.name ?? null,
       whatsapp: input.whatsapp ?? null,
-      has_class_access: true,
+      has_class_access: !input.subscription,
       is_active: true,
       referral_code: makeReferralCode(email),
     });
@@ -131,7 +132,7 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
       .select("order_bump, order_bump_ids, unlock_nutrition, unlock_videos")
       .eq("provider_reference", input.reference)
       .maybeSingle();
-    if (purchaseRow?.order_bump) {
+    if (purchaseRow?.order_bump && !input.subscription) {
       const legacyAccess = purchaseRow.order_bump_ids.length === 0;
       await supabaseAdmin.from("profiles").update({
         has_order_bump: true,
@@ -176,6 +177,9 @@ export async function provisionAccess(input: ProvisionInput): Promise<ProvisionR
     .from("leads")
     .update({ status: "aluno", student_id: userId, stage_updated_at: new Date().toISOString() })
     .ilike("email", email);
+
+  // Assinantes existentes conservam a senha: renovação nunca envia recuperação.
+  if (input.subscription && !created) return { ok: true, created: false, emailSent: false };
 
   // Envia o e-mail para o cliente definir a senha de acesso (reserva)
   let emailSent = false;

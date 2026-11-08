@@ -14,7 +14,7 @@ import { BrandLogoMark, BrandLogoName } from "@/components/brand-logo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Acesso — Plataforma do Personal" },
+      { title: "Acesso — Gui Treinador" },
       { name: "description", content: "Entre na sua área de aluno ou administrador." },
       { property: "og:title", content: "Acesso — Gui Treinador" },
       { property: "og:description", content: "Entre na sua área de aluno ou administrador." },

@@ -42,6 +42,11 @@ async function handle(request: Request): Promise<Response> {
   const reference = payment.external_reference;
   if (!reference) return new Response("no reference", { status: 200 });
 
+  const { supabaseAdmin: subscriptionDb } = await import('@/integrations/supabase/client.server');
+  const { data: billingRow } = await subscriptionDb.from('purchases').select('billing_type').eq('provider_reference', reference).maybeSingle();
+  // Parcelas recorrentes têm uma validação e registro próprios; nunca entram no legado de 90 dias.
+  if (billingRow?.billing_type === 'subscription') return new Response('subscription event required', { status: 200 });
+
   const status =
     payment.status === "approved"
       ? "approved"

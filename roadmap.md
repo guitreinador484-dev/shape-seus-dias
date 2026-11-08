@@ -1,5 +1,25 @@
 # Roadmap
 
+## Enquadramento do banner do funil
+- [x] Adicionar posição e zoom independentes para computador e celular com prévia e salvamento na configuração existente
+- [x] Verificar controles independentes, zoom aplicado, restauração e prévia em computador e celular sem vazamento; configuração publicada mantida intacta
+
+## Assinaturas mensais Mercado Pago
+- [x] Preparar checkout mensal com preço conferido no servidor, consentimento e telas de assinatura; PIX permanece avulso
+- [ ] Validar primeira cobrança, renovações e cancelamentos com o Mercado Pago: depende da confirmação do mecanismo de notificações para assinaturas e de uma contratação de teste; nenhuma cobrança real foi executada
+- [ ] Ativar assinaturas somente após validação: notificações de assinatura e credenciais de teste ainda pendentes; fluxo permanece desligado, compras antigas preservadas
+- [x] Verificar telas administrativas e área do aluno em desktop/mobile, bloqueio de ativação, retorno pendente e recusa do webhook não configurado; 15 testes passaram
+
+## Velocidade e coerência da navegação
+- [x] Reduzir carregamentos repetidos e o peso inicial: autenticação compartilhada, PDFs e abas opcionais sob demanda, treinos com exercícios vinculados e assinaturas de aulas em lote
+- [x] Alinhar menu lateral e títulos com o conteúdo: Visão geral, Críticas e sugestões, Ofertas extras e título da página atual
+- [x] Verificar navegação administrativa autenticada, leitura do treino real de teste, carregamento seletivo de aulas e celular sem rolagem lateral; 12 testes passaram
+
+## Correção do gerador administrativo
+- [x] Corrigir geração e salvar somente exercícios com vídeos reais
+- [x] Testar criação, regeneração e leitura na conta de teste: quatro dias e 28 exercícios vinculados; player abriu com vídeo assinado
+- [ ] Reprodução do arquivo testado: navegador rejeitou formato (erro 4); requer conversão dos arquivos para formato compatível
+
 ## Prévias nos treinos do aluno
 - [x] Conferir resolução dos vídeos e adicionar prévia clicável por exercício
 - [x] Verificar layout e abertura do player com catálogo real em sessão administrativa, sem alterar dados; sem rolagem lateral no celular

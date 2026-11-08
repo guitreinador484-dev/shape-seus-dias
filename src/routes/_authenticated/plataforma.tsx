@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Apple, Ban, BookOpen, ClipboardList, Dumbbell, Library, Loader2, Lock, LogOut, Megaphone, MessageSquareText, RefreshCw, Timer, TrendingUp, Video, type LucideIcon } from "lucide-react";
+import { AlertCircle, Apple, ArrowLeft, Ban, BookOpen, ClipboardList, CreditCard, Dumbbell, Library, Lightbulb, Loader2, Lock, LogOut, Megaphone, MessageSquareText, RefreshCw, Timer, TrendingUp, Video, type LucideIcon } from "lucide-react";
 import { CheckinCard } from "@/components/platform/checkin-card";
 import { ReferralCard } from "@/components/platform/referral-card";
 import { TreinoPanel, TreinoSkeleton } from "@/components/platform/treino-panel";
@@ -27,6 +27,7 @@ const AnamneseTab = lazy(() => import("@/components/platform/anamnese-tab").then
 const MentoriaTab = lazy(() => import("@/components/platform/mentoria-tab").then((m) => ({ default: m.MentoriaTab })));
 const FeedbackTab = lazy(() => import("@/components/platform/feedback-tab").then((m) => ({ default: m.FeedbackTab })));
 const AulasTab = lazy(() => import("@/components/platform/aulas-tab").then((m) => ({ default: m.AulasTab })));
+const SubscriptionsPanel = lazy(() => import("@/components/subscriptions-panel").then((m) => ({ default: m.SubscriptionsPanel })));
 
 function LockedExtra({ title, description }: { title: string; description: string }) {
   return (
@@ -186,13 +187,19 @@ function PlataformaPage() {
     { id: "evolucao", label: "Evolução", icon: TrendingUp },
     { id: "ficha", label: "Ficha", icon: ClipboardList },
     ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
-    { id: "feedback", label: "Sugestões", icon: MessageSquareText },
+    { id: "feedback", label: "Sugestões", icon: Lightbulb },
+    { id: "assinatura", label: "Assinatura", icon: CreditCard },
   ];
   const moreItems: MoreItem[] = [
     { id: "ficha", label: "Minha ficha", icon: ClipboardList },
     ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
     { id: "feedback", label: "Críticas e sugestões", icon: MessageSquareText },
+    { id: "assinatura", label: "Minha assinatura", icon: CreditCard },
   ];
+  // Quem está sem acesso também precisa conseguir ver ou cancelar a assinatura.
+  const subscriptionAction = (
+    <Button variant="outline" onClick={() => changeTab("assinatura")}><CreditCard /> Minha assinatura</Button>
+  );
 
   return (
     <div className="relative min-h-dvh overflow-x-clip bg-background text-foreground">
@@ -201,7 +208,7 @@ function PlataformaPage() {
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-3 sm:px-6">
             <BrandLogo className="h-7 w-auto max-w-[9rem] shrink-0" />
             {hasAccess ? (
-              <TabsList className="hidden h-10 min-h-0 gap-0.5 border-0 bg-transparent p-0 lg:inline-flex">
+              <TabsList className="hidden h-10 min-h-0 min-w-0 justify-start gap-0.5 overflow-x-auto border-0 bg-transparent p-0 scrollbar-none lg:inline-flex">
                 {headerTabs.map((tab) => (
                   <TabsTrigger key={tab.id} value={tab.id} className={HEADER_TAB}>
                     <tab.icon className="h-4 w-4" /> {tab.label}
@@ -245,16 +252,21 @@ function PlataformaPage() {
             </StatusScreen>
           ) : dataLoading ? (
             <TreinoSkeleton />
+          ) : !hasAccess && activeTab === "assinatura" ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => changeTab("treino")} className="text-muted-foreground"><ArrowLeft /> Voltar</Button>
+              <Suspense fallback={<TabFallback />}><SubscriptionsPanel /></Suspense>
+            </>
           ) : !isActive ? (
-            <StatusScreen icon={Ban} tone="destructive" title="Acesso bloqueado" email={user?.email}>
+            <StatusScreen icon={Ban} tone="destructive" title="Acesso bloqueado" email={user?.email} action={subscriptionAction}>
               Sua conta foi desativada. Fale com seu personal trainer para reativar o acesso.
             </StatusScreen>
           ) : isExpired ? (
-            <StatusScreen icon={Timer} tone="warning" title="Acesso expirado" email={user?.email}>
+            <StatusScreen icon={Timer} tone="warning" title="Acesso expirado" email={user?.email} action={subscriptionAction}>
               Seu período de acesso chegou ao fim. Fale com seu personal trainer para renovar e continuar treinando.
             </StatusScreen>
           ) : !hasClassAccess ? (
-            <StatusScreen icon={Lock} tone="neutral" title="Acesso pendente" email={user?.email}>
+            <StatusScreen icon={Lock} tone="neutral" title="Acesso pendente" email={user?.email} action={subscriptionAction}>
               Sua conta foi criada, mas o acesso à plataforma ainda não foi liberado. Assim que o pagamento for confirmado, seu personal libera o seu acesso.
             </StatusScreen>
           ) : (
@@ -277,6 +289,14 @@ function PlataformaPage() {
                 ) : null}
                 {user ? <CheckinCard userId={user.id} /> : null}
                 {user && showVideos ? <ReferralCard userId={user.id} /> : null}
+                <button type="button" onClick={() => changeTab("feedback")} className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors duration-150 hover:border-primary/60">
+                  <Lightbulb className="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">Tem uma ideia para melhorar a plataforma?</span>
+                    <span className="block text-sm text-muted-foreground">Deixe sua sugestão, lemos todas.</span>
+                  </span>
+                  <span className="text-sm font-semibold text-primary">Sugerir</span>
+                </button>
               </TabsContent>
 
               <KeptTab value="dieta" active={activeTab === "dieta"}>
@@ -300,6 +320,10 @@ function PlataformaPage() {
 
               <KeptTab value="feedback" active={activeTab === "feedback"}>
                 {user ? <FeedbackTab userId={user.id} /> : null}
+              </KeptTab>
+
+              <KeptTab value="assinatura" active={activeTab === "assinatura"}>
+                <SubscriptionsPanel />
               </KeptTab>
 
               {/* Mentoria e Aulas têm vídeo: desmontar ao sair garante que nada siga tocando escondido. */}

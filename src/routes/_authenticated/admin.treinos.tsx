@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminTrainingPanel } from "@/components/admin/admin-panels";
+import { TestWorkoutCard } from "@/components/admin/test-workout-card";
+import { useState } from "react";
+
+function TrainingPage() {
+  const [generation, setGeneration] = useState(0);
+  return <div className="space-y-6"><AdminTrainingPanel key={generation} /><TestWorkoutCard onGenerated={() => setGeneration(value => value + 1)} /></div>;
+}
 
 export const Route = createFileRoute("/_authenticated/admin/treinos")({
-  component: AdminTrainingPanel,
+  component: TrainingPage,
   head: () => ({ meta: [{ title: "Treinos — Gui Treinador" }, { name: "description", content: "Crie, organize e acompanhe os treinos dos alunos." }, { property: "og:title", content: "Treinos — Gui Treinador" }, { property: "og:description", content: "Crie, organize e acompanhe os treinos dos alunos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });

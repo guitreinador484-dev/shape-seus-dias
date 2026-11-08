@@ -15,7 +15,7 @@ export const setPurchasePasswordFn = createServerFn({ method: "POST" })
 
     const { data: purchase } = await supabaseAdmin
       .from("purchases")
-      .select("status, customer_email, user_id")
+      .select("status, customer_email, user_id, billing_type")
       .eq("provider_reference", data.reference)
       .maybeSingle();
 
@@ -24,6 +24,10 @@ export const setPurchasePasswordFn = createServerFn({ method: "POST" })
     }
 
     const email = purchase.customer_email.trim().toLowerCase();
+    if (purchase.billing_type === 'subscription') {
+      const { data: subscription } = await supabaseAdmin.from('subscriptions').select('account_created').eq('reference', data.reference).maybeSingle();
+      if (!subscription?.account_created) return { ok: false as const, message: 'Entre com a senha da sua conta existente.' };
+    }
     let userId = purchase.user_id as string | null;
 
     if (!userId) {

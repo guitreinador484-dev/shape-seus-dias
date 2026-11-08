@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -20,37 +20,15 @@ export interface AuthState {
   loading: boolean;
 }
 
-// Vários componentes usam useAuth ao mesmo tempo: uma única consulta por usuário basta.
-let rolesCache: { userId: string; roles: Promise<AppRole[]> } | null = null;
-
-function loadRoles(uid: string): Promise<AppRole[]> {
-  if (rolesCache?.userId === uid) return rolesCache.roles;
-  const roles = (async () => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", uid);
-    if (error) {
-      console.error("Erro ao carregar papel do usuário", error);
-      rolesCache = null;
-      return [];
-    }
-    return (data ?? []).map((r) => r.role as AppRole);
-  })();
-  rolesCache = { userId: uid, roles };
-  return roles;
-}
-
-function pickMain(list: AppRole[]): AppRole | null {
-  return (
-    list.find((r) => r === "admin") ??
-    list.find((r) => r === "online") ??
-    list.find((r) => r === "presencial") ??
-    null
-  );
-}
+export const AuthContext = createContext<AuthState | null>(null);
 
 export function useAuth(): AuthState {
+  const auth = useContext(AuthContext);
+  if (!auth) throw new Error("AuthProvider is required");
+  return auth;
+}
+
+export function useAuthState(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
@@ -59,16 +37,44 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let mounted = true;
-    let currentUserId: string | null | undefined;
+    let revision = 0;
+    let currentUserId: string | null = null;
+
+    async function loadRoles(uid: string): Promise<AppRole[]> {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid);
+      if (error) {
+        console.error("Erro ao carregar papel do usuário", error);
+        return [];
+      }
+      return (data ?? []).map((r) => r.role as AppRole);
+    }
+
+    function pickMain(list: AppRole[]): AppRole | null {
+      return (
+        list.find((r) => r === "admin") ??
+        list.find((r) => r === "online") ??
+        list.find((r) => r === "presencial") ??
+        null
+      );
+    }
 
     async function applySession(s: Session | null) {
       if (!mounted) return;
-      currentUserId = s?.user?.id ?? null;
       setSession(s);
       setUser(s?.user ?? null);
+      if (s?.user.id === currentUserId) {
+        return;
+      }
+      const request = ++revision;
+      currentUserId = s?.user.id ?? null;
+      setRole(null);
+      setRoles([]);
       if (s?.user) {
         const list = await loadRoles(s.user.id);
-        if (!mounted) return;
+        if (!mounted || request !== revision) return;
         if (isAdminEmail(s.user.email)) {
           setRoles(list.includes("admin") ? list : [...list, "admin"]);
           setRole("admin");
@@ -93,16 +99,9 @@ export function useAuth(): AuthState {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (!mounted) return;
       if (event === "INITIAL_SESSION") return; // handled by getSession above
-      // O Supabase repete SIGNED_IN ao voltar para a aba e renova o token de tempos em
-      // tempos. Sendo o mesmo usuário, a tela não pode piscar nem perder o que foi digitado.
-      if ((s?.user?.id ?? null) === currentUserId) {
-        setSession(s);
-        setUser(s?.user ?? null);
-        return;
-      }
-      rolesCache = null;
-      setLoading(true);
-      void applySession(s);
+      if ((s?.user.id ?? null) !== currentUserId) setLoading(true);
+      // Defer async reads outside the auth callback to avoid locking token refresh.
+      window.setTimeout(() => { if (mounted) void applySession(s); }, 0);
     });
 
     return () => {

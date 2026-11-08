@@ -14,8 +14,12 @@ export const Route = createFileRoute("/criar-senha")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Crie sua senha — Plataforma do Personal" },
+      { title: "Crie sua senha — Gui Treinador" },
       { name: "description", content: "Defina a senha de acesso da sua conta após a compra." },
+      { property: "og:title", content: "Crie sua senha — Gui Treinador" },
+      { property: "og:description", content: "Defina a senha de acesso da sua conta após a compra." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
