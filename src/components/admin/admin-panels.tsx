@@ -49,6 +49,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json, Tables } from "@/integrations/supabase/types";
 import { isAdminEmail, type AppRole } from "@/hooks/use-auth";
+import { fetchStudents, formatCurrency, formatDate, purchaseStatusLabels, type Student } from "@/lib/admin-data";
 import { useServerFn } from "@tanstack/react-start";
 import {
   createStudent,
@@ -72,6 +73,7 @@ import {
   type EmphasisSelection,
 } from "@/lib/workout-meta";
 import { saveWorkoutPdf, deleteWorkoutPdf, getWorkoutPdfUrl } from "@/lib/workout-pdf.functions";
+import { fileToBase64 } from "@/lib/file-to-base64";
 import { useWorkoutPdfs } from "@/components/platform/workout-pdf-buttons";
 import { EXERCISE_GROUPS } from "@/lib/exercise-library";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +92,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { SubscriptionsPanel } from '@/components/subscriptions-panel';
 
-type Profile = Tables<"profiles">;
 type Purchase = Tables<"purchases">;
 type Anamnese = Tables<"anamnese">;
 type Workout = Tables<"workouts">;
@@ -100,7 +101,6 @@ type BodyMeasurement = Tables<"body_measurements">;
 type WorkoutInsert = Database["public"]["Tables"]["workouts"]["Insert"];
 type WorkoutUpdate = Database["public"]["Tables"]["workouts"]["Update"];
 
-export type Student = Profile & { role: AppRole | null };
 type PlanWithExercises = StudentPlan & { exercises: StudentPlanExercise[] };
 type AdminSettings = {
   personal_name: string;
@@ -154,27 +154,6 @@ const roleLabels: Record<AppRole, string> = {
   presencial: "Aluno presencial",
   aluno_mentoria: "Aluno da mentoria",
 };
-
-export const purchaseStatusLabels: Record<string, string> = {
-  pending: "Pendente",
-  paid: "Pago",
-  approved: "Aprovado",
-  canceled: "Cancelado",
-  refunded: "Reembolsado",
-  failed: "Não concluída",
-  rejected: "Recusada",
-  expired: "Expirada",
-  in_process: "Em análise",
-};
-
-export function formatDate(value?: string | null) {
-  if (!value) return "—";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
-}
-
-export function formatCurrency(value: number | null | undefined) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value ?? 0));
-}
 
 function asJsonObject(value: Json | null): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
@@ -253,428 +232,6 @@ function StatCard({ title, value, icon: Icon }: { title: string; value: string |
         <div className="text-3xl font-semibold">{value}</div>
       </CardContent>
     </Card>
-  );
-}
-
-export async function fetchStudents(): Promise<Student[]> {
-  const [{ data: profiles, error: profilesError }, { data: roles, error: rolesError }] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-    supabase.from("user_roles").select("user_id, role"),
-  ]);
-  if (profilesError) throw profilesError;
-  if (rolesError) throw rolesError;
-  const roleByUser = new Map((roles ?? []).map((role) => [role.user_id, role.role as AppRole]));
-  return (profiles ?? []).map((profile) => ({ ...profile, role: roleByUser.get(profile.id) ?? null }));
-}
-
-export function AdminDashboardPanel() {
-  const [loading, setLoading] = useState(true);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [plans, setPlans] = useState<StudentPlan[]>([]);
-  const [measurements, setMeasurements] = useState<BodyMeasurement[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
-  const [evoLoading, setEvoLoading] = useState(false);
-  const [evoPhotos, setEvoPhotos] = useState<Record<string, string>>({});
-  const [searchStudent, setSearchStudent] = useState("");
-
-  async function load() {
-    setLoading(true);
-    const [studentRows, purchaseRows, planRows, measRows] = await Promise.all([
-      fetchStudents(),
-      supabase.from("purchases").select("*").order("created_at", { ascending: false }),
-      supabase.from("student_plans").select("*").order("created_at", { ascending: false }),
-      supabase.from("body_measurements").select("*").order("measured_at", { ascending: true }),
-    ]);
-    if (purchaseRows.error) throw purchaseRows.error;
-    if (planRows.error) throw planRows.error;
-    if (measRows.error) throw measRows.error;
-    setStudents(studentRows);
-    setPurchases(purchaseRows.data ?? []);
-    setPlans(planRows.data ?? []);
-    setMeasurements(measRows.data ?? []);
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    load().catch((error) => {
-      setLoading(false);
-      toast.error("Erro ao carregar o painel", { description: error.message });
-    });
-  }, []);
-
-  async function loadStudentEvolution(studentId: string) {
-    setSelectedStudentId(studentId);
-    setEvoLoading(true);
-    setEvoPhotos({});
-    try {
-      const { data } = await supabase
-        .from("body_measurements")
-        .select("*")
-        .eq("user_id", studentId)
-        .order("measured_at", { ascending: true });
-      const rows = data ?? [];
-      setMeasurements(rows);
-      const photoRows = rows.filter((r) => r.photo_path);
-      if (photoRows.length) {
-        const entries = await Promise.all(photoRows.map(async (r) => {
-          const { data: url } = await supabase.storage.from("progress-photos").createSignedUrl(r.photo_path!, 3600);
-          return [r.id, url?.signedUrl ?? ""] as const;
-        }));
-        setEvoPhotos(Object.fromEntries(entries));
-      }
-    } finally {
-      setEvoLoading(false);
-    }
-  }
-
-  const revenue = purchases.filter((purchase) => ["paid", "approved"].includes(purchase.status)).reduce((sum, purchase) => sum + Number(purchase.amount), 0);
-  const latestStudents = students.slice(0, 5);
-  const latestPurchases = purchases.slice(0, 5);
-  const activeStudents = students.filter((s) => s.is_active && s.has_class_access).length;
-  const expiredStudents = students.filter((s) => s.access_expires_at && new Date(s.access_expires_at).getTime() <= Date.now()).length;
-  const selectedStudent = students.find((s) => s.id === selectedStudentId);
-  const studentMeasurements = measurements.filter((m) => m.user_id === selectedStudentId);
-  const filteredStudents = students.filter((s) =>
-    s.role !== "admin" && (s.full_name?.toLowerCase().includes(searchStudent.toLowerCase()) || s.email?.toLowerCase().includes(searchStudent.toLowerCase()))
-  );
-
-  const onlyStudents = students.filter((s) => s.role !== "admin");
-  const studentsWithoutPlan = onlyStudents.filter((s) => s.is_active && !plans.some((p) => p.student_id === s.id));
-  const blockedStudents = onlyStudents.filter((s) => !s.is_active);
-  const pendingSales = purchases.filter((p) => p.status === "pending");
-  const registeredEmails = new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean));
-  const buyersWithoutLogin = purchases.filter(
-    (p) => ["paid", "approved"].includes(p.status) && p.customer_email && !registeredEmails.has(p.customer_email.toLowerCase()),
-  );
-  const newStudents30d = onlyStudents.filter(
-    (s) => Date.now() - new Date(s.created_at).getTime() < 30 * 24 * 60 * 60 * 1000,
-  ).length;
-
-  const attention: { key: string; text: string; to: string; tone: "amber" | "orange" | "red" | "blue" }[] = [];
-  if (studentsWithoutPlan.length)
-    attention.push({ key: "sem-treino", text: `${studentsWithoutPlan.length} aluno(s) ainda sem treino cadastrado.`, to: "/admin/treinos", tone: "amber" });
-  if (expiredStudents)
-    attention.push({ key: "vencidos", text: `${expiredStudents} aluno(s) com o acesso vencido.`, to: "/admin/alunos", tone: "orange" });
-  if (blockedStudents.length)
-    attention.push({ key: "bloqueados", text: `${blockedStudents.length} aluno(s) com o acesso bloqueado.`, to: "/admin/alunos", tone: "red" });
-  if (buyersWithoutLogin.length)
-    attention.push({ key: "sem-login", text: `${buyersWithoutLogin.length} comprador(es) ainda sem login criado.`, to: "/admin/alunos", tone: "blue" });
-  if (pendingSales.length)
-    attention.push({ key: "pendentes", text: `${pendingSales.length} venda(s) aguardando pagamento.`, to: "/admin/vendas", tone: "amber" });
-
-  if (loading) return <LoadingGrid />;
-
-  return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="font-display text-3xl sm:text-4xl tracking-tight">Visão geral</h2>
-          <p className="text-muted-foreground mt-1">Um resumo do que está acontecendo com seus alunos e vendas.</p>
-        </div>
-        <Button variant="outline" onClick={() => load()}><RefreshCw className="h-4 w-4 mr-2" /> Atualizar</Button>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <MetricCard label="Total de alunos" value={onlyStudents.length} icon={Users} tone="blue" />
-        <MetricCard label="Alunos ativos" value={activeStudents} icon={CheckCircle2} tone="green" />
-        <MetricCard label="Novos em 30 dias" value={newStudents30d} icon={TrendingUp} tone="purple" />
-        <MetricCard label="Treinos cadastrados" value={plans.length} icon={Dumbbell} tone="amber" />
-        <MetricCard label="Receita aprovada" value={formatCurrency(revenue)} icon={BadgeDollarSign} tone="green" />
-        <MetricCard label="Acessos vencidos" value={expiredStudents} icon={AlertCircle} tone="red" />
-      </div>
-
-      {/* Attention */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-500" /> O que precisa da sua atenção?
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {attention.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Tudo em dia. Nenhuma pendência no momento.</p>
-          ) : (
-            <ul className="space-y-2">
-              {attention.map((item) => (
-                <li key={item.key}>
-                  <Link
-                    to={item.to}
-                    className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-muted/30 px-3 py-3 text-sm transition hover:border-primary/40 hover:bg-muted/60 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-4"
-                  >
-                    <span className="flex min-w-0 items-start gap-2 sm:items-center">
-                      <StatusPill tone={item.tone}>Atenção</StatusPill>
-                      {item.text}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
-                      Resolver <ChevronRight className="h-4 w-4" />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Main grid: Students + Sales + Evolution */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent students */}
-        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
-          <CardHeader className="border-b border-white/8 pb-4">
-            <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <Users className="h-4 w-4 text-primary" /> Alunos recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {latestStudents.length === 0 ? <EmptyState title="Nenhum aluno" description="Cadastre alunos para começar." /> : (
-              <div className="space-y-2">
-                {latestStudents.map((student) => (
-                  <div key={student.id} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] transition">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-bold text-primary-foreground">
-                      {(student.full_name || student.email || "?")[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{student.full_name || student.email}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{student.email}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">{student.is_active ? "Ativo" : "Inativo"}</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent sales */}
-        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
-          <CardHeader className="border-b border-white/8 pb-4">
-            <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <BadgeDollarSign className="h-4 w-4 text-amber-400" /> Vendas recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {latestPurchases.length === 0 ? <EmptyState title="Nenhuma venda" description="As vendas aparecerão aqui." /> : (
-              <div className="space-y-2">
-                {latestPurchases.map((purchase) => (
-                  <div key={purchase.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] transition">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{purchase.customer_name || purchase.customer_email || "Sem cliente"}</p>
-                      <p className="text-[11px] text-muted-foreground">{formatDate(purchase.created_at)}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-white">{formatCurrency(purchase.amount)}</p>
-                      <p className="text-[10px] text-muted-foreground">{purchaseStatusLabels[purchase.status] ?? purchase.status}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick actions */}
-        <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
-          <CardHeader className="border-b border-white/8 pb-4">
-            <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <Sparkles className="h-4 w-4 text-primary" /> Acesso rápido
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-2">
-              {adminCards.slice(0, 5).map((card) => (
-                <Link key={card.url} to={card.url} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-white/[0.06] hover:border-primary/30 transition group">
-                  <div className="h-9 w-9 shrink-0 rounded-xl bg-primary/10 grid place-items-center">
-                    <card.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{card.title}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{card.desc}</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition" />
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Evolution section */}
-      <Card className="rounded-2xl border-white/10 bg-[#131316]/70 backdrop-blur-xl">
-        <CardHeader className="border-b border-white/8 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <TrendingUp className="h-4 w-4 text-emerald-400" /> Evolução dos Alunos
-            </CardTitle>
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchStudent}
-                onChange={(e) => setSearchStudent(e.target.value)}
-                placeholder="Buscar aluno..."
-                className="w-full rounded-full border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30 transition-all"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4">
-          {!selectedStudentId ? (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredStudents.length === 0 ? (
-                <p className="text-sm text-muted-foreground col-span-full text-center py-8">Nenhum aluno encontrado.</p>
-              ) : (
-                filteredStudents.map((student) => {
-                  const measCount = measurements.filter((m) => m.user_id === student.id).length;
-                  return (
-                    <button
-                      key={student.id}
-                      onClick={() => loadStudentEvolution(student.id)}
-                      className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3 hover:bg-primary/10 hover:border-primary/30 transition text-left"
-                    >
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-sm font-bold text-primary-foreground">
-                        {(student.full_name || student.email || "?")[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{student.full_name || student.email}</p>
-                        <p className="text-[11px] text-muted-foreground">{measCount} {measCount === 1 ? "medição" : "medições"}</p>
-                      </div>
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          ) : evoLoading ? (
-            <Skeleton className="h-48" />
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="sm" onClick={() => { setSelectedStudentId(""); setMeasurements([]); setEvoPhotos({}); }} className="rounded-full">
-                  ← Voltar
-                </Button>
-                <div className="flex items-center gap-2">
-                  <div className="grid h-8 w-8 place-items-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-bold text-primary-foreground">
-                    {(selectedStudent?.full_name || selectedStudent?.email || "?")[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{selectedStudent?.full_name || selectedStudent?.email}</p>
-                    <p className="text-[11px] text-muted-foreground">{studentMeasurements.length} {studentMeasurements.length === 1 ? "registro" : "registros"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {studentMeasurements.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Este aluno ainda não registrou medições.</p>
-              ) : (
-                <>
-                  {/* Weight chart summary */}
-                  {studentMeasurements.some((m) => m.weight_kg !== null) && (
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Peso</p>
-                        <div className="flex items-center gap-2">
-                          {studentMeasurements.length >= 2 && studentMeasurements[0].weight_kg !== null && studentMeasurements[studentMeasurements.length - 1].weight_kg !== null && (
-                            <span className={`flex items-center gap-1 text-xs font-semibold ${studentMeasurements[studentMeasurements.length - 1].weight_kg! < studentMeasurements[0].weight_kg! ? "text-emerald-400" : "text-red-400"}`}>
-                              {studentMeasurements[studentMeasurements.length - 1].weight_kg! < studentMeasurements[0].weight_kg! ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />}
-                              {(studentMeasurements[studentMeasurements.length - 1].weight_kg! - studentMeasurements[0].weight_kg!).toFixed(1)} kg
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-end gap-1 h-16">
-                        {studentMeasurements.filter((m) => m.weight_kg !== null).map((m, i) => {
-                          const allWeights = studentMeasurements.filter((x) => x.weight_kg !== null).map((x) => x.weight_kg!);
-                          const min = Math.min(...allWeights);
-                          const max = Math.max(...allWeights);
-                          const range = max - min || 1;
-                          const height = ((m.weight_kg! - min) / range) * 100;
-                          return (
-                            <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
-                              <div
-                                className="w-full rounded-t bg-linear-to-t from-primary/60 to-primary transition-all duration-500"
-                                style={{ height: `${Math.max(height, 8)}%` }}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex justify-between mt-2">
-                        <span className="text-[10px] text-muted-foreground">{studentMeasurements.filter((m) => m.weight_kg !== null)[0]?.weight_kg} kg</span>
-                        <span className="text-[10px] text-muted-foreground">{studentMeasurements.filter((m) => m.weight_kg !== null).slice(-1)[0]?.weight_kg} kg</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Measurement table */}
-                  <div className="overflow-x-auto rounded-xl border border-white/10">
-                    <table className="min-w-[720px] w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-white/10 bg-white/[0.03]">
-                          <th className="px-3 py-2.5 text-left text-[11px] text-muted-foreground font-medium">Data</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Peso</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Cintura</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Peito</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Braço</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Quadril</th>
-                          <th className="px-3 py-2.5 text-right text-[11px] text-muted-foreground font-medium">Coxa</th>
-                          <th className="px-3 py-2.5 text-center text-[11px] text-muted-foreground font-medium">Foto</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...studentMeasurements].reverse().map((r) => (
-                          <tr key={r.id} className="border-b border-white/5 hover:bg-white/[0.03]">
-                            <td className="px-3 py-2.5 whitespace-nowrap text-white">{formatDate(r.measured_at)}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.weight_kg ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.waist_cm ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.chest_cm ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.arm_cm ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.hip_cm ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-right text-white">{r.thigh_cm ?? "—"}</td>
-                            <td className="px-3 py-2.5 text-center">
-                              {evoPhotos[r.id] ? (
-                                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                  <ImageIcon className="h-3.5 w-3.5" />
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Photos grid */}
-                  {Object.keys(evoPhotos).length > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Fotos de progresso</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {Object.entries(evoPhotos).filter(([, url]) => url).map(([id, url]) => {
-                          const row = studentMeasurements.find((r) => r.id === id);
-                          return (
-                            <figure key={id} className="group relative rounded-xl overflow-hidden border border-white/10">
-                              <img src={url} alt="Progresso" className="h-40 w-full object-cover transition duration-300 group-hover:scale-105" />
-                              <figcaption className="absolute bottom-0 inset-x-0 bg-linear-to-t from-background/90 to-transparent px-3 py-2">
-                                <p className="text-[11px] text-white font-medium">{formatDate(row?.measured_at)}</p>
-                                {row?.weight_kg && <p className="text-[10px] text-white/70">{row.weight_kg} kg</p>}
-                              </figcaption>
-                            </figure>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
   );
 }
 
@@ -1252,13 +809,13 @@ export function AdminTrainingPanel() {
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
-              className="border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300 font-medium"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-medium"
               onClick={() => {
                 if (filterStudent !== "all") setSmartStudent(filterStudent);
                 setSmartOpen(true);
               }}
             >
-              <Zap className="mr-2 h-4 w-4 text-red-500" /> Gerador Inteligente
+              <Zap className="mr-2 h-4 w-4 text-destructive" /> Gerador Inteligente
             </Button>
             <Button onClick={() => setNewOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Novo treino
@@ -1271,7 +828,7 @@ export function AdminTrainingPanel() {
       <Dialog open={smartOpen} onOpenChange={setSmartOpen}>
         <DialogContent className="max-h-[92vh] overflow-y-auto overflow-x-hidden sm:max-w-xl">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-red-400">
+            <div className="flex items-center gap-2 text-destructive">
               <Zap className="h-5 w-5" />
               <DialogTitle className="text-xl">Gerador Inteligente de Treinos</DialogTitle>
             </div>
@@ -1352,7 +909,7 @@ export function AdminTrainingPanel() {
                 </SelectContent>
               </Select>
               {smartType === "intercalado" && (
-                <p className="mt-1.5 text-xs text-red-400/90 bg-red-500/10 border border-red-500/20 rounded-md p-2">
+                <p className="mt-1.5 text-xs text-destructive/90 bg-destructive/10 border border-destructive/20 rounded-md p-2">
                   ⚡ <strong>Método Intercalado:</strong> Organiza os exercícios em pares A1 / A2 (agonista/antagonista ou superior/inferior), reduzindo tempo ocioso e maximizando queima calórica e condicionamento.
                 </p>
               )}
@@ -1375,7 +932,7 @@ export function AdminTrainingPanel() {
                 </SelectContent>
               </Select>
               {smartEmphasis !== "nenhum" && (
-                <p className="mt-1.5 text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-md p-2">
+                <p className="mt-1.5 text-xs text-warning/90 bg-warning/10 border border-warning/20 rounded-md p-2">
                   ⭐ <strong>Ênfase em {smartEmphasis}:</strong> O grupo muscular selecionado terá exercícios prioritários no início da sessão (quando o foco neuromuscular está no pico) e volume direcionado.
                 </p>
               )}
@@ -1383,7 +940,7 @@ export function AdminTrainingPanel() {
 
             <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
               <p className="flex items-center gap-1.5 font-medium text-foreground">
-                <Film className="h-3.5 w-3.5 text-emerald-400" />
+                <Film className="h-3.5 w-3.5 text-success" />
                 <span>Integração direta com o Banco de Vídeos</span>
               </p>
               <p>
@@ -1399,7 +956,7 @@ export function AdminTrainingPanel() {
             <Button
               onClick={handleGenerateSmart}
               disabled={smartGenerating || (!smartStudent && filterStudent === "all")}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium"
+              className="bg-destructive hover:bg-destructive text-foreground font-medium"
             >
               {smartGenerating ? (
                 <>
@@ -1505,13 +1062,13 @@ export function AdminTrainingPanel() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   onClick={() => {
                     setSmartStudent(filterStudent);
                     setSmartOpen(true);
                   }}
                 >
-                  <Zap className="mr-1.5 h-3.5 w-3.5 text-red-500" /> Gerador Inteligente
+                  <Zap className="mr-1.5 h-3.5 w-3.5 text-destructive" /> Gerador Inteligente
                 </Button>
                 <Button onClick={() => { setSelectedStudent(filterStudent); setNewOpen(true); }}>
                   <Plus className="mr-2 h-4 w-4" /> Novo dia de treino
@@ -1729,7 +1286,6 @@ function PlanCard({
     }
     try {
       setBusy("pdf");
-      const { fileToBase64 } = await import("@/lib/workout-pdf");
       const base64 = await fileToBase64(file);
       await savePdfFn({ data: { planId: plan.id, studentId: plan.student_id, fileBase64: base64, fileName: file.name, source: "upload" } });
       toast.success("PDF enviado e vinculado ao treino");
@@ -1788,17 +1344,17 @@ function PlanCard({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <CardTitle className="truncate text-lg">{meta.cleanName || "Treino"}</CardTitle>
                 {meta.workoutType === "intercalado" && (
-                  <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[11px] gap-1 py-0">
+                  <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[11px] gap-1 py-0">
                     <Zap className="h-3 w-3" /> Intercalado
                   </Badge>
                 )}
                 {meta.workoutType === "circuito" && (
-                  <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30 text-[11px] py-0">
+                  <Badge className="bg-warning/15 text-warning border-warning/30 text-[11px] py-0">
                     Circuito
                   </Badge>
                 )}
                 {meta.hasEmphasis && (
-                  <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[11px] gap-1 py-0">
+                  <Badge className="bg-warning/15 text-warning border-warning/30 text-[11px] gap-1 py-0">
                     <Flame className="h-3 w-3" /> {meta.emphasis}
                   </Badge>
                 )}
@@ -1844,12 +1400,12 @@ function PlanCard({
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <span>{meta.cleanName || "Treino"}</span>
               {meta.workoutType === "intercalado" && (
-                <Badge className="bg-red-500/20 text-red-300 border-red-500/40 text-xs gap-1">
+                <Badge className="bg-destructive/20 text-destructive border-destructive/40 text-xs gap-1">
                   <Zap className="h-3 w-3" /> Método Intercalado (A1 / A2)
                 </Badge>
               )}
               {meta.hasEmphasis && (
-                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs gap-1">
+                <Badge className="bg-warning/20 text-warning border-warning/40 text-xs gap-1">
                   <Flame className="h-3 w-3" /> Prioridade: {meta.emphasis}
                 </Badge>
               )}
@@ -1902,18 +1458,18 @@ function PlanCard({
                           <TableCell>
                             <div className="flex items-center gap-2 flex-wrap">
                               {pairLabel && (
-                                <Badge variant="outline" className={`font-mono text-[10px] px-1.5 py-0 ${idx % 2 === 0 ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10"}`}>
+                                <Badge variant="outline" className={`font-mono text-[10px] px-1.5 py-0 ${idx % 2 === 0 ? "border-destructive/40 text-destructive bg-destructive/10" : "border-warning/40 text-warning bg-warning/10"}`}>
                                   {pairLabel}
                                 </Badge>
                               )}
                               <span className="font-medium text-foreground">{exercise.exercise_name}</span>
                               {inEmphasis && (
-                                <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/30 text-[10px] py-0 gap-1">
+                                <Badge className="bg-warning/15 text-warning border-warning/30 text-[10px] py-0 gap-1">
                                   <Flame className="h-2.5 w-2.5" /> Ênfase
                                 </Badge>
                               )}
                               {matchedDb?.has_video && (
-                                <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/30" title="Vídeo disponível no banco de dados">
+                                <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold text-success border border-success/30" title="Vídeo disponível no banco de dados">
                                   <Film className="h-2.5 w-2.5" /> Vídeo
                                 </span>
                               )}
@@ -1986,7 +1542,7 @@ function PlanCard({
           <DialogHeader>
             <DialogTitle>Biblioteca de exercícios</DialogTitle>
             <DialogDescription>
-              Selecione os exercícios para adicionar. Exercícios com selo <span className="text-emerald-400 font-medium">Vídeo</span> possuem demonstrações gravadas no banco de dados.
+              Selecione os exercícios para adicionar. Exercícios com selo <span className="text-success font-medium">Vídeo</span> possuem demonstrações gravadas no banco de dados.
             </DialogDescription>
           </DialogHeader>
           <div className="px-1">
@@ -2026,18 +1582,18 @@ function PlanCard({
                             load: "",
                             exercise_id: matchInDb?.id || null,
                           })}
-                          className={`flex items-center justify-between gap-2 rounded-lg border p-3 text-left text-sm transition group hover:border-primary/50 hover:bg-accent/40 ${isEmphasisEx ? "border-amber-500/30 bg-amber-500/5" : "border-border"}`}
+                          className={`flex items-center justify-between gap-2 rounded-lg border p-3 text-left text-sm transition group hover:border-primary/50 hover:bg-accent/40 ${isEmphasisEx ? "border-warning/30 bg-warning/5" : "border-border"}`}
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-medium text-foreground">{ex}</span>
                               {hasVideo && (
-                                <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold text-success border border-success/30">
                                   <Film className="h-2.5 w-2.5" /> Vídeo
                                 </span>
                               )}
                               {isEmphasisEx && (
-                                <span className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300 border border-amber-500/30">
+                                <span className="inline-flex items-center gap-1 rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning border border-warning/30">
                                   <Flame className="h-2.5 w-2.5" /> Ênfase
                                 </span>
                               )}
@@ -2065,7 +1621,7 @@ function PlanCard({
             <DialogTitle className="flex items-center gap-2">
               <span>{pending?.name}</span>
               {pending?.exercise_id && (
-                <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-normal">
+                <span className="inline-flex items-center gap-1 text-xs text-success font-normal">
                   <Film className="h-3 w-3" /> Vídeo vinculado
                 </span>
               )}
@@ -2408,23 +1964,23 @@ export function AdminPlatformPanel() {
 
       {!loading && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+          <div className="rounded-2xl border border-border bg-secondary p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Categorias</p>
-            <p className="font-display text-2xl mt-1 text-white">{allCategories.length}</p>
+            <p className="font-display text-2xl mt-1 text-foreground">{allCategories.length}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+          <div className="rounded-2xl border border-border bg-secondary p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas de Vídeo</p>
-            <p className="font-display text-2xl mt-1 text-white">{workouts.length}</p>
+            <p className="font-display text-2xl mt-1 text-foreground">{workouts.length}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+          <div className="rounded-2xl border border-border bg-secondary p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Tema Ativo</p>
-            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5 text-white">
+            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5 text-foreground">
               <Palette className="h-4 w-4 text-primary" /> {settings.platform_theme === "dark" ? "Escuro" : "Claro"}
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+          <div className="rounded-2xl border border-border bg-secondary p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Comunicado</p>
-            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-emerald-400" : "text-muted-foreground"}`}>
+            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-success" : "text-muted-foreground"}`}>
               <Megaphone className="h-4 w-4" /> {settings.platform_announcement_enabled ? "Ativo" : "Desativado"}
             </p>
           </div>
@@ -2433,7 +1989,7 @@ export function AdminPlatformPanel() {
 
       {loading ? <Skeleton className="h-96 rounded-3xl" /> : (
         <Tabs defaultValue="banner" className="space-y-6">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl gap-1">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-secondary border border-border rounded-2xl gap-1">
             <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
               <Film className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Banner
             </TabsTrigger>
@@ -2454,8 +2010,8 @@ export function AdminPlatformPanel() {
           {/* TAB 1: Banner & Destaque */}
           <TabsContent value="banner" className="space-y-6 mt-0">
             <Card className="glass-block rounded-3xl overflow-hidden shadow-2xl">
-              <CardHeader className="border-b border-white/10 bg-white/[0.03]">
-                <CardTitle className="text-xl flex items-center gap-2 text-white">
+              <CardHeader className="border-b border-border bg-muted/40">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Film className="h-5 w-5 text-primary" /> Banner Principal de Destaque
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -2505,7 +2061,7 @@ export function AdminPlatformPanel() {
                       <div className="relative rounded-2xl overflow-hidden border border-border aspect-video max-h-56 w-full bg-black group">
                         <img src={bannerPreviewUrl} alt="Preview do banner" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent flex items-end p-4 justify-between">
-                          <span className="text-xs text-white/80 font-mono truncate max-w-xs">{settings.platform_hero_image_path}</span>
+                          <span className="text-xs text-muted-foreground font-mono truncate max-w-xs">{settings.platform_hero_image_path}</span>
                           <Button type="button" size="sm" variant="destructive" className="rounded-full text-xs" onClick={deleteBanner}>
                             <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover imagem
                           </Button>
@@ -2539,9 +2095,9 @@ export function AdminPlatformPanel() {
 
           {/* TAB 2: Prateleiras & Ordem */}
           <TabsContent value="categories" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
-              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
-                <CardTitle className="text-xl flex items-center gap-2 text-white">
+            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-border bg-muted/40">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Layers className="h-5 w-5 text-primary" /> Organizador Visual de Prateleiras
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -2550,7 +2106,7 @@ export function AdminPlatformPanel() {
               </CardHeader>
               <CardContent className="space-y-4 p-6">
                 {currentCategoryOrder.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/40">
                     Nenhuma categoria encontrada nos treinos cadastrados.
                   </div>
                 ) : (
@@ -2558,20 +2114,20 @@ export function AdminPlatformPanel() {
                     {currentCategoryOrder.map((cat, idx) => (
                       <div
                         key={cat}
-                        className="flex items-center justify-between p-3.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/8 transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-2xl border border-border bg-secondary hover:bg-surface-2 transition-all"
                       >
                         <div className="flex items-center gap-3">
                           <span className="grid h-7 w-7 place-items-center rounded-xl bg-primary/20 text-primary border border-primary/30 font-display text-sm font-bold">
                             #{idx + 1}
                           </span>
-                          <span className="font-semibold text-sm text-white">{cat}</span>
+                          <span className="font-semibold text-sm text-foreground">{cat}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 rounded-xl hover:bg-white/10"
+                            className="h-8 w-8 rounded-xl hover:bg-surface-2"
                             disabled={idx === 0}
                             onClick={() => moveCategory(idx, "up")}
                           >
@@ -2581,7 +2137,7 @@ export function AdminPlatformPanel() {
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 rounded-xl hover:bg-white/10"
+                            className="h-8 w-8 rounded-xl hover:bg-surface-2"
                             disabled={idx === currentCategoryOrder.length - 1}
                             onClick={() => moveCategory(idx, "down")}
                           >
@@ -2610,9 +2166,9 @@ export function AdminPlatformPanel() {
 
           {/* TAB 3: Tema & Marca */}
           <TabsContent value="appearance" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
-              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
-                <CardTitle className="text-xl flex items-center gap-2 text-white">
+            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-border bg-muted/40">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Palette className="h-5 w-5 text-primary" /> Aparência e Tema da Plataforma
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -2621,7 +2177,7 @@ export function AdminPlatformPanel() {
               </CardHeader>
               <CardContent className="grid gap-6 p-6">
                 <div>
-                  <Label className="text-sm font-semibold mb-3 block text-white">Tema da Área de Membros</Label>
+                  <Label className="text-sm font-semibold mb-3 block text-foreground">Tema da Área de Membros</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
                     {(["dark", "light"] as const).map((t) => {
                       const active = settings.platform_theme === t;
@@ -2632,12 +2188,12 @@ export function AdminPlatformPanel() {
                           onClick={() => setSettings({ ...settings, platform_theme: t })}
                           className={`relative rounded-2xl border p-4 text-left transition-all ${
                             active
-                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/20 backdrop-blur-md"
-                              : "border-white/10 hover:border-primary/40 bg-white/5 backdrop-blur-md"
+                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                              : "border-border hover:border-primary/40 bg-secondary"
                           }`}
                         >
                           <div className={`h-24 rounded-xl mb-3 border p-3 flex flex-col justify-between ${
-                            t === "dark" ? "bg-[#09090b] border-white/10" : "bg-[#ffffff] border-[#e4e4e7]"
+                            t === "dark" ? "bg-[#09090b] border-border" : "bg-[#ffffff] border-[#e4e4e7]"
                           }`}>
                             <div className="flex items-center justify-between">
                               <div className={`h-2 w-12 rounded ${t === "dark" ? "bg-zinc-700" : "bg-zinc-300"}`} />
@@ -2645,7 +2201,7 @@ export function AdminPlatformPanel() {
                             </div>
                             <div className={`h-8 rounded-lg ${t === "dark" ? "bg-zinc-900 border border-zinc-800" : "bg-zinc-100 border border-zinc-200"}`} />
                           </div>
-                          <p className="font-semibold text-sm text-white">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
+                          <p className="font-semibold text-sm text-foreground">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {t === "dark" ? "Estilo streaming de alta resolução com blocos de vidro" : "Alto contraste e fundo limpo"}
                           </p>
@@ -2684,8 +2240,8 @@ export function AdminPlatformPanel() {
                   />
                 </Field>
 
-                <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-                  <div><p className="font-semibold text-white">Primeiro acesso após a compra</p><p className="text-xs text-muted-foreground">Este vídeo aparece uma única vez depois do login e da confirmação real do pagamento.</p></div>
+                <div className="grid gap-4 rounded-2xl border border-border bg-secondary p-5">
+                  <div><p className="font-semibold text-foreground">Primeiro acesso após a compra</p><p className="text-xs text-muted-foreground">Este vídeo aparece uma única vez depois do login e da confirmação real do pagamento.</p></div>
                   <Field label="URL do vídeo de agradecimento"><Input value={settings.welcome_video_url} onChange={(e) => setSettings({ ...settings, welcome_video_url: e.target.value })} placeholder="YouTube, Vimeo ou arquivo de vídeo" /></Field>
                   <Field label="Título da tela"><Input value={settings.welcome_video_title} maxLength={100} onChange={(e) => setSettings({ ...settings, welcome_video_title: e.target.value })} /></Field>
                   <Field label="Mensagem"><Textarea rows={2} value={settings.welcome_video_text} maxLength={300} onChange={(e) => setSettings({ ...settings, welcome_video_text: e.target.value })} /></Field>
@@ -2696,9 +2252,9 @@ export function AdminPlatformPanel() {
 
           {/* TAB 4: Comunicado / Aviso */}
           <TabsContent value="announcement" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
-              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
-                <CardTitle className="text-xl flex items-center gap-2 text-white">
+            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-border bg-muted/40">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Megaphone className="h-5 w-5 text-primary" /> Barra de Comunicados / Avisos
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -2706,9 +2262,9 @@ export function AdminPlatformPanel() {
                 </p>
               </CardHeader>
               <CardContent className="grid gap-5 p-6">
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
                   <div>
-                    <p className="font-semibold text-sm text-white">Ativar Barra de Comunicado</p>
+                    <p className="font-semibold text-sm text-foreground">Ativar Barra de Comunicado</p>
                     <p className="text-xs text-muted-foreground">Exibe a mensagem no topo para todos os alunos</p>
                   </div>
                   <Switch
@@ -2746,9 +2302,9 @@ export function AdminPlatformPanel() {
                     {/* Preview Box */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">Pré-visualização do Aviso:</Label>
-                      <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 backdrop-blur-md shadow-md ${
-                        settings.platform_announcement_type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : settings.platform_announcement_type === "warning" ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                      <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 shadow-md ${
+                        settings.platform_announcement_type === "success" ? "bg-success/10 border-success/30 text-success"
+                        : settings.platform_announcement_type === "warning" ? "bg-warning/10 border-warning/30 text-warning"
                         : settings.platform_announcement_type === "purple" ? "bg-primary/10 border-primary/30 text-primary"
                         : "bg-primary/10 border-primary/30 text-primary-foreground"
                       }`}>
@@ -2764,9 +2320,9 @@ export function AdminPlatformPanel() {
 
           {/* TAB 5: Seções & Visibilidade */}
           <TabsContent value="visibility" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-white/10 bg-[#131316]/70 backdrop-blur-xl shadow-2xl shadow-black/40">
-              <CardHeader className="border-b border-white/8 bg-white/[0.02]">
-                <CardTitle className="text-xl flex items-center gap-2 text-white">
+            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+              <CardHeader className="border-b border-border bg-muted/40">
+                <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <SlidersHorizontal className="h-5 w-5 text-primary" /> Recursos & Seções Visíveis
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -2774,9 +2330,9 @@ export function AdminPlatformPanel() {
                 </p>
               </CardHeader>
               <CardContent className="grid gap-4 p-6">
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
                   <div>
-                    <p className="font-semibold text-sm text-white">Barra de Pesquisa de Cursos</p>
+                    <p className="font-semibold text-sm text-foreground">Barra de Pesquisa de Cursos</p>
                     <p className="text-xs text-muted-foreground">Permite ao aluno pesquisar cursos por título</p>
                   </div>
                   <Switch
@@ -2785,9 +2341,9 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
                   <div>
-                    <p className="font-semibold text-sm text-white">Trilho "Continuar Assistindo"</p>
+                    <p className="font-semibold text-sm text-foreground">Trilho "Continuar Assistindo"</p>
                     <p className="text-xs text-muted-foreground">Mostra a aula em andamento do aluno</p>
                   </div>
                   <Switch
@@ -2796,9 +2352,9 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
                   <div>
-                    <p className="font-semibold text-sm text-white">Trilho "Próximos Módulos / Recomendados"</p>
+                    <p className="font-semibold text-sm text-foreground">Trilho "Próximos Módulos / Recomendados"</p>
                     <p className="text-xs text-muted-foreground">Sugere novos módulos baseados no histórico</p>
                   </div>
                   <Switch
@@ -2814,7 +2370,7 @@ export function AdminPlatformPanel() {
 
       {/* Floating / Bottom Save Bar */}
       {!loading && (
-        <div className="flex items-center justify-between p-4 bg-[#131316]/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl shadow-2xl">
           <p className="text-xs text-muted-foreground">
             Lembre-se de clicar em salvar após fazer alterações nas configurações.
           </p>
@@ -2842,3 +2398,5 @@ export function AdminHomeCards() {
     </div>
   );
 }
+
+export { fetchStudents, formatCurrency, formatDate, purchaseStatusLabels, type Student };

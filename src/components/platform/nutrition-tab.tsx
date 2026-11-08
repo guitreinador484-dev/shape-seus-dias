@@ -77,17 +77,17 @@ export function NutritionTab({ userId }: { userId: string }) {
   return (
     <div className="space-y-6">
       {pdf && (
-        <Card className="overflow-hidden border-primary/30 bg-primary/5">
+        <Card className="overflow-hidden">
           <CardContent className="grid gap-4 p-5 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-            <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <div className="grid h-12 w-12 place-items-center rounded-lg bg-secondary text-foreground">
               <FileText className="h-6 w-6" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-primary">Seu material de alimentação</p>
+              <p className="text-xs font-medium text-muted-foreground">Seu material de alimentação</p>
               <h3 className="truncate text-lg font-semibold">{pdf.title}</h3>
               <p className="text-xs text-muted-foreground">PDF atualizado · versão {pdf.version}</p>
             </div>
-            <div className="flex flex-col gap-2 xs:flex-row">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <Button onClick={() => void openPdf(false)} disabled={pdfBusy}>
                 {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />} Abrir PDF
               </Button>
@@ -111,24 +111,26 @@ export function NutritionTab({ userId }: { userId: string }) {
 
         return (
           <Card key={plan.id}>
-            <CardContent className="pt-6 space-y-5">
+            <CardContent className="space-y-5 p-4 sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="font-display text-2xl tracking-tight flex items-center gap-2">
-                  <Apple className="h-5 w-5 text-primary" /> {plan.plan_name || "Plano alimentar"}
+                <h3 className="font-display text-3xl leading-none">
+                  {plan.plan_name || "Plano alimentar"}
                 </h3>
-                <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span>🔥 {Math.round(totals.calories)} kcal</span>
-                  <span>🥩 {Math.round(totals.protein)}g prot</span>
-                  <span>🌾 {Math.round(totals.carbs)}g carb</span>
-                  <span>🫒 {Math.round(totals.fat)}g gord</span>
-                </div>
+                <dl className="grid w-full grid-cols-4 gap-2 sm:w-auto sm:gap-6">
+                  {[["kcal", totals.calories], ["proteína", totals.protein], ["carbo", totals.carbs], ["gordura", totals.fat]].map(([label, value], index) => (
+                    <div key={label as string}>
+                      <dd className="font-display text-2xl leading-none tabular-nums">{Math.round(value as number)}{index > 0 ? "g" : ""}</dd>
+                      <dt className="mt-0.5 text-[11px] text-muted-foreground">{label as string}</dt>
+                    </div>
+                  ))}
+                </dl>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 {plan.meals.map((meal) => (
-                  <div key={meal.id} className="rounded-2xl border border-border/60 bg-muted/40 p-4">
+                  <div key={meal.id} className="rounded-lg border border-border p-3 sm:p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <UtensilsCrossed className="h-4 w-4 text-primary" />
+                      <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
                       <p className="font-semibold">{meal.meal_label}</p>
                     </div>
                     {meal.notes && <p className="text-xs text-muted-foreground mb-2">{meal.notes}</p>}
@@ -137,7 +139,7 @@ export function NutritionTab({ userId }: { userId: string }) {
                     ) : (
                       <ul className="space-y-1.5 text-sm">
                         {meal.items.map((item) => (
-                          <li key={item.id} className="flex items-baseline justify-between gap-2 border-b border-border/40 pb-1 last:border-0">
+                          <li key={item.id} className="flex items-baseline justify-between gap-2 border-b border-border pb-1.5 last:border-0 last:pb-0">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-xs text-muted-foreground shrink-0">
                               {item.amount ? `${item.amount} · ` : ""}{num(item.calories) ? `${Math.round(num(item.calories))} kcal` : ""}

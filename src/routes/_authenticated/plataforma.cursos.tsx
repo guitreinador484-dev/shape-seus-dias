@@ -34,7 +34,7 @@ type Row = {
 /* ─── Mobile header ─────────────────────────────────────────────────────── */
 function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-xl lg:hidden">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 lg:hidden">
       <BrandLogo className="h-7 w-auto" />
       <Button
         type="button"
@@ -55,17 +55,17 @@ function StatPill({
   icon: Icon, label, value, accent,
 }: { icon: React.ElementType; label: string; value: string | number; accent?: boolean }) {
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition backdrop-blur-md ${
+    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
       accent
         ? "border-primary/30 bg-primary/10 text-primary shadow-md shadow-primary/10"
-        : "border-white/10 bg-white/5 text-foreground/80 hover:bg-white/8"
+        : "border-border bg-secondary text-foreground/80 hover:bg-surface-2"
     }`}>
-      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${accent ? "bg-primary/20 text-primary" : "bg-white/10 text-white"}`}>
+      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${accent ? "bg-primary/20 text-primary" : "bg-secondary text-foreground"}`}>
         <Icon className="h-4 w-4" />
       </div>
       <div>
         <p className="text-[11px] uppercase tracking-[0.15em] opacity-60 font-medium">{label}</p>
-        <p className="font-display text-lg leading-none text-white">{value}</p>
+        <p className="font-display text-lg leading-none text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -82,7 +82,7 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
       className="group relative flex flex-col w-[200px] sm:w-[220px] shrink-0 snap-start text-left"
     >
       {/* Cover */}
-      <div className="glass-card relative aspect-[3/4] overflow-hidden rounded-3xl border border-white/12 shadow-2xl transition duration-300 group-hover:-translate-y-2 group-hover:border-primary/50 group-hover:shadow-primary/25">
+      <div className="glass-card relative aspect-[3/4] overflow-hidden rounded-3xl border border-border shadow-2xl transition duration-300 group-hover:-translate-y-2 group-hover:border-primary/50 group-hover:shadow-primary/25">
         {r.coverUrl ? (
           <img
             src={r.coverUrl}
@@ -99,13 +99,13 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
         <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/40 to-transparent" />
 
         {/* lesson badge */}
-        <span className="glass-pill absolute right-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-white">
+        <span className="glass-pill absolute right-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-foreground">
           {r.totalLessons} {r.totalLessons === 1 ? "aula" : "aulas"}
         </span>
 
         {/* done badge */}
         {isDone && (
-          <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-500/90 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md backdrop-blur-md">
+          <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-success/90 px-2.5 py-0.5 text-[10px] font-semibold text-foreground shadow-md">
             <Award className="h-3 w-3" /> Concluído
           </span>
         )}
@@ -118,14 +118,14 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
         </div>
 
         {/* title + progress */}
-        <div className="absolute inset-x-3.5 bottom-3.5 space-y-2 text-white">
+        <div className="absolute inset-x-3.5 bottom-3.5 space-y-2 text-foreground">
           {r.course.category && (
-            <p className="text-[9px] uppercase tracking-[0.25em] text-white/60 font-medium">{r.course.category}</p>
+            <p className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-medium">{r.course.category}</p>
           )}
-          <p className="font-display text-xl leading-none line-clamp-2 uppercase text-white drop-shadow">{r.course.title}</p>
+          <p className="font-display text-xl leading-none line-clamp-2 uppercase text-foreground drop-shadow">{r.course.title}</p>
           <div>
-            <Progress value={pct} className="h-1 bg-white/20" />
-            <p className="mt-1.5 text-[10px] text-white/70 font-medium">
+            <Progress value={pct} className="h-1 bg-secondary" />
+            <p className="mt-1.5 text-[10px] text-muted-foreground font-medium">
               {r.completedLessons}/{r.totalLessons} concluídas · {pct}%
             </p>
           </div>
@@ -252,7 +252,7 @@ function MyCoursesPage() {
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
           <div
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md lg:hidden"
+            className="fixed inset-0 z-50 bg-background/80 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
             role="presentation"
         >
@@ -271,7 +271,7 @@ function MyCoursesPage() {
 
         <main className="flex-1">
           {/* ── Hero band ─────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden border-b border-white/10">
+          <div className="relative overflow-hidden border-b border-border">
             {/* background cover blur */}
             {featured?.coverUrl && (
               <img
@@ -290,7 +290,7 @@ function MyCoursesPage() {
               {/* Back link */}
               <Link
                 to="/plataforma"
-                className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition mb-6 font-medium"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition mb-6 font-medium"
               >
                 <ChevronLeft className="h-3.5 w-3.5" /> Voltar à plataforma
               </Link>
@@ -301,10 +301,10 @@ function MyCoursesPage() {
               </div>
 
               {/* Greeting */}
-              <h1 className="font-display text-4xl sm:text-6xl leading-none mb-2 text-white drop-shadow">
+              <h1 className="font-display text-4xl sm:text-6xl leading-none mb-2 text-foreground drop-shadow">
                 {firstName ? `Olá, ${firstName}` : "Bem-vindo"}
               </h1>
-              <p className="text-sm text-white/60 max-w-md mb-6 leading-relaxed">
+              <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
                 Todo o conteúdo da sua mentoria em um só lugar. Continue de onde parou.
               </p>
 
@@ -341,8 +341,8 @@ function MyCoursesPage() {
               <div className="glass-block mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-3xl border border-primary/30 bg-primary/10 px-6 py-5 shadow-2xl shadow-primary/10">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold mb-0.5">Continuar de onde parou</p>
-                  <p className="font-semibold text-base text-white truncate">{continueItems[0].lessonTitle}</p>
-                  <p className="text-xs text-white/50 truncate mt-0.5">{continueItems[0].courseTitle} · {continueItems[0].moduleTitle}</p>
+                  <p className="font-semibold text-base text-foreground truncate">{continueItems[0].lessonTitle}</p>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{continueItems[0].courseTitle} · {continueItems[0].moduleTitle}</p>
                 </div>
                 <Button
                   size="sm"
@@ -365,20 +365,20 @@ function MyCoursesPage() {
             {/* Section header + search */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
               <div className="flex-1">
-                <h2 className="font-display text-2xl sm:text-4xl text-white">Meus cursos</h2>
-                <p className="text-sm text-white/50 mt-0.5">Escolha um curso para continuar assistindo.</p>
+                <h2 className="font-display text-2xl sm:text-4xl text-foreground">Meus cursos</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Escolha um curso para continuar assistindo.</p>
               </div>
               {/* Inline search */}
               {rows.length > 0 && (
                 <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40 pointer-events-none" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                   <input
                     type="search"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Buscar curso..."
                     aria-label="Buscar curso"
-                    className="min-h-11 w-full rounded-full border border-border bg-secondary/70 py-2 pl-9 pr-3 text-sm text-foreground backdrop-blur-xl placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30"
+                    className="min-h-11 w-full rounded-full border border-border bg-secondary/70 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               )}
@@ -430,7 +430,7 @@ function MyCoursesPage() {
                   type="button"
                   aria-label="Anterior"
                   onClick={() => railRef.current?.scrollBy({ left: -460, behavior: "smooth" })}
-                  className="absolute -left-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg backdrop-blur transition hover:bg-card sm:grid"
+                  className="absolute -left-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg transition hover:bg-card sm:grid"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -438,7 +438,7 @@ function MyCoursesPage() {
                   type="button"
                   aria-label="Próximo"
                   onClick={() => railRef.current?.scrollBy({ left: 460, behavior: "smooth" })}
-                  className="absolute -right-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg backdrop-blur transition hover:bg-card sm:grid"
+                  className="absolute -right-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg transition hover:bg-card sm:grid"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>

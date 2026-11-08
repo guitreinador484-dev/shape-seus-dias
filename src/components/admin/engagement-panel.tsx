@@ -95,7 +95,7 @@ export function AdminEngagementPanel() {
       <AdminPageHeader title="Engajamento" description="Quem está treinando com consistência e quem precisa de atenção.">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="gap-1"><Flame className="h-3 w-3" /> {activeToday} check-in hoje</Badge>
-          <Badge variant="secondary" className="gap-1 text-amber-500"><AlertTriangle className="h-3 w-3" /> {atRisk} sem contato há 7+ dias</Badge>
+          <Badge variant="secondary" className="gap-1 text-warning"><AlertTriangle className="h-3 w-3" /> {atRisk} sem contato há 7+ dias</Badge>
         </div>
       </AdminPageHeader>
 
@@ -147,7 +147,7 @@ export function AdminEngagementPanel() {
                     <p className="text-xs text-muted-foreground">{student.email}</p>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-sm font-bold text-orange-500">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-3 py-1 text-sm font-bold text-warning">
                       <Flame className="h-3.5 w-3.5" /> {streak}
                     </span>
                   </TableCell>
@@ -162,11 +162,11 @@ export function AdminEngagementPanel() {
                   </TableCell>
                   <TableCell>
                     {daysSince >= 7 ? (
-                      <Badge className="bg-amber-500/15 text-amber-500 gap-1"><AlertTriangle className="h-3 w-3" /> Precisando de contato</Badge>
+                      <Badge className="bg-warning/15 text-warning gap-1"><AlertTriangle className="h-3 w-3" /> Precisando de contato</Badge>
                     ) : daysSince >= 3 ? (
                       <Badge variant="secondary">Alguns dias sem check-in</Badge>
                     ) : (
-                      <Badge className="bg-emerald-500/15 text-emerald-500">Em dia</Badge>
+                      <Badge className="bg-success/15 text-success">Em dia</Badge>
                     )}
                   </TableCell>
                 </TableRow>

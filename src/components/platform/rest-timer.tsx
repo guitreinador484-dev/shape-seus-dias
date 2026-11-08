@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { Play, Pause, RotateCcw, Plus, X, Timer, Volume2, CheckCircle2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play, Plus, RotateCcw, Timer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type RestTimerProps = {
@@ -8,12 +8,18 @@ type RestTimerProps = {
   onClose: () => void;
 };
 
+function formatClock(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
 export function RestTimer({ initialSeconds, exerciseName, onClose }: RestTimerProps) {
   const [totalSeconds, setTotalSeconds] = useState(initialSeconds);
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(true);
-  const [isFinished, setIsFinished] = useState(false);
+  const endsAt = useRef(Date.now() + initialSeconds * 1000);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const isFinished = secondsLeft <= 0;
 
   // Som suave com Web Audio API ao zerar o descanso
   function playBeep() {
@@ -44,124 +50,82 @@ export function RestTimer({ initialSeconds, exerciseName, onClose }: RestTimerPr
     }
   }
 
+  // Conta pelo relógio: com o celular bloqueado o intervalo atrasa, o horário final não.
   useEffect(() => {
-    setTotalSeconds(initialSeconds);
-    setSecondsLeft(initialSeconds);
-    setIsRunning(true);
-    setIsFinished(false);
-  }, [initialSeconds, exerciseName]);
+    if (!isRunning) return;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((endsAt.current - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left <= 0) {
+        setIsRunning(false);
+        playBeep();
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 250);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [isRunning]);
 
-  useEffect(() => {
-    if (!isRunning || secondsLeft <= 0) return;
-
-    const timer = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsRunning(false);
-          setIsFinished(true);
-          playBeep();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isRunning, secondsLeft]);
-
-  const progress = totalSeconds > 0 ? Math.round(((totalSeconds - secondsLeft) / totalSeconds) * 100) : 100;
+  const progress = totalSeconds > 0 ? ((totalSeconds - secondsLeft) / totalSeconds) * 100 : 100;
 
   function addSeconds(amount: number) {
+    endsAt.current = (isFinished || !isRunning ? Date.now() + secondsLeft * 1000 : endsAt.current) + amount * 1000;
     setSecondsLeft((prev) => prev + amount);
     setTotalSeconds((prev) => prev + amount);
-    setIsFinished(false);
     setIsRunning(true);
   }
 
-  function reset() {
+  function togglePause() {
+    if (!isRunning) endsAt.current = Date.now() + secondsLeft * 1000;
+    setIsRunning(!isRunning);
+  }
+
+  function restart() {
+    endsAt.current = Date.now() + totalSeconds * 1000;
     setSecondsLeft(totalSeconds);
-    setIsFinished(false);
     setIsRunning(true);
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-96 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#121216]/95 backdrop-blur-2xl shadow-2xl shadow-black/80 text-white p-4">
-        {/* Barra superior de progresso com brilho vermelho */}
-        <div className="absolute top-0 inset-x-0 h-1 bg-white/10">
-          <div
-            className={`h-full transition-all duration-500 ${isFinished ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]" : "bg-primary shadow-[0_0_12px_rgba(230,0,0,0.8)]"}`}
-            style={{ width: `${progress}%` }}
-          />
+    <div
+      role="timer"
+      aria-label="Descanso entre séries"
+      className="fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 animate-fade-up sm:left-auto sm:right-6 sm:w-96 lg:bottom-6"
+    >
+      <div className="relative overflow-hidden rounded-lg border border-input bg-popover p-3 pt-4">
+        <div className="absolute inset-x-0 top-0 h-1 bg-foreground/10">
+          <div className={`h-full transition-[width] duration-300 ${isFinished ? "bg-success" : "bg-primary"}`} style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="flex items-start justify-between gap-3 pt-1">
-          <div className="min-w-0">
-            <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary">
-              <Timer className="h-3.5 w-3.5" />
-              {isFinished ? "Descanso Concluído!" : "Descanso entre séries"}
-            </span>
-            {exerciseName && (
-              <p className="text-xs text-white/60 truncate mt-0.5" title={exerciseName}>
-                {exerciseName}
-              </p>
-            )}
+        <div className="flex items-center gap-3">
+          <p className={`font-display text-5xl leading-none tabular-nums ${isFinished ? "text-success" : "text-foreground"}`}>{formatClock(secondsLeft)}</p>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <Timer className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              {isFinished ? "Descanso concluído" : "Descanso"}
+            </p>
+            {exerciseName ? <p className="mt-0.5 truncate text-xs text-muted-foreground" title={exerciseName}>{exerciseName}</p> : null}
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-full p-1 text-white/40 hover:text-white hover:bg-white/10 transition"
-            aria-label="Fechar timer"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <Button size="icon" variant="ghost" className="shrink-0" onClick={onClose} aria-label="Fechar cronômetro">
+            <X />
+          </Button>
         </div>
 
-        <div className="flex items-center justify-between gap-4 mt-3">
-          <div className="flex items-baseline gap-1">
-            <span
-              className={`font-display text-4xl tabular-nums leading-none tracking-tight ${
-                isFinished ? "text-emerald-400 animate-pulse" : "text-white"
-              }`}
-            >
-              {secondsLeft}
-            </span>
-            <span className="text-xs font-semibold text-white/50">seg</span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 px-2.5 text-xs rounded-xl border-white/15 bg-white/5 hover:bg-white/10 text-white"
-              onClick={() => addSeconds(15)}
-            >
-              <Plus className="h-3 w-3 mr-1" /> 15s
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button variant="outline" size="sm" onClick={() => addSeconds(15)}>
+            <Plus /> 15 segundos
+          </Button>
+          {isFinished ? (
+            <Button size="sm" onClick={restart}><RotateCcw /> Repetir</Button>
+          ) : (
+            <Button variant={isRunning ? "outline" : "default"} size="sm" onClick={togglePause}>
+              {isRunning ? <><Pause /> Pausar</> : <><Play /> Continuar</>}
             </Button>
-
-            {!isFinished ? (
-              <Button
-                size="sm"
-                variant={isRunning ? "outline" : "default"}
-                className={`h-8 px-3 text-xs rounded-xl ${
-                  isRunning
-                    ? "border-white/15 bg-white/5 hover:bg-white/10 text-white"
-                    : "bg-primary text-primary-foreground"
-                }`}
-                onClick={() => setIsRunning(!isRunning)}
-              >
-                {isRunning ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className="h-8 px-3 text-xs rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
-                onClick={reset}
-              >
-                <RotateCcw className="h-3 w-3 mr-1" /> Repetir
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>

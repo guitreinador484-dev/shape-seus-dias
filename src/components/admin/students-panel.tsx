@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
@@ -33,7 +34,8 @@ import {
 } from "@/lib/admin.functions";
 import { resolvePlanTier } from "@/lib/plan-tiers";
 import { generateStudentRegistrationPassword, generateTemporaryPassword } from "@/lib/temporary-password";
-import { AnamneseDialog, EvolutionDialog, fetchStudents, formatDate, formatCurrency, purchaseStatusLabels, type Student } from "@/components/admin/admin-panels";
+import { AnamneseDialog, EvolutionDialog } from "@/components/admin/admin-panels";
+import { adminStudentsKey, fetchStudents, formatCurrency, formatDate, purchaseStatusLabels, type Student } from "@/lib/admin-data";
 import { AdminPageHeader, ConfirmDialog, EmptyBox, ErrorBox, LoadingBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,44 +95,48 @@ function initials(student: Student) {
 
 function useStudentsData() {
   const listAccessFn = useServerFn(listStudentAccess);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [access, setAccess] = useState<Record<string, StudentAccessInfo>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const studentsQuery = useQuery({ queryKey: adminStudentsKey, queryFn: fetchStudents });
+  const purchasesQuery = useQuery({
+    queryKey: ["admin", "purchases"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("purchases").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  // Último acesso é complementar: a lista continua funcionando sem ele.
+  const accessQuery = useQuery({
+    queryKey: ["admin", "student-access"],
+    queryFn: async () => {
+      const res = await listAccessFn();
+      return Object.fromEntries(res.users.map((u) => [u.id, { last_sign_in_at: u.last_sign_in_at }])) as Record<string, StudentAccessInfo>;
+    },
+  });
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [rows, purchaseRes] = await Promise.all([
-        fetchStudents(),
-        supabase.from("purchases").select("*").order("created_at", { ascending: false }),
-      ]);
-      if (purchaseRes.error) throw purchaseRes.error;
-      setStudents(rows);
-      setPurchases(purchaseRes.data ?? []);
-      try {
-        const res = await listAccessFn();
-        setAccess(
-          Object.fromEntries(res.users.map((u) => [u.id, { last_sign_in_at: u.last_sign_in_at }])),
-        );
-      } catch {
-        /* último acesso é complementar: a lista continua funcionando sem ele */
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro inesperado");
-    } finally {
-      setLoading(false);
-    }
-  }, [listAccessFn]);
+  const reload = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: adminStudentsKey }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "purchases"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "student-access"] }),
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] }),
+    ]);
+  }, [queryClient]);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  return { students, purchases, access, loading, error, reload: load };
+  const error = studentsQuery.error ?? purchasesQuery.error;
+  return {
+    students: studentsQuery.data ?? [],
+    purchases: purchasesQuery.data ?? [],
+    access: accessQuery.data ?? {},
+    loading: studentsQuery.isPending || purchasesQuery.isPending,
+    fetching: studentsQuery.isFetching || purchasesQuery.isFetching,
+    error: error ? (error instanceof Error ? error.message : "Erro inesperado") : null,
+    reload,
+  };
 }
+
+/** Renderiza aos poucos: com centenas de linhas cada uma traz menus e janelas próprios. */
+const PAGE_SIZE = 40;
 
 const FILTERS = [
   { key: "todos", label: "Todos" },
@@ -143,9 +149,12 @@ const FILTERS = [
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 export function AdminStudentsPanel() {
-  const { students, purchases, access, loading, error, reload } = useStudentsData();
+  const { students, purchases, access, loading, fetching, error, reload } = useStudentsData();
+  const search = useSearch({ strict: false }) as { filtro?: string };
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<FilterKey>("todos");
+  const [filter, setFilter] = useState<FilterKey>(() => FILTERS.find((f) => f.key === search.filtro)?.key ?? "todos");
+  const [visibleStudents, setVisibleStudents] = useState(PAGE_SIZE);
+  const [visiblePurchases, setVisiblePurchases] = useState(PAGE_SIZE);
   const [createOpen, setCreateOpen] = useState(false);
   const updateStudentFn = useServerFn(updateStudentStatus);
 
@@ -169,6 +178,11 @@ export function AdminStudentsPanel() {
       return matchesQuery && (filter === "todos" || state === filter);
     });
   }, [onlyStudents, query, filter, access]);
+
+  useEffect(() => { setVisibleStudents(PAGE_SIZE); }, [query, filter]);
+
+  const shownStudents = filtered.slice(0, visibleStudents);
+  const shownPurchases = purchases.slice(0, visiblePurchases);
 
   const registeredEmails = useMemo(
     () => new Set(students.map((s) => s.email?.toLowerCase()).filter(Boolean)),
@@ -196,9 +210,9 @@ export function AdminStudentsPanel() {
         title="Alunos"
         description="Gerencie alunos, acessos, planos, treinos e informações de cadastro."
         action={
-          <div className="grid grid-cols-1 gap-2 sm:flex">
-            <Button variant="outline" onClick={() => void reload()}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Atualizar
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => void reload()} disabled={fetching}>
+              <RefreshCw className={fetching ? "animate-spin" : undefined} /> Atualizar
             </Button>
             <Button onClick={() => setCreateOpen(true)}>
               <UserPlus className="mr-2 h-4 w-4" /> Cadastrar aluno
@@ -206,7 +220,7 @@ export function AdminStudentsPanel() {
           </div>
         }
       >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <MetricCard label="Total de alunos" value={counts.todos} icon={Users} tone="blue" />
           <MetricCard label="Com acesso ativo" value={counts.ativo} icon={CheckCircle2} tone="green" />
           <MetricCard label="Aguardando 1º acesso" value={counts.aguardando} icon={KeyRound} tone="amber" />
@@ -268,14 +282,14 @@ export function AdminStudentsPanel() {
       ) : (
         <>
         <div className="grid gap-3 sm:hidden">
-          {filtered.map((student) => {
+          {shownStudents.map((student) => {
             const state = accessState(student, access[student.id]?.last_sign_in_at);
             const plan = studentPlanLabel(purchases, student);
             return (
               <Card key={student.id}>
                 <CardContent className="space-y-4 p-4">
                   <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary">{initials(student)}</span>
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-foreground">{initials(student)}</span>
                     <div className="min-w-0">
                       <Link to="/admin/alunos/$id" params={{ id: student.id }} className="block truncate font-medium hover:underline">{student.full_name || "Sem nome"}</Link>
                       <p className="truncate text-xs text-muted-foreground">{student.email}</p>
@@ -294,26 +308,26 @@ export function AdminStudentsPanel() {
         </div>
         <Card className="hidden sm:block">
           <CardContent className="overflow-x-auto p-0">
-            <Table className="min-w-[560px]">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Aluno</TableHead>
-                  <TableHead className="hidden md:table-cell">E-mail</TableHead>
+                  <TableHead className="hidden xl:table-cell">E-mail</TableHead>
                   <TableHead className="hidden lg:table-cell">Plano</TableHead>
                   <TableHead>Acesso</TableHead>
-                  <TableHead className="hidden lg:table-cell">Último acesso</TableHead>
+                  <TableHead className="hidden xl:table-cell">Último acesso</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((student) => {
+                {shownStudents.map((student) => {
                   const state = accessState(student, access[student.id]?.last_sign_in_at);
                   const plan = studentPlanLabel(purchases, student);
                   return (
                     <TableRow key={student.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-foreground">
                             {initials(student)}
                           </span>
                           <div className="min-w-0">
@@ -324,18 +338,18 @@ export function AdminStudentsPanel() {
                             >
                               {student.full_name || "Sem nome"}
                             </Link>
-                            <p className="truncate text-xs text-muted-foreground md:hidden">{student.email}</p>
+                            <p className="truncate text-xs text-muted-foreground xl:hidden">{student.email}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="hidden text-muted-foreground md:table-cell">{student.email}</TableCell>
+                      <TableCell className="hidden text-muted-foreground xl:table-cell">{student.email}</TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {plan ? <Badge variant="secondary">{plan}</Badge> : <span className="text-xs text-muted-foreground">Sem plano</span>}
                       </TableCell>
                       <TableCell>
                         <StatusPill tone={state.tone}>{state.label}</StatusPill>
                       </TableCell>
-                      <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                      <TableCell className="hidden whitespace-nowrap text-muted-foreground xl:table-cell">
                         {access[student.id]?.last_sign_in_at ? formatDate(access[student.id]?.last_sign_in_at) : "Nunca entrou"}
                       </TableCell>
                       <TableCell className="text-right">
@@ -353,11 +367,18 @@ export function AdminStudentsPanel() {
             </Table>
           </CardContent>
         </Card>
+        {filtered.length > shownStudents.length ? (
+          <div className="mt-4 flex justify-center">
+            <Button variant="outline" onClick={() => setVisibleStudents((n) => n + PAGE_SIZE)}>
+              Mostrar mais ({filtered.length - shownStudents.length})
+            </Button>
+          </div>
+        ) : null}
         </>
       )}
 
-      <section className="mt-10">
-        <h3 className="font-display text-xl">Compradores</h3>
+      <section id="compradores" className="mt-10 scroll-mt-20">
+        <h3 className="font-display text-2xl leading-none">Compradores</h3>
         <p className="mb-4 mt-1 text-sm text-muted-foreground">
           Pessoas que compraram pelo site. Quem ainda não tem login aparece com o botão para criar o acesso.
         </p>
@@ -368,7 +389,7 @@ export function AdminStudentsPanel() {
         ) : (
           <>
           <div className="grid gap-3 sm:hidden">
-            {purchases.map((purchase) => {
+            {shownPurchases.map((purchase) => {
               const hasAccount = Boolean(purchase.customer_email && registeredEmails.has(purchase.customer_email.toLowerCase()));
               return (
                 <Card key={purchase.id}>
@@ -390,25 +411,25 @@ export function AdminStudentsPanel() {
           </div>
           <Card className="hidden sm:block">
             <CardContent className="overflow-x-auto p-0">
-              <Table className="min-w-[600px]">
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
-                    <TableHead className="hidden md:table-cell">E-mail</TableHead>
+                    <TableHead className="hidden xl:table-cell">E-mail</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Situação</TableHead>
-                    <TableHead className="hidden lg:table-cell">Data</TableHead>
+                    <TableHead className="hidden xl:table-cell">Data</TableHead>
                     <TableHead className="text-right">Login</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchases.map((purchase) => {
+                  {shownPurchases.map((purchase) => {
                     const hasAccount =
                       purchase.customer_email && registeredEmails.has(purchase.customer_email.toLowerCase());
                     return (
                       <TableRow key={purchase.id}>
                         <TableCell>{purchase.customer_name || "—"}</TableCell>
-                        <TableCell className="hidden text-muted-foreground md:table-cell">
+                        <TableCell className="hidden text-muted-foreground xl:table-cell">
                           {purchase.customer_email || "—"}
                         </TableCell>
                         <TableCell>{formatCurrency(purchase.amount)}</TableCell>
@@ -417,13 +438,13 @@ export function AdminStudentsPanel() {
                             {purchaseStatusLabels[purchase.status] ?? purchase.status}
                           </StatusPill>
                         </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                        <TableCell className="hidden whitespace-nowrap text-muted-foreground xl:table-cell">
                           {formatDate(purchase.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
                           {hasAccount ? (
                             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Já tem login
+                              <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Já tem login
                             </span>
                           ) : purchase.customer_email ? (
                             <CreateStudentDialog
@@ -452,6 +473,13 @@ export function AdminStudentsPanel() {
               )}
             </CardContent>
           </Card>
+          {purchases.length > shownPurchases.length ? (
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline" onClick={() => setVisiblePurchases((n) => n + PAGE_SIZE)}>
+                Mostrar mais ({purchases.length - shownPurchases.length})
+              </Button>
+            </div>
+          ) : null}
           </>
         )}
       </section>

@@ -8,11 +8,6 @@
 @import "@fontsource/inter/800.css";
 @import "@fontsource/bebas-neue/400.css";
 
-@keyframes kenburns {
-  0% { transform: scale(1) translate(0, 0); }
-  100% { transform: scale(1.12) translate(-1%, -1%); }
-}
-
 @keyframes shimmer {
   100% { transform: translateX(200%); }
 }
@@ -25,11 +20,6 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px color-mix(in oklab, var(--primary) 18%, transparent); }
-  50%       { box-shadow: 0 0 22px color-mix(in oklab, var(--primary) 32%, transparent); }
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -102,120 +92,68 @@
 
 :root {
   --radius: 0.75rem;
-
-  /* Gui Treinador — preto profundo, vermelho de performance e prata */
-  --bg-primary: #050505;
-  --bg-secondary: #0D0D0D;
-  --bg-elevated: #151515;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-
-  /* Texto */
-  --text-primary: #FFFFFF;
-  --text-secondary: #C0C0C0;
-  --text-muted: #8A8A8A;
-
-  --accent-primary: #FF0000;
-  --accent-secondary: #8B0000;
-  --accent-gradient: linear-gradient(135deg, #8B0000 0%, #FF0000 100%);
-  --accent-glow: color-mix(in oklab, #FF0000 22%, transparent);
-
-  /* Status */
-  --success-color: #C0C0C0;
-  --warning-color: #C0C0C0;
-  --danger-color: #FF0000;
-
-  /* Semantic UI Mapping */
-  --background: #050505;
-  --foreground: #FFFFFF;
-  --card: #0D0D0D;
-  --card-foreground: #FFFFFF;
-  --popover: #151515;
-  --popover-foreground: #FFFFFF;
-  --primary: #E60000;
-  --primary-foreground: #FFFFFF;
-  --secondary: #111111;
-  --secondary-foreground: #FFFFFF;
-  --muted: #111111;
-  --muted-foreground: #C0C0C0;
-  --accent: #E60000;
-  --accent-foreground: #FFFFFF;
-  --destructive: #FF0000;
-  --destructive-foreground: #FFFFFF;
-  --border: #252525;
-  --input: #303030;
-  --ring: #FF0000;
-  --surface-2: #151515;
-  --success: #C0C0C0;
-  --warning: #A0A0A0;
-  --chart-1: #FF0000;
-  --chart-2: #C0C0C0;
-  --chart-3: #8B0000;
-  --chart-4: #555555;
-  --chart-5: #FFFFFF;
-  --sidebar: #080808;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FF0000;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #151515;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #252525;
-  --sidebar-ring: #FF0000;
-}
-
-.dark {
   color-scheme: dark;
-  --background: #050505;
-  --foreground: #FFFFFF;
-  --card: #0D0D0D;
-  --card-foreground: #FFFFFF;
-  --popover: #151515;
-  --popover-foreground: #FFFFFF;
-  --primary: #E60000;
-  --primary-foreground: #FFFFFF;
-  --secondary: #111111;
-  --secondary-foreground: #FFFFFF;
-  --muted: #111111;
-  --muted-foreground: #C0C0C0;
-  --accent: #E60000;
-  --accent-foreground: #FFFFFF;
-  --border: #252525;
-  --input: #303030;
-  --ring: #FF0000;
+
+  /* Sala de musculação à noite: ferro, giz, aço escovado e a anilha vermelha. */
+  --ferro-0: #09090a;
+  --ferro-1: #111113;
+  --ferro-2: #18181b;
+  --ferro-3: #202024;
+  --giz: #f5f5f6;
+  --aco: #a1a1a8;
+  --aco-escuro: #6e6e76;
+  --anilha: #e5262b;
+  --anilha-clara: #f2484c;
+  --linha: rgba(255, 255, 255, 0.09);
+  --linha-forte: rgba(255, 255, 255, 0.15);
+
+  /* Mapeamento semântico */
+  --background: var(--ferro-0);
+  --foreground: var(--giz);
+  --card: var(--ferro-1);
+  --card-foreground: var(--giz);
+  --popover: var(--ferro-2);
+  --popover-foreground: var(--giz);
+  --primary: var(--anilha);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ferro-2);
+  --secondary-foreground: var(--giz);
+  --muted: var(--ferro-2);
+  --muted-foreground: var(--aco);
+  --accent: var(--ferro-3);
+  --accent-foreground: var(--giz);
+  --destructive: #dc2b30;
+  --destructive-foreground: #ffffff;
+  --border: var(--linha);
+  --input: var(--linha-forte);
+  --ring: var(--anilha-clara);
+  --surface-2: var(--ferro-3);
+  --success: #5fcb8e;
+  --warning: #e3b04b;
+  --chart-1: var(--anilha);
+  --chart-2: #c7c7cc;
+  --chart-3: #8b1a1d;
+  --chart-4: var(--aco-escuro);
+  --chart-5: var(--giz);
+  --sidebar: var(--ferro-0);
+  --sidebar-foreground: var(--giz);
+  --sidebar-primary: var(--anilha);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--ferro-2);
+  --sidebar-accent-foreground: var(--giz);
+  --sidebar-border: var(--linha);
+  --sidebar-ring: var(--anilha-clara);
 }
 
-/* Mantém a preferência existente sem quebrar a identidade visual única da marca. */
+/* A marca tem uma identidade escura única; a preferência antiga só mantém o fundo. */
+.dark,
 .platform-light {
   color-scheme: dark;
-  --background: #050505;
-  --foreground: #FFFFFF;
-  --card: #0D0D0D;
-  --card-foreground: #FFFFFF;
-  --popover: #151515;
-  --popover-foreground: #FFFFFF;
-  --primary: #E60000;
-  --primary-foreground: #FFFFFF;
-  --secondary: #111111;
-  --secondary-foreground: #FFFFFF;
-  --muted: #111111;
-  --muted-foreground: #C0C0C0;
-  --accent: #E60000;
-  --accent-foreground: #FFFFFF;
-  --border: #252525;
-  --input: #303030;
-  --ring: #FF0000;
-  --surface-2: #151515;
-  background-color: var(--color-background);
-  color: var(--color-foreground);
 }
 
-/* Video player keeps its own dark theme even inside the light platform scope */
-.platform-light .video-player-scope,
-.platform-light .video-player-scope button,
-.platform-light .video-player-scope span,
-.platform-light .video-player-scope p,
-.platform-light .video-player-scope h3,
-.platform-light .video-player-scope h4 {
-  color: #ffffff;
+/* Vermelho de preenchimento é escuro demais para texto pequeno sobre o ferro. */
+.text-primary {
+  color: var(--anilha-clara);
 }
 
 @layer base {
@@ -242,14 +180,24 @@
     color: var(--color-foreground);
   }
 
-  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.05; letter-spacing: 0; }
-  h2 { font-size: clamp(2rem, 4vw, 3rem);      font-weight: 700; line-height: 1.1;  letter-spacing: 0; }
-  h3 { font-size: clamp(1.4rem, 2.5vw, 2rem);  font-weight: 600; line-height: 1.2;  letter-spacing: 0; }
+  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.05; letter-spacing: 0; text-wrap: balance; }
+  h2 { font-size: clamp(2rem, 4vw, 3rem);      font-weight: 700; line-height: 1.1;  letter-spacing: 0; text-wrap: balance; }
+  h3 { font-size: clamp(1.4rem, 2.5vw, 2rem);  font-weight: 600; line-height: 1.2;  letter-spacing: 0; text-wrap: balance; }
   h4 { font-size: 1.125rem;                     font-weight: 600; line-height: 1.3;  letter-spacing: 0; }
+  p { text-wrap: pretty; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 
   /* Consistent focus ring - accessibility */
   :focus-visible {
-    outline: 2px solid var(--accent-primary);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -257,7 +205,7 @@
   /* Premium scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
 
@@ -267,7 +215,7 @@
 
 /* ─── Utilities ─────────────────────────────────────────────────────────── */
 
-@utility font-display { font-family: var(--font-display); letter-spacing: 0.01em; }
+@utility font-display { font-family: var(--font-display); letter-spacing: 0.02em; font-weight: 400; }
 @utility font-mono    { font-family: var(--font-mono); }
 
 @utility scrollbar-none {
@@ -299,99 +247,64 @@
   background-clip: text;
 }
 
-/* Card hover with violet glow micro-interaction */
+/* Elevação sutil em cartões clicáveis */
 @utility card-interactive {
-  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
   &:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in oklab, var(--primary) 25%, transparent), 0 0 22px color-mix(in oklab, var(--primary) 12%, transparent);
+    border-color: var(--linha-forte);
+    background-color: var(--ferro-2);
   }
 }
 
-/* Scroll-entry animation utility */
 @utility animate-fade-up {
-  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up 0.24s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
-/* Staggered children (used with JS-driven class additions) */
 @utility animate-fade-in {
-  animation: fade-in 0.4s ease both;
+  animation: fade-in 0.16s ease-out both;
 }
 
-/* Accent glow pulse on primary CTAs */
 @utility glow-primary {
-  animation: glow-pulse 2.5s ease-in-out infinite;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 40%, transparent);
 }
 
-/* ─── Ultra-Realistic Glass Block Design System ────────────────────────────── */
-
-/* Premium Liquid Glass Block */
+/* Superfícies: ferro em camadas e linhas discretas, sem desfoque de fundo. */
 @utility glass-block {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%),
-              rgba(19, 19, 22, 0.65);
-  backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-              inset 0 -1px 0 0 rgba(0, 0, 0, 0.5),
-              0 20px 40px -15px rgba(0, 0, 0, 0.6),
-              0 0 30px color-mix(in oklab, var(--primary) 6%, transparent);
+  background-color: var(--ferro-1);
+  border: 1px solid var(--linha);
 }
 
-/* Glass Card with Hover Lift & Violet Ambient Reaction */
 @utility glass-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%),
-              rgba(19, 19, 22, 0.6);
-  backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
-              0 12px 32px -10px rgba(0, 0, 0, 0.5);
-  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: var(--ferro-1);
+  border: 1px solid var(--linha);
+  transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
   &:hover {
-    transform: translateY(-3px) scale(1.01);
-    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
-                0 24px 48px -12px rgba(0, 0, 0, 0.7),
-                0 0 30px color-mix(in oklab, var(--primary) 20%, transparent);
+    border-color: var(--linha-forte);
+    background-color: var(--ferro-2);
   }
 }
 
-/* Glass Pill for Chips, Badges & Triggers */
 @utility glass-pill {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 100%);
-  backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-              0 4px 16px rgba(0, 0, 0, 0.3);
+  background-color: var(--ferro-2);
+  border: 1px solid var(--linha);
 }
 
-/* Glass surface fallback */
 @utility glass {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(28, 28, 33, 0.65);
-  backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  background-color: var(--ferro-2);
+  border: 1px solid var(--linha);
 }
 
-/* Primary CTA button utility (preserved for backward compat) */
 @utility btn-cta {
-  background: linear-gradient(135deg, #8B0000 0%, #FF0000 100%);
+  background-color: var(--primary);
   color: #ffffff;
   font-weight: 600;
   letter-spacing: 0.02em;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px color-mix(in oklab, var(--primary) 30%, transparent);
-  transition: box-shadow 200ms ease, transform 200ms ease, filter 200ms ease;
-  &:hover {
-    box-shadow: 0 6px 24px color-mix(in oklab, var(--primary) 40%, transparent);
-    filter: brightness(1.08);
-    transform: translateY(-1px);
-  }
+  border-radius: 10px;
+  transition: filter 140ms ease-out, transform 140ms ease-out;
+  &:hover { filter: brightness(1.08); }
   &:active { transform: scale(0.98); }
 }
-@utility btn-cta-hover { filter: brightness(1.1); }
+@utility btn-cta-hover { filter: brightness(1.08); }
 
 /* Funil e editor seguem a mesma identidade escura da marca. */
 .quiz-vendas-scope,
@@ -447,6 +360,8 @@
 
 /* Hide Lovable badge/watermark — injected by hosting platform */
 #lovable-badge,
+[id*="lovable"],
+[class*="lovable"],
 [data-lovable-badge],
 a[href*="lovable"],
 a[href*="lovable.dev"],
@@ -462,20 +377,4 @@ iframe[src*="lovable"] {
   height: 0 !important;
   overflow: hidden !important;
   z-index: -9999 !important;
-}
-
-@media (max-width: 639px) {
-  .admin-mobile [data-slot="dialog-footer"] {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .admin-mobile [data-slot="dialog-footer"] > * {
-    width: 100%;
-  }
-
-  .admin-mobile h1,
-  .admin-mobile h2 {
-    overflow-wrap: anywhere;
-  }
 }

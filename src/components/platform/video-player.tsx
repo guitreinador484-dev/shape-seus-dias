@@ -237,7 +237,7 @@ export function VideoPlayer({
       {/* Seek Feedback Overlay */}
       {seekFeedback && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center z-20 animate-fade-in">
-          <div className="flex items-center gap-2 rounded-full bg-black/80 border border-white/20 px-5 py-2.5 text-base font-bold text-white shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-2 rounded-full bg-black/80 border border-white/20 px-5 py-2.5 text-base font-bold text-white shadow-2xl">
             {seekFeedback === "-10s" ? <Rewind className="h-5 w-5 text-[#E63946]" /> : <FastForward className="h-5 w-5 text-[#E63946]" />}
             <span>{seekFeedback}</span>
           </div>
@@ -259,7 +259,7 @@ export function VideoPlayer({
           aria-label="Reproduzir"
           className="absolute inset-0 grid place-items-center z-10"
         >
-          <span className="grid h-20 w-20 place-items-center rounded-full bg-[#E63946] shadow-2xl shadow-[#E63946]/50 ring-4 ring-white/20 backdrop-blur transition duration-300 hover:scale-110">
+          <span className="grid h-20 w-20 place-items-center rounded-full bg-[#E63946] shadow-2xl shadow-[#E63946]/50 ring-4 ring-white/20 transition duration-300 hover:scale-110">
             <Play className="ml-1 h-8 w-8 fill-current text-white" />
           </span>
         </button>
@@ -275,7 +275,7 @@ export function VideoPlayer({
           {onClose && (
             <button
               type="button" onClick={onClose} aria-label="Fechar"
-              className="pointer-events-auto grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-white/20 hover:scale-105"
+              className="pointer-events-auto grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20 hover:scale-105"
             ><X className="h-5 w-5" /></button>
           )}
         </div>
@@ -293,7 +293,7 @@ export function VideoPlayer({
 
       {/* Keyboard Shortcuts Dialog */}
       {showHelp && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-fade-in">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 p-4 animate-fade-in">
           <div className="max-w-xs w-full bg-[#141414] border border-white/15 rounded-2xl p-5 text-white shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-display text-lg flex items-center gap-2">
@@ -448,14 +448,14 @@ export function VideoPlayer({
                 type="button"
                 onClick={() => setMenu((m) => !m)}
                 aria-label="Velocidade de reprodução"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 bg-[#141414]/90 text-xs font-semibold text-white backdrop-blur transition hover:bg-[#141414]"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/20 bg-[#141414]/90 text-xs font-semibold text-white transition hover:bg-[#141414]"
               >
                 <Gauge className="h-3.5 w-3.5 text-[#E63946]" />
                 <span className="tabular-nums">{rate === 1 ? "1.0x" : `${rate}x`}</span>
               </button>
 
               {menu && (
-                <div className="absolute bottom-11 right-0 w-36 overflow-hidden rounded-2xl bg-black/95 p-1.5 text-xs ring-1 ring-white/20 backdrop-blur shadow-2xl z-30">
+                <div className="absolute bottom-11 right-0 w-36 overflow-hidden rounded-2xl bg-black/95 p-1.5 text-xs ring-1 ring-white/20 shadow-2xl z-30">
                   <p className="px-3 py-1.5 text-[10px] uppercase tracking-widest text-white/50 font-semibold">Velocidade</p>
                   {SPEEDS.map((s) => (
                     <button

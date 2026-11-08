@@ -69,7 +69,7 @@ function StateCard({
   return (
     <PageShell>
       <div className="mx-auto grid min-h-screen max-w-md place-items-center px-4">
-        <Card className="w-full border-border/50 bg-card/40 backdrop-blur">
+        <Card className="w-full border-border/50 bg-card/40">
           <CardContent className="space-y-3 py-14 text-center">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">{icon}</div>
             <p className="font-display text-2xl">{title}</p>
@@ -229,7 +229,7 @@ function CourseDetailPage() {
 
   return (
     <PageShell>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90">
         <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:px-6">
           <Button asChild variant="ghost" className="min-w-0 justify-start px-2 text-muted-foreground hover:text-foreground">
             <Link to="/plataforma/cursos"><ArrowLeft className="h-4 w-4 shrink-0" /> <span className="truncate">Meus cursos</span></Link>
@@ -278,14 +278,14 @@ function CourseDetailPage() {
 
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
             {/* Resumo de progresso */}
-            <Card className="glass-block rounded-3xl border border-white/12 shadow-2xl overflow-hidden">
+            <Card className="glass-block rounded-3xl border border-border shadow-2xl overflow-hidden">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-baseline justify-between">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/50 font-bold">Seu progresso</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold">Seu progresso</p>
                   <span className="font-display text-3xl text-primary">{pct}%</span>
                 </div>
-                <Progress value={pct} className="h-2 bg-white/10" />
-                <p className="text-xs text-white/60 font-medium">{completedCount} de {totalLessons} aulas concluídas</p>
+                <Progress value={pct} className="h-2 bg-secondary" />
+                <p className="text-xs text-muted-foreground font-medium">{completedCount} de {totalLessons} aulas concluídas</p>
                 {nextLesson ? (
                   <Button
                     className="mt-1 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30 h-11 text-sm font-semibold"
@@ -298,7 +298,7 @@ function CourseDetailPage() {
                   <CertificateButton course={course} userId={user!.id} />
                 ) : null}
                 {nextLesson && (
-                  <p className="truncate text-center text-[11px] text-white/50">Próxima: {nextLesson.title}</p>
+                  <p className="truncate text-center text-[11px] text-muted-foreground">Próxima: {nextLesson.title}</p>
                 )}
               </CardContent>
             </Card>
@@ -398,7 +398,7 @@ function NextUpPlaylist({
                           </span>
                         )}
                         {dur && (
-                          <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-white">
+                          <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-foreground">
                             {dur}
                           </span>
                         )}
