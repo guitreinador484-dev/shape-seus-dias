@@ -118,11 +118,11 @@ function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="login-email">Email</Label>
-        <Input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="login-password">Senha</Label>
-        <Input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input id="login-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
@@ -165,19 +165,19 @@ function SignupForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="su-name">Nome completo</Label>
-        <Input id="su-name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Input id="su-name" autoComplete="name" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="su-email">Email</Label>
-        <Input id="su-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input id="su-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="su-wa">WhatsApp</Label>
-        <Input id="su-wa" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
+        <Input id="su-wa" type="tel" autoComplete="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
       </div>
       <div className="space-y-2">
         <Label htmlFor="su-pw">Senha</Label>
-        <Input id="su-pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input id="su-pw" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}

@@ -33,7 +33,7 @@ export function AdminPageHeader({
     <div className="mb-6 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-56">
-          <h2 className="font-display text-4xl leading-none">{title}</h2>
+          <h1 className="font-display text-4xl leading-none">{title}</h1>
           <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>
         </div>
         {action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}

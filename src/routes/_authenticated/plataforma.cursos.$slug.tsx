@@ -274,7 +274,7 @@ function CourseDetailPage() {
 
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
             {/* Resumo de progresso */}
-            <Card className="glass-block rounded-3xl border border-border shadow-2xl overflow-hidden">
+            <Card className="overflow-hidden rounded-lg border border-border">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-baseline justify-between">
                   <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold">Seu progresso</p>
@@ -284,7 +284,7 @@ function CourseDetailPage() {
                 <p className="text-xs text-muted-foreground font-medium">{completedCount} de {totalLessons} aulas concluídas</p>
                 {nextLesson ? (
                   <Button
-                    className="mt-1 w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30 h-11 text-sm font-semibold"
+                    className="mt-1 w-full h-11 text-sm font-semibold"
                     onClick={() => selectLesson(nextLesson.id)}
                   >
                     <Play className="mr-2 h-4 w-4 fill-current" />
@@ -559,7 +559,7 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
       </div>
 
       {/* Player */}
-      <div className="aspect-video overflow-hidden rounded-2xl border border-border/50 bg-black shadow-2xl shadow-black/40">
+      <div className="aspect-video overflow-hidden rounded-lg border border-border bg-black">
         {loadingVideo ? (
           <Skeleton className="h-full w-full rounded-none" />
         ) : videoUrl ? (

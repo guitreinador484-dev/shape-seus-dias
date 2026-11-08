@@ -19,7 +19,7 @@ import { CoursesShell } from "@/components/platform/courses-shell";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
 import { BrandLogo } from "@/components/brand-logo";
 import { defaultConfig, fetchPlatformHome, platformHomeKey } from "@/lib/platform-data";
-import { accountNavItems } from "@/lib/student-nav";
+import { accountNavItems, PRIMARY_TABS } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
 
 // Cada aba só baixa o próprio código quando é aberta (o gráfico de Evolução e o player são pesados).
@@ -281,24 +281,33 @@ function PlataformaPage() {
             </StatusScreen>
           ) : (
             <>
-              <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium first-letter:uppercase text-muted-foreground">{todayLabel}</p>
-                  <h1 className="font-display text-3xl leading-none text-foreground sm:text-4xl">{firstName ? `Olá, ${firstName}` : "Olá"}</h1>
+              {activeTab === "treino" ? (
+                <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium first-letter:uppercase text-muted-foreground">{todayLabel}</p>
+                    <h1 className="font-display text-3xl leading-none text-foreground sm:text-4xl">{firstName ? `Olá, ${firstName}` : "Olá"}</h1>
+                  </div>
+                  {accessExpiresAt ? (
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      Acesso até {new Date(accessExpiresAt).toLocaleDateString("pt-BR")}
+                    </p>
+                  ) : null}
                 </div>
-                {accessExpiresAt ? (
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    Acesso até {new Date(accessExpiresAt).toLocaleDateString("pt-BR")}
-                  </p>
-                ) : null}
-              </div>
+              ) : (
+                <h1 className="font-display text-3xl leading-none text-foreground sm:text-4xl">
+                  {[...PRIMARY_TABS, ...moreItems].find((item) => item.id === activeTab)?.label}
+                </h1>
+              )}
 
               <TabsContent value="treino" forceMount hidden={activeTab !== "treino"} className="mt-0 space-y-5">
+                <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+                  <div className="min-w-0">
                 {user ? (
                   <TreinoPanel userId={user.id} plans={home?.plans ?? []} loading={false} showVideos gymId={gymId} onGoToCheckin={goToCheckin} />
                 ) : null}
+                  </div>
+                  <div className="min-w-0 space-y-5">
                 {user ? <CheckinCard userId={user.id} /> : null}
-                {user && showVideos ? <ReferralCard userId={user.id} /> : null}
                 <button type="button" onClick={() => changeTab("feedback")} className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors duration-150 hover:border-primary/60">
                   <Lightbulb className="h-5 w-5 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
@@ -307,6 +316,9 @@ function PlataformaPage() {
                   </span>
                   <span className="text-sm font-semibold text-primary">Sugerir</span>
                 </button>
+                  </div>
+                </div>
+                {user && showVideos ? <ReferralCard userId={user.id} /> : null}
               </TabsContent>
 
               <KeptTab value="dieta" active={activeTab === "dieta"}>
@@ -325,15 +337,15 @@ function PlataformaPage() {
               </KeptTab>
 
               <KeptTab value="ficha" active={activeTab === "ficha"}>
-                {user ? <AnamneseTab userId={user.id} /> : null}
+                {user ? <div className="max-w-2xl"><AnamneseTab userId={user.id} /></div> : null}
               </KeptTab>
 
               <KeptTab value="feedback" active={activeTab === "feedback"}>
-                {user ? <FeedbackTab userId={user.id} /> : null}
+                {user ? <div className="max-w-2xl"><FeedbackTab userId={user.id} /></div> : null}
               </KeptTab>
 
               <KeptTab value="assinatura" active={activeTab === "assinatura"}>
-                <SubscriptionsPanel />
+                <div className="max-w-3xl"><SubscriptionsPanel /></div>
               </KeptTab>
 
               {/* Mentoria e Aulas têm vídeo: desmontar ao sair garante que nada siga tocando escondido. */}

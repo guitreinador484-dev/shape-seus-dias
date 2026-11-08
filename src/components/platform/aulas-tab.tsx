@@ -143,7 +143,7 @@ function LessonRow({ title, children }: { title: string; children: React.ReactNo
   return (
     <section>
       <h3 className="mb-3 font-display text-2xl leading-none text-foreground">{title}</h3>
-      <div className="-mx-3 flex snap-x gap-3 overflow-x-auto px-3 pb-1 scrollbar-none sm:mx-0 sm:px-0">
+      <div className="-mx-3 flex snap-x scroll-px-3 gap-3 overflow-x-auto px-3 pb-1 scrollbar-none sm:mx-0 sm:scroll-px-0 sm:px-0">
         {children}
       </div>
     </section>

@@ -139,7 +139,7 @@ export function EvolutionTab({ userId }: { userId: string }) {
                   <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
                   <YAxis stroke="var(--muted-foreground)" fontSize={11} domain={["auto", "auto"]} />
                   <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--input)", borderRadius: 8, fontSize: 12 }} />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="peso" name="Peso (kg)" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} connectNulls />
                   {chartData.some((d) => d.cintura !== null) && (
                     <Line type="monotone" dataKey="cintura" name="Cintura (cm)" stroke="var(--chart-2)" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} connectNulls />
@@ -154,14 +154,14 @@ export function EvolutionTab({ userId }: { userId: string }) {
       <Card>
         <CardContent className="p-4 sm:p-6">
           <h3 className="mb-4 font-display text-2xl leading-none">Registrar nova medição</h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {FIELDS.map((f) => (
               <div key={f.key} className="space-y-1">
                 <Label>{f.label} ({f.suffix})</Label>
                 <Input type="number" inputMode="decimal" step="0.1" value={form[f.key] ?? ""} onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))} placeholder="0,0" />
               </div>
             ))}
-            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <div className="col-span-2 space-y-2 lg:col-span-3">
               <Label>Foto de progresso (opcional)</Label>
               <Input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
               {photo ? (

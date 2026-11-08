@@ -190,18 +190,6 @@ function readAdminSettings(value: Json | null): AdminSettings {
   };
 }
 
-function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
-  return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 className="font-display text-3xl">{title}</h2>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-      {action}
-    </div>
-  );
-}
-
 function LoadingGrid() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -469,38 +457,36 @@ export function AdminLessonsPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader
+      <AdminPageHeader
         title="Aulas em vídeo"
         description="Cadastre aulas, categorias, links de vídeo, duração e destaque."
         action={<WorkoutDialog open={open} onOpenChange={setOpen} onSave={saveWorkout} />}
       />
       {loading ? <Skeleton className="h-80" /> : workouts.length === 0 ? <EmptyState title="Nenhuma aula cadastrada" description="Crie a primeira aula para liberar conteúdo aos alunos online." /> : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {workouts.map((workout) => (
-            <Card key={workout.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <CardTitle>{workout.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">{workout.category} · {workout.difficulty || "Nível livre"}</p>
+        <Card>
+          <CardContent className="divide-y divide-border p-0">
+            {workouts.map((workout) => (
+              <div key={workout.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
+                <div className="min-w-0 flex-[1_1_16rem]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{workout.title}</p>
+                    {workout.is_featured && <Badge>Destaque</Badge>}
                   </div>
-                  {workout.is_featured && <Badge>Destaque</Badge>}
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {workout.category} · {workout.difficulty || "Nível livre"} · {workout.duration_minutes ?? 0} min · Ordem {workout.display_order}
+                  </p>
+                  {workout.description ? <p className="mt-1 hidden truncate text-sm text-muted-foreground sm:block">{workout.description}</p> : null}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground min-h-10">{workout.description || "Sem descrição."}</p>
-                <div className="text-sm grid grid-cols-2 gap-2">
-                  <span>Duração: {workout.duration_minutes ?? 0} min</span>
-                  <span>Ordem: {workout.display_order}</span>
-                </div>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   <WorkoutDialog workout={workout} onSave={saveWorkout} />
-                  <Button variant="destructive" size="sm" onClick={() => removeWorkout(workout.id)}><Trash2 className="h-4 w-4" /> Excluir</Button>
+                  <Button variant="ghost" size="icon" aria-label={`Excluir ${workout.title}`} className="text-muted-foreground hover:text-destructive" onClick={() => removeWorkout(workout.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -1737,7 +1723,7 @@ export function AdminSalesPanel() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <PageHeader title="Vendas" description="Registre vendas, acompanhe pagamentos e ajuste status de acesso." />
+      <AdminPageHeader title="Vendas" description="Registre vendas, acompanhe pagamentos e ajuste status de acesso." />
       <SubscriptionsPanel admin />
       <Card className="mb-6">
         <CardHeader><CardTitle>Registrar venda manual</CardTitle></CardHeader>
@@ -1813,10 +1799,10 @@ export function AdminSettingsPanel() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <PageHeader title="Configurações" description="Defina dados de marca, contato e links usados na operação da plataforma." />
+    <div className="max-w-3xl mx-auto">
+      <AdminPageHeader title="Configurações" description="Defina dados de marca, contato e links usados na operação da plataforma." />
       {loading ? <Skeleton className="h-80" /> : (
-        <Card><CardContent className="pt-6 grid gap-4"><Field label="Nome do personal"><Input value={settings.personal_name} onChange={(event) => setSettings({ ...settings, personal_name: event.target.value })} /></Field><Field label="Nome da plataforma"><Input value={settings.brand_title} onChange={(event) => setSettings({ ...settings, brand_title: event.target.value })} /></Field><Field label="WhatsApp de suporte"><Input value={settings.support_whatsapp} onChange={(event) => setSettings({ ...settings, support_whatsapp: event.target.value })} /></Field><Field label="Link de checkout"><Input value={settings.checkout_url} onChange={(event) => setSettings({ ...settings, checkout_url: event.target.value })} /></Field><Field label="Mensagem de boas-vindas"><Textarea value={settings.welcome_message} onChange={(event) => setSettings({ ...settings, welcome_message: event.target.value })} /></Field><Button onClick={save} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar configurações</Button></CardContent></Card>
+        <Card><CardContent className="grid gap-4 pt-6 sm:grid-cols-2"><Field label="Nome do personal"><Input value={settings.personal_name} onChange={(event) => setSettings({ ...settings, personal_name: event.target.value })} /></Field><Field label="Nome da plataforma"><Input value={settings.brand_title} onChange={(event) => setSettings({ ...settings, brand_title: event.target.value })} /></Field><Field label="WhatsApp de suporte"><Input value={settings.support_whatsapp} onChange={(event) => setSettings({ ...settings, support_whatsapp: event.target.value })} /></Field><Field label="Link de checkout"><Input value={settings.checkout_url} onChange={(event) => setSettings({ ...settings, checkout_url: event.target.value })} /></Field><Field label="Mensagem de boas-vindas" className="sm:col-span-2"><Textarea value={settings.welcome_message} onChange={(event) => setSettings({ ...settings, welcome_message: event.target.value })} /></Field><Button onClick={save} disabled={saving} className="w-full sm:col-span-2 sm:w-auto sm:justify-self-end">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar configurações</Button></CardContent></Card>
       )}
     </div>
   );
@@ -1936,80 +1922,46 @@ export function AdminPlatformPanel() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header with Title and Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border/60 rounded-2xl p-6 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-              <Sparkles className="h-3 w-3" /> Gestão da Área de Membros
-            </span>
+      <AdminPageHeader
+        title="Plataforma do aluno"
+        description="Personalize banners, comunicados, temas e a ordem de exibição dos treinos."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <a href="/plataforma?preview=1" target="_blank" rel="noreferrer">
+                <ExternalLink className="h-4 w-4" /> Ver como aluno
+              </a>
+            </Button>
+            <Button onClick={save} disabled={saving || uploading}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar alterações
+            </Button>
           </div>
-          <h2 className="font-display text-3xl">Plataforma do Aluno</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Personalize banners, comunicados, temas e a ordem de exibição dos treinos.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Button asChild variant="outline" size="sm" className="rounded-full">
-            <a href="/plataforma?preview=1" target="_blank" rel="noreferrer" className="inline-flex items-center">
-              <ExternalLink className="h-4 w-4 mr-1.5" /> Ver como aluno
-            </a>
-          </Button>
-          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-5 shadow-lg shadow-primary/20">
-            {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
-            Salvar alterações
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {!loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Categorias</p>
-            <p className="font-display text-2xl mt-1 text-foreground">{allCategories.length}</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Aulas de Vídeo</p>
-            <p className="font-display text-2xl mt-1 text-foreground">{workouts.length}</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Tema Ativo</p>
-            <p className="font-display text-xl mt-1 capitalize flex items-center gap-1.5 text-foreground">
-              <Palette className="h-4 w-4 text-primary" /> {settings.platform_theme === "dark" ? "Escuro" : "Claro"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border bg-secondary p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Comunicado</p>
-            <p className={`font-display text-xl mt-1 flex items-center gap-1.5 ${settings.platform_announcement_enabled ? "text-success" : "text-muted-foreground"}`}>
-              <Megaphone className="h-4 w-4" /> {settings.platform_announcement_enabled ? "Ativo" : "Desativado"}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {loading ? <Skeleton className="h-96 rounded-3xl" /> : (
+      {loading ? <Skeleton className="h-96 rounded-lg" /> : (
         <Tabs defaultValue="banner" className="space-y-6">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-secondary border border-border rounded-2xl gap-1">
-            <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto p-1.5 bg-secondary border border-border rounded-lg gap-1">
+            <TabsTrigger value="banner" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground transition-all">
               <Film className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Banner
             </TabsTrigger>
-            <TabsTrigger value="categories" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+            <TabsTrigger value="categories" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground transition-all">
               <Layers className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Prateleiras
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+            <TabsTrigger value="appearance" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground transition-all">
               <Palette className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Tema & Marca
             </TabsTrigger>
-            <TabsTrigger value="announcement" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all">
+            <TabsTrigger value="announcement" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground transition-all">
               <Megaphone className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Aviso
             </TabsTrigger>
-            <TabsTrigger value="visibility" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30 transition-all col-span-2 sm:col-span-1">
+            <TabsTrigger value="visibility" className="rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-foreground transition-all col-span-2 sm:col-span-1">
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 shrink-0" /> Seções
             </TabsTrigger>
           </TabsList>
 
           {/* TAB 1: Banner & Destaque */}
           <TabsContent value="banner" className="space-y-6 mt-0">
-            <Card className="glass-block rounded-3xl overflow-hidden shadow-2xl">
+            <Card className="glass-block rounded-lg overflow-hidden shadow-2xl">
               <CardHeader className="border-b border-border bg-muted/40">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Film className="h-5 w-5 text-primary" /> Banner Principal de Destaque
@@ -2058,7 +2010,7 @@ export function AdminPlatformPanel() {
                 <Field label="Imagem do Banner (Background)">
                   <div className="space-y-3">
                     {bannerPreviewUrl ? (
-                      <div className="relative rounded-2xl overflow-hidden border border-border aspect-video max-h-56 w-full bg-black group">
+                      <div className="relative rounded-lg overflow-hidden border border-border aspect-video max-h-56 w-full bg-black group">
                         <img src={bannerPreviewUrl} alt="Preview do banner" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-linear-to-t from-background/80 via-transparent to-transparent flex items-end p-4 justify-between">
                           <span className="text-xs text-muted-foreground font-mono truncate max-w-xs">{settings.platform_hero_image_path}</span>
@@ -2068,7 +2020,7 @@ export function AdminPlatformPanel() {
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/70 rounded-2xl cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition text-center">
+                      <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/70 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition text-center">
                         <input
                           type="file"
                           accept="image/*"
@@ -2080,7 +2032,7 @@ export function AdminPlatformPanel() {
                             e.target.value = "";
                           }}
                         />
-                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mb-3">
+                        <div className="grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary mb-3">
                           {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Upload className="h-6 w-6" />}
                         </div>
                         <p className="font-semibold text-sm">{uploading ? "Enviando imagem..." : "Clique para fazer upload da imagem do banner"}</p>
@@ -2095,7 +2047,7 @@ export function AdminPlatformPanel() {
 
           {/* TAB 2: Prateleiras & Ordem */}
           <TabsContent value="categories" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+            <Card className="rounded-lg border border-border bg-card shadow-2xl shadow-black/40">
               <CardHeader className="border-b border-border bg-muted/40">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Layers className="h-5 w-5 text-primary" /> Organizador Visual de Prateleiras
@@ -2106,7 +2058,7 @@ export function AdminPlatformPanel() {
               </CardHeader>
               <CardContent className="space-y-4 p-6">
                 {currentCategoryOrder.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-2xl bg-muted/40">
+                  <div className="p-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-lg bg-muted/40">
                     Nenhuma categoria encontrada nos treinos cadastrados.
                   </div>
                 ) : (
@@ -2114,7 +2066,7 @@ export function AdminPlatformPanel() {
                     {currentCategoryOrder.map((cat, idx) => (
                       <div
                         key={cat}
-                        className="flex items-center justify-between p-3.5 rounded-2xl border border-border bg-secondary hover:bg-surface-2 transition-all"
+                        className="flex items-center justify-between p-3.5 rounded-lg border border-border bg-secondary hover:bg-surface-2 transition-all"
                       >
                         <div className="flex items-center gap-3">
                           <span className="grid h-7 w-7 place-items-center rounded-xl bg-primary/20 text-primary border border-primary/30 font-display text-sm font-bold">
@@ -2166,7 +2118,7 @@ export function AdminPlatformPanel() {
 
           {/* TAB 3: Tema & Marca */}
           <TabsContent value="appearance" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+            <Card className="rounded-lg border border-border bg-card shadow-2xl shadow-black/40">
               <CardHeader className="border-b border-border bg-muted/40">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Palette className="h-5 w-5 text-primary" /> Aparência e Tema da Plataforma
@@ -2186,9 +2138,9 @@ export function AdminPlatformPanel() {
                           key={t}
                           type="button"
                           onClick={() => setSettings({ ...settings, platform_theme: t })}
-                          className={`relative rounded-2xl border p-4 text-left transition-all ${
+                          className={`relative rounded-lg border p-4 text-left transition-all ${
                             active
-                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/20"
+                              ? "border-primary bg-primary/10"
                               : "border-border hover:border-primary/40 bg-secondary"
                           }`}
                         >
@@ -2240,7 +2192,7 @@ export function AdminPlatformPanel() {
                   />
                 </Field>
 
-                <div className="grid gap-4 rounded-2xl border border-border bg-secondary p-5">
+                <div className="grid gap-4 rounded-lg border border-border bg-secondary p-5">
                   <div><p className="font-semibold text-foreground">Primeiro acesso após a compra</p><p className="text-xs text-muted-foreground">Este vídeo aparece uma única vez depois do login e da confirmação real do pagamento.</p></div>
                   <Field label="URL do vídeo de agradecimento"><Input value={settings.welcome_video_url} onChange={(e) => setSettings({ ...settings, welcome_video_url: e.target.value })} placeholder="YouTube, Vimeo ou arquivo de vídeo" /></Field>
                   <Field label="Título da tela"><Input value={settings.welcome_video_title} maxLength={100} onChange={(e) => setSettings({ ...settings, welcome_video_title: e.target.value })} /></Field>
@@ -2252,7 +2204,7 @@ export function AdminPlatformPanel() {
 
           {/* TAB 4: Comunicado / Aviso */}
           <TabsContent value="announcement" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+            <Card className="rounded-lg border border-border bg-card shadow-2xl shadow-black/40">
               <CardHeader className="border-b border-border bg-muted/40">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <Megaphone className="h-5 w-5 text-primary" /> Barra de Comunicados / Avisos
@@ -2262,7 +2214,7 @@ export function AdminPlatformPanel() {
                 </p>
               </CardHeader>
               <CardContent className="grid gap-5 p-6">
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
+                <div className="flex items-center justify-between p-4.5 rounded-lg border border-border bg-secondary">
                   <div>
                     <p className="font-semibold text-sm text-foreground">Ativar Barra de Comunicado</p>
                     <p className="text-xs text-muted-foreground">Exibe a mensagem no topo para todos os alunos</p>
@@ -2302,7 +2254,7 @@ export function AdminPlatformPanel() {
                     {/* Preview Box */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground">Pré-visualização do Aviso:</Label>
-                      <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center gap-2 shadow-md ${
+                      <div className={`p-4 rounded-lg border text-xs font-semibold flex items-center gap-2 shadow-md ${
                         settings.platform_announcement_type === "success" ? "bg-success/10 border-success/30 text-success"
                         : settings.platform_announcement_type === "warning" ? "bg-warning/10 border-warning/30 text-warning"
                         : settings.platform_announcement_type === "purple" ? "bg-primary/10 border-primary/30 text-primary"
@@ -2320,7 +2272,7 @@ export function AdminPlatformPanel() {
 
           {/* TAB 5: Seções & Visibilidade */}
           <TabsContent value="visibility" className="space-y-6 mt-0">
-            <Card className="rounded-3xl border border-border bg-card shadow-2xl shadow-black/40">
+            <Card className="rounded-lg border border-border bg-card shadow-2xl shadow-black/40">
               <CardHeader className="border-b border-border bg-muted/40">
                 <CardTitle className="text-xl flex items-center gap-2 text-foreground">
                   <SlidersHorizontal className="h-5 w-5 text-primary" /> Recursos & Seções Visíveis
@@ -2330,7 +2282,7 @@ export function AdminPlatformPanel() {
                 </p>
               </CardHeader>
               <CardContent className="grid gap-4 p-6">
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
+                <div className="flex items-center justify-between p-4.5 rounded-lg border border-border bg-secondary">
                   <div>
                     <p className="font-semibold text-sm text-foreground">Barra de Pesquisa de Cursos</p>
                     <p className="text-xs text-muted-foreground">Permite ao aluno pesquisar cursos por título</p>
@@ -2341,7 +2293,7 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
+                <div className="flex items-center justify-between p-4.5 rounded-lg border border-border bg-secondary">
                   <div>
                     <p className="font-semibold text-sm text-foreground">Trilho "Continuar Assistindo"</p>
                     <p className="text-xs text-muted-foreground">Mostra a aula em andamento do aluno</p>
@@ -2352,7 +2304,7 @@ export function AdminPlatformPanel() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4.5 rounded-2xl border border-border bg-secondary">
+                <div className="flex items-center justify-between p-4.5 rounded-lg border border-border bg-secondary">
                   <div>
                     <p className="font-semibold text-sm text-foreground">Trilho "Próximos Módulos / Recomendados"</p>
                     <p className="text-xs text-muted-foreground">Sugere novos módulos baseados no histórico</p>
@@ -2370,11 +2322,11 @@ export function AdminPlatformPanel() {
 
       {/* Floating / Bottom Save Bar */}
       {!loading && (
-        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl shadow-2xl">
+        <div className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-2xl">
           <p className="text-xs text-muted-foreground">
             Lembre-se de clicar em salvar após fazer alterações nas configurações.
           </p>
-          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-6 bg-primary shadow-lg shadow-primary/30">
+          <Button onClick={save} disabled={saving || uploading} size="sm" className="rounded-full px-6 bg-primary">
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
             Salvar Plataforma
           </Button>
