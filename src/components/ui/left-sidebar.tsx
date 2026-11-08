@@ -33,7 +33,7 @@ export default function LeftSidebar({ mobile = false, onNavigate, onRequestLogou
 
   return (
     <aside className={cn(
-      "flex h-full w-72 max-w-[85vw] shrink-0 flex-col border-r border-border bg-sidebar/95 text-sidebar-foreground backdrop-blur-xl",
+      "flex h-full w-72 max-w-[85vw] shrink-0 flex-col border-r border-border bg-sidebar/95 text-sidebar-foreground",
       mobile ? "min-h-dvh" : "hidden min-h-dvh lg:flex",
     )}>
       {/* Logo / Brand */}

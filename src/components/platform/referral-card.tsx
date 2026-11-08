@@ -5,8 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getReferralCount } from "@/lib/admin.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Copy, MessageCircle, Gift, Loader2 } from "lucide-react";
+import { Copy, Gift, MessageCircle, Share2 } from "lucide-react";
 
 type ConfigRow = { content: Record<string, unknown> | null };
 
@@ -57,54 +56,44 @@ export function ReferralCard({ userId }: { userId: string }) {
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   }
 
-  if (loading) return null;
+  if (loading || (!code && !waLink)) return null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 mb-6">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 mb-1">
-            <Gift className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-lg">Indique e ganhe</h3>
-          </div>
-          <p className="text-sm text-muted-foreground mb-3">
-            Compartilhe seu link e ajude mais gente a mudar de vida.
-          </p>
-          {code && (
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2">
-              <span className="font-mono font-bold tracking-wider text-primary flex-1 truncate">{code}</span>
-              <Button size="sm" variant="outline" onClick={copyLink}>
-                <Copy className="h-3.5 w-3.5" /> Copiar link
-              </Button>
-            </div>
-          )}
-          <div className="flex items-center justify-between mt-3">
-            <Badge variant="secondary">{count ?? 0} pessoa{count === 1 ? "" : "s"} indicada{count === 1 ? "" : "s"}</Badge>
-            <Button size="sm" variant="ghost" onClick={shareWhatsApp}>
-              <MessageCircle className="h-3.5 w-3.5" /> Enviar no WhatsApp
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {waLink && (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {code ? (
         <Card>
-          <CardContent className="pt-6 flex flex-col items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <MessageCircle className="h-4 w-4 text-emerald-500" />
-                <h3 className="font-display text-lg">Falar com o personal</h3>
+          <CardContent className="space-y-3 p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-2xl leading-none"><Gift className="h-4 w-4 text-primary" /> Indique e ganhe</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">Compartilhe seu link e ajude mais gente a mudar de vida.</p>
               </div>
-              <p className="text-sm text-muted-foreground">Tem alguma dúvida? Manda uma mensagem direto.</p>
+              <p className="shrink-0 text-right">
+                <span className="block font-display text-3xl leading-none tabular-nums">{count ?? 0}</span>
+                <span className="text-[11px] text-muted-foreground">{count === 1 ? "indicação" : "indicações"}</span>
+              </p>
             </div>
-            <a href={waLink} target="_blank" rel="noopener noreferrer">
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Loader2 className="hidden" /> Abrir conversa
-              </Button>
-            </a>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={copyLink}><Copy /> Copiar link</Button>
+              <Button variant="outline" onClick={shareWhatsApp}><Share2 /> WhatsApp</Button>
+            </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
+
+      {waLink ? (
+        <Card>
+          <CardContent className="flex h-full flex-col justify-between gap-3 p-4 sm:p-6">
+            <div>
+              <h3 className="flex items-center gap-2 font-display text-2xl leading-none"><MessageCircle className="h-4 w-4 text-success" /> Falar com o personal</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">Tem alguma dúvida? Manda uma mensagem direto.</p>
+            </div>
+            <Button variant="outline" asChild>
+              <a href={waLink} target="_blank" rel="noopener noreferrer">Abrir conversa</a>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

@@ -20,6 +20,36 @@ export interface AuthState {
   loading: boolean;
 }
 
+// Vários componentes usam useAuth ao mesmo tempo: uma única consulta por usuário basta.
+let rolesCache: { userId: string; roles: Promise<AppRole[]> } | null = null;
+
+function loadRoles(uid: string): Promise<AppRole[]> {
+  if (rolesCache?.userId === uid) return rolesCache.roles;
+  const roles = (async () => {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid);
+    if (error) {
+      console.error("Erro ao carregar papel do usuário", error);
+      rolesCache = null;
+      return [];
+    }
+    return (data ?? []).map((r) => r.role as AppRole);
+  })();
+  rolesCache = { userId: uid, roles };
+  return roles;
+}
+
+function pickMain(list: AppRole[]): AppRole | null {
+  return (
+    list.find((r) => r === "admin") ??
+    list.find((r) => r === "online") ??
+    list.find((r) => r === "presencial") ??
+    null
+  );
+}
+
 export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -29,30 +59,11 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let mounted = true;
-
-    async function loadRoles(uid: string): Promise<AppRole[]> {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", uid);
-      if (error) {
-        console.error("Erro ao carregar papel do usuário", error);
-        return [];
-      }
-      return (data ?? []).map((r) => r.role as AppRole);
-    }
-
-    function pickMain(list: AppRole[]): AppRole | null {
-      return (
-        list.find((r) => r === "admin") ??
-        list.find((r) => r === "online") ??
-        list.find((r) => r === "presencial") ??
-        null
-      );
-    }
+    let currentUserId: string | null | undefined;
 
     async function applySession(s: Session | null) {
       if (!mounted) return;
+      currentUserId = s?.user?.id ?? null;
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
@@ -82,6 +93,14 @@ export function useAuth(): AuthState {
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (!mounted) return;
       if (event === "INITIAL_SESSION") return; // handled by getSession above
+      // O Supabase repete SIGNED_IN ao voltar para a aba e renova o token de tempos em
+      // tempos. Sendo o mesmo usuário, a tela não pode piscar nem perder o que foi digitado.
+      if ((s?.user?.id ?? null) === currentUserId) {
+        setSession(s);
+        setUser(s?.user ?? null);
+        return;
+      }
+      rolesCache = null;
       setLoading(true);
       void applySession(s);
     });

@@ -5,16 +5,18 @@ import type { Tables } from "@/integrations/supabase/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Loader2, Flame } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Apple, Check, CheckCircle2, Dumbbell, Flame, Loader2, Pencil } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Checkin = Tables<"checkins">;
 
 const MOODS = [
-  { value: 1, emoji: "😞" },
-  { value: 2, emoji: "😕" },
-  { value: 3, emoji: "😐" },
-  { value: 4, emoji: "🙂" },
-  { value: 5, emoji: "🔥" },
+  { value: 1, emoji: "😞", label: "Muito mal" },
+  { value: 2, emoji: "😕", label: "Mal" },
+  { value: 3, emoji: "😐", label: "Normal" },
+  { value: 4, emoji: "🙂", label: "Bem" },
+  { value: 5, emoji: "🔥", label: "Muito bem" },
 ];
 
 function localDateISO(): string {
@@ -28,10 +30,31 @@ function shiftDate(iso: string, days: number): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+function ToggleRow({ checked, onChange, icon: Icon, label }: { checked: boolean; onChange: () => void; icon: typeof Dumbbell; label: string }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={checked}
+      onClick={onChange}
+      className={cn(
+        "flex min-h-12 items-center gap-3 rounded-lg border px-3 text-left text-sm font-medium transition-colors duration-150",
+        checked ? "border-primary/50 bg-primary/10 text-foreground" : "border-input text-muted-foreground hover:text-foreground",
+      )}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className="flex-1">{label}</span>
+      <span className={cn("grid h-5 w-5 place-items-center rounded border", checked ? "border-primary bg-primary text-primary-foreground" : "border-input")}>
+        {checked ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
+      </span>
+    </button>
+  );
+}
+
 export function CheckinCard({ userId }: { userId: string }) {
   const [rows, setRows] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const today = localDateISO();
 
   const todayRow = useMemo(() => rows.find((r) => r.checkin_date === today), [rows, today]);
@@ -88,6 +111,7 @@ export function CheckinCard({ userId }: { userId: string }) {
       const from = shiftDate(today, -29);
       const { data } = await supabase.from("checkins").select("*").eq("user_id", userId).gte("checkin_date", from);
       setRows(data ?? []);
+      setEditing(false);
     } catch (e) {
       toast.error("Erro ao registrar", { description: e instanceof Error ? e.message : "Tente novamente." });
     } finally {
@@ -95,101 +119,95 @@ export function CheckinCard({ userId }: { userId: string }) {
     }
   }
 
+  const showForm = !todayRow || editing;
+
   return (
-    <Card id="checkin-section" className={`mb-6 scroll-mt-24 overflow-hidden border-2 ${todayRow ? "border-primary/40 bg-primary/5" : "border-primary/20"}`}>
-      <CardContent className="pt-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="font-display text-xl flex items-center gap-2">
-            {todayRow ? <CheckCircle2 className="h-5 w-5 text-primary" /> : null} Check-in de hoje
+    <Card id="checkin-section" className="scroll-mt-20">
+      <CardContent className="space-y-4 p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="flex items-center gap-2 font-display text-2xl leading-none">
+            {todayRow ? <CheckCircle2 className="h-5 w-5 text-success" /> : null} Check-in de hoje
           </h3>
-          <div className="flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5">
-            <Flame className="h-4 w-4 text-orange-500" />
-            <span className="text-sm font-bold text-orange-500">{streak} dias seguidos</span>
-          </div>
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+            <Flame className={cn("h-4 w-4", streak > 0 ? "text-primary" : "text-muted-foreground")} />
+            {streak} {streak === 1 ? "dia" : "dias"}
+          </span>
         </div>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Carregando...</div>
+          <Skeleton className="h-14" />
         ) : (
-          <div className="space-y-4">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setTreinoDone(!treinoDone)}
-                className={`h-14 justify-between px-4 text-sm ${
-                  treinoDone ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 hover:border-primary/30"
-                }`}
-              >
-                <span>🏋️ Fiz meu treino hoje</span>
-                <span className="text-lg">{treinoDone ? "✅" : "⬜"}</span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDietDone(!dietDone)}
-                className={`h-14 justify-between px-4 text-sm ${
-                  dietDone ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 bg-muted/40 hover:border-primary/30"
-                }`}
-              >
-                <span>🥗 Segui minha dieta</span>
-                <span className="text-lg">{dietDone ? "✅" : "⬜"}</span>
-              </Button>
+          <>
+            <div className="grid grid-cols-7 gap-1 sm:gap-2" aria-label="Últimos 7 dias">
+              {last7.map((d) => {
+                const done = dates.has(d);
+                const isToday = d === today;
+                const date = new Date(`${d}T12:00:00`);
+                return (
+                  <div key={d} className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground">
+                      {date.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
+                    </span>
+                    <span
+                      aria-label={`${date.toLocaleDateString("pt-BR")}${done ? ", check-in feito" : ""}`}
+                      className={cn(
+                        "grid h-9 w-full place-items-center rounded-md text-xs font-semibold tabular-nums",
+                        done ? "bg-primary text-primary-foreground" : isToday ? "border border-dashed border-input text-foreground" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {date.getDate()}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Como você está se sentindo hoje?</p>
-              <div className="flex gap-2">
-                {MOODS.map((m) => (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    key={m.value}
-                    onClick={() => setMood(mood === m.value ? null : m.value)}
-                    className={`h-12 w-12 text-xl ${
-                      mood === m.value ? "border-primary/60 bg-primary/10 scale-110" : "border-border/60 bg-muted/40 hover:border-primary/30"
-                    }`}
-                    title={`Humor ${m.value}/5`}
-                  >
-                    {m.emoji}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            {showForm ? (
+              <div className="space-y-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <ToggleRow checked={treinoDone} onChange={() => setTreinoDone(!treinoDone)} icon={Dumbbell} label="Fiz meu treino" />
+                  <ToggleRow checked={dietDone} onChange={() => setDietDone(!dietDone)} icon={Apple} label="Segui minha dieta" />
+                </div>
 
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observações do dia (opcional)" />
-
-            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <div className="flex justify-between gap-1.5 overflow-x-auto sm:justify-start">
-                {last7.map((d) => {
-                  const done = dates.has(d);
-                  const isToday = d === today;
-                  return (
-                    <div key={d} className="flex flex-col items-center gap-1">
-                      <div
-                        className={`h-8 w-8 rounded-lg grid place-items-center text-xs font-bold ${
-                          done
-                            ? "bg-primary text-primary-foreground"
-                            : isToday
-                            ? "border border-dashed border-primary/40 text-muted-foreground"
-                            : "bg-muted/40 text-muted-foreground/40"
-                        }`}
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">Como você está se sentindo?</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {MOODS.map((m) => (
+                      <button
+                        type="button"
+                        key={m.value}
+                        aria-label={m.label}
+                        aria-pressed={mood === m.value}
+                        onClick={() => setMood(mood === m.value ? null : m.value)}
+                        className={cn(
+                          "h-12 rounded-lg border text-xl transition-colors duration-150",
+                          mood === m.value ? "border-primary bg-primary/15" : "border-input hover:bg-secondary",
+                        )}
                       >
-                        {new Date(`${d}T12:00:00`).getDate()}
-                      </div>
-                      <span className="text-[9px] uppercase text-muted-foreground/50">
-                        {new Date(`${d}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
-                      </span>
-                    </div>
-                  );
-                })}
+                        {m.emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Observações do dia (opcional)" aria-label="Observações do dia" />
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                  {editing ? <Button variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button> : null}
+                  <Button className="h-11 sm:min-w-44" onClick={save} disabled={saving}>
+                    {saving ? <Loader2 className="animate-spin" /> : null} {todayRow ? "Salvar alterações" : "Salvar check-in"}
+                  </Button>
+                </div>
               </div>
-              <Button className="h-12 w-full sm:w-auto" onClick={save} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : todayRow ? <CheckCircle2 className="h-4 w-4" /> : null} {todayRow ? "Atualizar check-in" : "Salvar check-in"}
-              </Button>
-            </div>
-          </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                <p className="text-sm text-muted-foreground">
+                  {[todayRow?.treino_done ? "Treino feito" : null, todayRow?.diet_done ? "Dieta seguida" : null, MOODS.find((m) => m.value === todayRow?.mood)?.emoji].filter(Boolean).join(" · ") || "Check-in registrado"}
+                </p>
+                <Button variant="ghost" size="sm" onClick={() => setEditing(true)}><Pencil /> Editar</Button>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

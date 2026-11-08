@@ -31,12 +31,12 @@ export function AdminPageHeader({
 }) {
   return (
     <div className="mb-6 space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-        <div className="min-w-0">
-          <h2 className="font-display text-3xl tracking-tight">{title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground max-w-2xl">{description}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-56">
+          <h2 className="font-display text-4xl leading-none">{title}</h2>
+          <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{description}</p>
         </div>
-        {action ? <div className="grid shrink-0 grid-cols-1 gap-2 [&>button]:w-full sm:block sm:[&>button]:w-auto">{action}</div> : null}
+        {action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}
       </div>
       {children}
     </div>
@@ -46,12 +46,12 @@ export function AdminPageHeader({
 type Tone = "green" | "amber" | "orange" | "red" | "blue" | "gray" | "purple";
 
 const toneClasses: Record<Tone, string> = {
-  green: "bg-foreground/10 text-foreground border-foreground/25",
-  amber: "bg-muted text-muted-foreground border-foreground/20",
-  orange: "bg-primary/10 text-primary border-primary/30",
-  red: "bg-destructive/15 text-destructive border-destructive/35",
-  blue: "bg-foreground/10 text-foreground border-foreground/25",
-  purple: "bg-primary/10 text-primary border-primary/30",
+  green: "bg-success/10 text-success border-success/25",
+  amber: "bg-warning/10 text-warning border-warning/25",
+  orange: "bg-warning/10 text-warning border-warning/25",
+  red: "bg-destructive/15 text-primary border-destructive/35",
+  blue: "bg-secondary text-foreground border-border",
+  purple: "bg-secondary text-foreground border-border",
   gray: "bg-muted text-muted-foreground border-border",
 };
 
@@ -143,7 +143,7 @@ export function EmptyBox({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-border p-10 text-center">
+    <div className="rounded-lg border border-dashed border-border p-10 text-center">
       <p className="font-medium">{title}</p>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
@@ -154,8 +154,8 @@ export function EmptyBox({
 /** Erro de carregamento com opção de tentar de novo. */
 export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center">
-      <AlertTriangle className="mx-auto h-5 w-5 text-destructive" />
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
+      <AlertTriangle className="mx-auto h-5 w-5 text-primary" />
       <p className="mt-2 font-medium">Não conseguimos carregar estas informações</p>
       <p className="mt-1 text-sm text-muted-foreground">{message}</p>
       {onRetry ? (
@@ -177,12 +177,11 @@ export function LoadingBox({ rows = 4 }: { rows?: number }) {
   );
 }
 
-/** Card de número: informação, nunca parece botão. Vira link só quando recebe `to`. */
+/** Card de número: informação, nunca parece botão. O número é o protagonista. */
 export function MetricCard({
   label,
   value,
   hint,
-  icon: Icon,
   tone = "gray",
 }: {
   label: string;
@@ -193,16 +192,9 @@ export function MetricCard({
 }) {
   return (
     <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          {Icon ? (
-            <span className={cn("grid h-8 w-8 place-items-center rounded-lg border", toneClasses[tone])}>
-              <Icon className="h-4 w-4" />
-            </span>
-          ) : null}
-        </div>
-        <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
+      <CardContent className="p-4 sm:p-5">
+        <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+        <p className={cn("mt-1 truncate font-display text-4xl leading-none tabular-nums", tone === "red" && value ? "text-primary" : "text-foreground")}>{value}</p>
         {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
       </CardContent>
     </Card>

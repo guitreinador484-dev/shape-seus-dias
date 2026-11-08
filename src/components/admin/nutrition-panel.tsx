@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { createNutritionPlan, deleteNutritionPlan, saveNutritionPlan } from "@/lib/admin.functions";
 import { countNutritionAccess, deleteNutritionPdf, getNutritionPdf, getNutritionPdfUrl, saveNutritionPdf } from "@/lib/nutrition-pdf.functions";
-import { fileToBase64 } from "@/lib/workout-pdf";
+import { fileToBase64 } from "@/lib/file-to-base64";
 import type { AppRole } from "@/hooks/use-auth";
 import type { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";

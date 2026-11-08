@@ -656,7 +656,7 @@ function ExerciseField({
       </Popover>
 
       {exact && !selected ? (
-        <p className="text-xs text-amber-600 dark:text-amber-400">
+        <p className="text-xs text-warning dark:text-warning">
           Já existe um exercício com esse nome.{" "}
           <button type="button" className="underline" onClick={() => choose(exact)}>
             Usar &quot;{exact.name}&quot;

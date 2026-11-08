@@ -95,7 +95,7 @@ function ContinueCard({ item, onOpen }: { item: ContinueItem; onOpen: () => void
           </span>
         </div>
         <div className="absolute inset-x-3 bottom-3">
-          <Progress value={item.pct} className="h-1 bg-white/20" />
+          <Progress value={item.pct} className="h-1 bg-secondary" />
         </div>
       </div>
       <p className="mt-2 truncate text-sm font-medium">{item.lessonTitle}</p>

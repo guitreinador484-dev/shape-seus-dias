@@ -16,7 +16,7 @@ export default function SearchInput({ value, onChange, placeholder = "Buscar..."
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="pl-10 w-full rounded-full border border-border/30 bg-background/60 backdrop-blur-md focus:border-primary focus:ring-0 placeholder:text-foreground/50"
+        className="pl-10 w-full rounded-full border border-border/30 bg-background/60 focus:border-primary focus:ring-0 placeholder:text-foreground/50"
       />
     </div>
   );

@@ -19,10 +19,13 @@ import {
   Library,
   Tag,
   MessageSquareText,
+  Settings,
+  Eye,
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -35,6 +38,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { BrandLogo, BrandLogoMark } from "@/components/brand-logo";
+import { AdminCommand } from "@/components/admin/admin-command";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -84,7 +88,16 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-export const navItems: NavItem[] = navGroups.flatMap((group) => group.items);
+const settingsItem: NavItem = { title: "Configurações", url: "/admin/configuracoes", icon: Settings };
+
+export const navItems: NavItem[] = [...navGroups.flatMap((group) => group.items), settingsItem];
+
+function currentPageTitle(pathname: string) {
+  const match = [...navItems]
+    .sort((a, b) => b.url.length - a.url.length)
+    .find((item) => (item.exact ? pathname === item.url : pathname === item.url || pathname.startsWith(item.url + "/")));
+  return match?.title ?? "Painel";
+}
 
 function AdminSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -92,7 +105,7 @@ function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-3">
-        <BrandLogo className="mx-auto h-14 w-auto group-data-[collapsible=icon]:hidden" />
+        <BrandLogo className="mx-auto h-9 w-auto group-data-[collapsible=icon]:hidden" />
         <BrandLogoMark className="mx-auto hidden h-9 w-auto group-data-[collapsible=icon]:block" />
       </SidebarHeader>
       <SidebarContent>
@@ -121,6 +134,26 @@ function AdminSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === settingsItem.url} tooltip={settingsItem.title}>
+              <Link to={settingsItem.url} className="flex items-center gap-2" onClick={() => { if (isMobile) setOpenMobile(false); }}>
+                <Settings className="h-4 w-4" />
+                <span>{settingsItem.title}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Ver como aluno">
+              <a href="/plataforma?preview=1" target="_blank" rel="noreferrer" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                <span>Ver como aluno</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
@@ -129,6 +162,7 @@ function AdminLayout() {
   const { user, role, loading } = useAuth();
   const navigate = useNavigate();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -154,20 +188,16 @@ function AdminLayout() {
       <div className="min-h-screen flex w-full bg-background text-foreground">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-30 grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-popover/95 px-3 backdrop-blur-xl sm:gap-3">
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background px-3 sm:gap-3">
             <SidebarTrigger />
-            <div className="flex items-center gap-2 min-w-0">
-              <h1 className="truncate font-display text-lg">Painel Gui Treinador</h1>
-              <span className="hidden rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:inline">Administrador</span>
-            </div>
-            <div className="ml-auto flex items-center gap-3 text-sm">
-              <span className="text-muted-foreground hidden md:inline">{user?.email}</span>
-              <Button variant="outline" size="sm" onClick={signOut} aria-label="Sair">
-                <LogOut className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Sair</span>
-              </Button>
-            </div>
+            <h1 className="min-w-0 flex-1 truncate font-display text-xl leading-none">{currentPageTitle(pathname)}</h1>
+            <AdminCommand pages={navItems} />
+            <span className="hidden max-w-48 truncate text-xs text-muted-foreground xl:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={signOut} aria-label="Sair" className="text-muted-foreground">
+              <LogOut /> <span className="hidden sm:inline">Sair</span>
+            </Button>
           </header>
-          <main className="admin-mobile min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6">
+          <main className="admin-mobile min-w-0 flex-1 overflow-x-clip p-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:p-6">
             <Outlet />
           </main>
         </div>
