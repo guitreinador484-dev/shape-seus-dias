@@ -1,23 +1,25 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Apple, ArrowLeft, Ban, BookOpen, ClipboardList, CreditCard, Dumbbell, Library, Lightbulb, Loader2, Lock, LogOut, Megaphone, MessageSquareText, RefreshCw, Timer, TrendingUp, Video, type LucideIcon } from "lucide-react";
+import { AlertCircle, ArrowLeft, Ban, CreditCard, Lightbulb, Loader2, Lock, LogOut, Megaphone, RefreshCw, Timer, type LucideIcon } from "lucide-react";
 import { CheckinCard } from "@/components/platform/checkin-card";
 import { ReferralCard } from "@/components/platform/referral-card";
 import { TreinoPanel, TreinoSkeleton } from "@/components/platform/treino-panel";
 import { useGymPreference } from "@/hooks/use-gym-preference";
 import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
-import type { MoreItem } from "@/components/platform/profile-more";
+import { StudentSidebar } from "@/components/platform/student-sidebar";
+import { CoursesShell } from "@/components/platform/courses-shell";
 import { WelcomeGate } from "@/components/platform/welcome-gate";
 import { BrandLogo } from "@/components/brand-logo";
 import { defaultConfig, fetchPlatformHome, platformHomeKey } from "@/lib/platform-data";
+import { accountNavItems } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
 
 // Cada aba só baixa o próprio código quando é aberta (o gráfico de Evolução e o player são pesados).
@@ -86,10 +88,12 @@ function KeptTab({ value, active, children }: { value: string; active: boolean; 
   );
 }
 
-const HEADER_TAB = "gap-2 rounded-md px-3 text-[13px] font-medium text-muted-foreground data-[state=active]:bg-secondary data-[state=active]:text-foreground";
+const PLATFORM_TABS = ["treino", "aulas", "dieta", "evolucao", "ficha", "mentoria", "feedback", "assinatura", "checkin"];
 
 export const Route = createFileRoute("/_authenticated/plataforma")({
   component: PlatformRoute,
+  validateSearch: (search: Record<string, unknown>): { aba?: string } =>
+    typeof search.aba === "string" && PLATFORM_TABS.includes(search.aba) ? { aba: search.aba } : {},
   head: () => ({ meta: [
     { title: "Minha plataforma — Gui Treinador" },
     { name: "description", content: "Treinos, evolução e acompanhamento personalizado." },
@@ -102,7 +106,7 @@ export const Route = createFileRoute("/_authenticated/plataforma")({
 
 function PlatformRoute() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  return pathname === "/plataforma" ? <PlataformaPage /> : <Outlet />;
+  return pathname === "/plataforma" ? <PlataformaPage /> : <CoursesShell><Outlet /></CoursesShell>;
 }
 
 function PlataformaPage() {
@@ -110,7 +114,9 @@ function PlataformaPage() {
   const { gymId } = useGymPreference(isMentoria ? (user?.id ?? null) : null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("treino");
+  const { aba } = Route.useSearch();
+  const [selectedTab, setActiveTab] = useState(!aba || aba === "checkin" ? "treino" : aba);
+  const activeTab = selectedTab === "mentoria" && !loading && !isMentoria ? "treino" : selectedTab;
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [welcomeReady, setWelcomeReady] = useState(false);
 
@@ -139,6 +145,24 @@ function PlataformaPage() {
       body.classList.remove("platform-light");
     };
   }, [config.theme]);
+
+  useEffect(() => {
+    if (!aba) return;
+    if (aba !== "checkin") {
+      setActiveTab(aba);
+      return;
+    }
+    setActiveTab("treino");
+    // O card de check-in só aparece depois que os dados do treino carregam.
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      const section = document.getElementById("checkin-section");
+      if (!section && Date.now() - startedAt < 8000) return;
+      window.clearInterval(timer);
+      section?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [aba]);
 
   const finishWelcome = useCallback(() => setWelcomeReady(true), []);
   const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview");
@@ -180,22 +204,9 @@ function PlataformaPage() {
   const firstName = (home?.fullName ?? "").split(/\s+/).filter(Boolean)[0] ?? "";
   const todayLabel = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
 
-  const headerTabs: { id: string; label: string; icon: LucideIcon }[] = [
-    { id: "treino", label: "Treino", icon: Dumbbell },
-    { id: "aulas", label: "Aulas", icon: Video },
-    { id: "dieta", label: "Dieta", icon: Apple },
-    { id: "evolucao", label: "Evolução", icon: TrendingUp },
-    { id: "ficha", label: "Ficha", icon: ClipboardList },
-    ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
-    { id: "feedback", label: "Sugestões", icon: Lightbulb },
-    { id: "assinatura", label: "Assinatura", icon: CreditCard },
-  ];
-  const moreItems: MoreItem[] = [
-    { id: "ficha", label: "Minha ficha", icon: ClipboardList },
-    ...(isMentoria ? [{ id: "mentoria", label: "Mentoria", icon: Library }] : []),
-    { id: "feedback", label: "Críticas e sugestões", icon: MessageSquareText },
-    { id: "assinatura", label: "Minha assinatura", icon: CreditCard },
-  ];
+  // Durante o carregamento o menu já fica no lugar, para o conteúdo não pular quando os dados chegam.
+  const showNav = hasAccess || dataLoading;
+  const moreItems = accountNavItems(isMentoria);
   // Quem está sem acesso também precisa conseguir ver ou cancelar a assinatura.
   const subscriptionAction = (
     <Button variant="outline" onClick={() => changeTab("assinatura")}><CreditCard /> Minha assinatura</Button>
@@ -203,22 +214,21 @@ function PlataformaPage() {
 
   return (
     <div className="relative min-h-dvh overflow-x-clip bg-background text-foreground">
-      <Tabs value={activeTab} onValueChange={changeTab} className="flex min-h-dvh w-full flex-col">
-        <header className="sticky top-0 z-30 border-b border-border bg-background">
+      {showNav ? (
+        <StudentSidebar
+          activeTab={activeTab}
+          accountItems={moreItems}
+          onTabChange={changeTab}
+          onGoToCheckin={goToCheckin}
+          onLogout={() => setLogoutDialogOpen(true)}
+          userName={home?.fullName}
+          userEmail={user?.email}
+        />
+      ) : null}
+      <Tabs value={activeTab} className={cn("flex min-h-dvh w-full flex-col", showNav && "lg:pl-60")}>
+        <header className={cn("sticky top-0 z-30 border-b border-border bg-background", showNav && "lg:hidden")}>
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-3 sm:px-6">
             <BrandLogo className="h-7 w-auto max-w-[9rem] shrink-0" />
-            {hasAccess ? (
-              <TabsList className="hidden h-10 min-h-0 min-w-0 justify-start gap-0.5 overflow-x-auto border-0 bg-transparent p-0 scrollbar-none lg:inline-flex">
-                {headerTabs.map((tab) => (
-                  <TabsTrigger key={tab.id} value={tab.id} className={HEADER_TAB}>
-                    <tab.icon className="h-4 w-4" /> {tab.label}
-                  </TabsTrigger>
-                ))}
-                <Link to="/plataforma/cursos" className="inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
-                  <BookOpen className="h-4 w-4" /> Cursos
-                </Link>
-              </TabsList>
-            ) : null}
             <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)} aria-label="Sair" className="shrink-0 text-muted-foreground">
               <LogOut /> <span className="hidden sm:inline">Sair</span>
             </Button>
@@ -240,7 +250,7 @@ function PlataformaPage() {
           </div>
         ) : null}
 
-        <main className={cn("mx-auto w-full max-w-6xl flex-1 space-y-5 px-3 py-4 sm:px-6 sm:py-6 lg:pb-8", hasAccess && "pb-[calc(5.5rem+env(safe-area-inset-bottom))]")}>
+        <main className={cn("mx-auto w-full max-w-6xl flex-1 space-y-5 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:pb-8", showNav && "pb-[calc(6rem+env(safe-area-inset-bottom))]")}>
           {homeQuery.error ? (
             <StatusScreen
               icon={AlertCircle}
@@ -347,7 +357,7 @@ function PlataformaPage() {
           )}
         </main>
       </Tabs>
-      {hasAccess ? (
+      {showNav ? (
         <MobileNav
           activeTab={activeTab}
           onTabChange={changeTab}

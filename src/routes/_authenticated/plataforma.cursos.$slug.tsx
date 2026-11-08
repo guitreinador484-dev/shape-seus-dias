@@ -21,8 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VideoPlayer } from "@/components/platform/video-player";
 import {
   ArrowLeft, CheckCircle2, Lock, Play, FileText, Link2, Award, Send, MessageSquare,
-  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip, ListVideo, Home,
-} from "lucide-react";
+  AlertTriangle, BookOpen, RotateCcw, Clock, Download, Check, Paperclip, ListVideo, } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos/$slug")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -233,9 +232,6 @@ function CourseDetailPage() {
         <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 sm:px-6">
           <Button asChild variant="ghost" className="min-w-0 justify-start px-2 text-muted-foreground hover:text-foreground">
             <Link to="/plataforma/cursos"><ArrowLeft className="h-4 w-4 shrink-0" /> <span className="truncate">Meus cursos</span></Link>
-          </Button>
-          <Button asChild variant="outline" className="h-11 shrink-0 px-3">
-            <Link to="/plataforma"><Home className="h-4 w-4" /> <span className="hidden sm:inline">Plataforma</span></Link>
           </Button>
         </div>
       </header>
@@ -538,7 +534,7 @@ function LessonPlayer({ lesson, enrolledAt, userId, completed, savedSeconds, onP
     <div className="space-y-4">
       {/* Título da aula no topo */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-[1_1_16rem]">
           <p className="text-[11px] uppercase tracking-[0.2em] text-foreground/50">Aula</p>
           <h1 className="mt-1 font-display text-3xl leading-none sm:text-4xl">{lesson.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-foreground/50">

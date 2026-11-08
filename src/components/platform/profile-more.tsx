@@ -8,6 +8,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { floatingNavItemClass } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
 
 export type MoreItem = { id: string; label: string; icon: LucideIcon };
@@ -25,7 +26,7 @@ const rowClass = "flex min-h-14 w-full items-center gap-3 px-1 text-left text-[1
 
 export function ProfileMore({ userEmail, activeTab, items, onTabChange, onGoToCheckin, onLogout }: ProfileMoreProps) {
   const [open, setOpen] = useState(false);
-  const active = items.some((item) => item.id === activeTab);
+  const active = activeTab === "cursos" || items.some((item) => item.id === activeTab);
 
   function pick(action: () => void) {
     setOpen(false);
@@ -38,9 +39,8 @@ export function ProfileMore({ userEmail, activeTab, items, onTabChange, onGoToCh
         <button
           type="button"
           aria-current={active ? "page" : undefined}
-          className={cn("relative flex flex-col items-center justify-center gap-1 transition-colors duration-150", active ? "text-foreground" : "text-muted-foreground")}
+          className={floatingNavItemClass(active)}
         >
-          {active ? <span className="absolute inset-x-4 top-0 h-0.5 rounded-b bg-primary" /> : null}
           <Menu className={cn("h-5 w-5", active && "text-primary")} />
           <span className="text-[11px] font-medium">Mais</span>
         </button>

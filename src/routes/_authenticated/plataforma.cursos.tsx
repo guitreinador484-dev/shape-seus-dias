@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,6 @@ import {
   type Course, type ContinueItem, type RecommendedModule,
 } from "@/lib/courses-api";
 import { ContinueWatchingRail, RecommendedRail } from "@/components/platform/course-rails";
-import LeftSidebar from "@/components/ui/left-sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,12 +14,11 @@ import { Button } from "@/components/ui/button";
 import {
   BookOpen, Play, ChevronLeft, ChevronRight, Sparkles,
   AlertTriangle, RotateCcw, Search, TrendingUp, Award, Clock,
-  Menu, X,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
-  component: MyCoursesPage,
+  component: CoursesRoute,
   head: () => ({ meta: [{ title: "Meus cursos — Gui Treinador" }, { name: "description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:title", content: "Meus cursos — Gui Treinador" }, { property: "og:description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
@@ -30,25 +28,6 @@ type Row = {
   completedLessons: number;
   coverUrl: string | null;
 };
-
-/* ─── Mobile header ─────────────────────────────────────────────────────── */
-function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
-  return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 lg:hidden">
-      <BrandLogo className="h-7 w-auto" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={onMenu}
-        className="h-11 w-11 border border-border bg-secondary/70 text-foreground"
-        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-      >
-        {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </Button>
-    </header>
-  );
-}
 
 /* ─── Stat pill ──────────────────────────────────────────────────────────── */
 function StatPill({
@@ -151,6 +130,11 @@ function SkeletonCards() {
 }
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
+function CoursesRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname === "/plataforma/cursos" ? <MyCoursesPage /> : <Outlet />;
+}
+
 function MyCoursesPage() {
   const { user, role, loading: authLoading } = useAuth();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
@@ -164,7 +148,6 @@ function MyCoursesPage() {
   const [recommended, setRecommended] = useState<RecommendedModule[]>([]);
   const [railsLoading, setRailsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
 
   const filteredRows = useMemo(
@@ -246,28 +229,10 @@ function MyCoursesPage() {
   return (
     <div className="relative flex min-h-screen overflow-x-hidden bg-background text-foreground">
 
-      {/* Left sidebar — desktop */}
-      <LeftSidebar />
-
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-background/80 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-            role="presentation"
-        >
-          <div
-            className="absolute bottom-0 left-0 top-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LeftSidebar mobile onNavigate={() => setMobileMenuOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
       <div className="relative z-10 flex-1 min-w-0 flex flex-col">
-        <MobileHeader onMenu={() => setMobileMenuOpen((o) => !o)} menuOpen={mobileMenuOpen} />
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background px-3 sm:px-6 lg:hidden">
+          <BrandLogo className="h-7 w-auto max-w-[9rem]" />
+        </header>
 
         <main className="flex-1">
           {/* ── Hero band ─────────────────────────────────────────────── */}
@@ -281,20 +246,9 @@ function MyCoursesPage() {
                 className="absolute inset-0 h-full w-full object-cover opacity-15 blur-md scale-105"
               />
             )}
-            {/* color halos */}
-            <div className="absolute -top-32 -left-20 h-[400px] w-[400px] rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
-            <div className="absolute -bottom-32 right-0 h-[300px] w-[300px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
             <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-background/60 via-background/85 to-background" />
 
             <div className="relative px-5 py-10 sm:px-8 sm:py-14 max-w-5xl">
-              {/* Back link */}
-              <Link
-                to="/plataforma"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition mb-6 font-medium"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" /> Voltar à plataforma
-              </Link>
-
               {/* Badge */}
               <div className="glass-pill mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/15 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary shadow-md shadow-primary/20">
                 <Sparkles className="h-3 w-3" /> Área de membros
