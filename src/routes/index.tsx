@@ -84,6 +84,7 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,6 +115,8 @@ function LoginForm() {
     navigate({ to: roleHomePath(nextRole, data.user?.email), replace: true });
   }
 
+  if (forgot) return <ForgotPasswordForm initialEmail={email} onBack={() => setForgot(false)} />;
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -121,11 +124,68 @@ function LoginForm() {
         <Input id="login-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="login-password">Senha</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="login-password">Senha</Label>
+          <button type="button" onClick={() => setForgot(true)} className="-my-2 py-2 text-sm text-primary hover:underline">
+            Esqueci minha senha
+          </button>
+        </div>
         <Input id="login-password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+      </Button>
+    </form>
+  );
+}
+
+function ForgotPasswordForm({ initialEmail, onBack }: { initialEmail: string; onBack: () => void }) {
+  const [email, setEmail] = useState(initialEmail);
+  const [busy, setBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const target = email.trim();
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error("Não foi possível enviar o link", {
+        description: error.status === 429 ? "Aguarde alguns minutos antes de pedir outro link." : "Tente novamente em alguns minutos.",
+      });
+      return;
+    }
+    setSentTo(target);
+  }
+
+  if (sentTo) {
+    return (
+      <div role="status" className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Se existir uma conta com <span className="font-medium text-foreground [overflow-wrap:anywhere]">{sentTo}</span>, enviamos um link para criar uma nova senha. Confira também a caixa de spam.
+        </p>
+        <Button type="button" variant="outline" onClick={onBack} className="h-12 w-full">
+          Voltar para o login
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <p className="text-sm text-muted-foreground">Informe seu e-mail e enviaremos um link para criar uma nova senha.</p>
+      <div className="space-y-2">
+        <Label htmlFor="forgot-email">Email</Label>
+        <Input id="forgot-email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+      </div>
+      <Button type="submit" disabled={busy} className="h-12 w-full uppercase font-bold">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link"}
+      </Button>
+      <Button type="button" variant="ghost" onClick={onBack} className="w-full text-muted-foreground">
+        Voltar para o login
       </Button>
     </form>
   );
