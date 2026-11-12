@@ -15,6 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { VideoUploadIndicator } from "@/components/admin/video-upload-status";
 import { AuthProvider } from "@/hooks/auth-provider";
+import { themeBootScript, useTheme } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -106,8 +107,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <HeadContent />
       </head>
       <body>
@@ -121,6 +123,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     let currentUserId: string | null | undefined;
@@ -147,7 +150,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <VideoUploadIndicator />
-      <Toaster richColors position="bottom-right" theme="dark" mobileOffset={{ bottom: 96 }} />
+      <Toaster richColors position="bottom-right" theme={theme} mobileOffset={{ bottom: 96 }} />
       </AuthProvider>
     </QueryClientProvider>
   );

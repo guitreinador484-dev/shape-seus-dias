@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { BookOpen, CalendarCheck, LogOut, type LucideIcon } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { MoreItem } from "@/components/platform/profile-more";
 import { PRIMARY_TABS } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,7 @@ export function StudentSidebar({ activeTab, accountItems, onTabChange, onGoToChe
           <p className="truncate text-sm font-medium">{displayName}</p>
           {userName ? <p className="truncate text-xs text-muted-foreground">{userEmail}</p> : null}
         </div>
+        <ThemeToggle />
         <Button variant="ghost" size="icon" onClick={onLogout} aria-label="Sair da conta" className="shrink-0 text-muted-foreground">
           <LogOut />
         </Button>

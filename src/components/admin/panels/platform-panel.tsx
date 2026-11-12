@@ -339,7 +339,8 @@ export function AdminPlatformPanel() {
               </CardHeader>
               <CardContent className="grid gap-6 p-6">
                 <div>
-                  <Label className="text-sm font-semibold mb-3 block text-foreground">Tema da Área de Membros</Label>
+                  <Label className="text-sm font-semibold mb-3 block text-foreground">Tema padrão da área do aluno</Label>
+                  <p className="-mt-2 mb-3 text-xs text-muted-foreground">Vale até o aluno escolher o dele no menu (ícone de sol/lua).</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
                     {(["dark", "light"] as const).map((t) => {
                       const active = settings.platform_theme === t;
@@ -363,9 +364,9 @@ export function AdminPlatformPanel() {
                             </div>
                             <div className={`h-8 rounded-lg ${t === "dark" ? "bg-zinc-900 border border-zinc-800" : "bg-zinc-100 border border-zinc-200"}`} />
                           </div>
-                          <p className="font-semibold text-sm text-foreground">{t === "dark" ? "Tema Escuro (Dark Mode)" : "Tema Claro (Light Mode)"}</p>
+                          <p className="font-semibold text-sm text-foreground">{t === "dark" ? "Escuro" : "Claro"}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {t === "dark" ? "Estilo streaming de alta resolução com blocos de vidro" : "Alto contraste e fundo limpo"}
+                            {t === "dark" ? "Fundo preto, ideal para treinar à noite" : "Fundo claro, melhor sob luz forte"}
                           </p>
                           {active && <CheckCircle2 className="absolute top-3 right-3 h-5 w-5 text-primary" />}
                         </button>

@@ -394,7 +394,7 @@ function NextUpPlaylist({
                           </span>
                         )}
                         {dur && (
-                          <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-foreground">
+                          <span className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-semibold text-white">
                             {dur}
                           </span>
                         )}

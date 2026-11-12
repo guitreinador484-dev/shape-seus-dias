@@ -84,6 +84,7 @@
   --color-surface-2: var(--surface-2);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-overlay: var(--overlay);
   /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Bebas Neue", "Inter", sans-serif;
@@ -143,12 +144,50 @@
   --sidebar-accent-foreground: var(--giz);
   --sidebar-border: var(--linha);
   --sidebar-ring: var(--anilha-clara);
+  /* Fundo atrás de janelas e painéis */
+  --overlay: rgb(9 9 10 / 0.88);
 }
 
-/* A marca tem uma identidade escura única; a preferência antiga só mantém o fundo. */
-.dark,
-.platform-light {
-  color-scheme: dark;
+/*
+ * Tema claro: a mesma academia de dia — giz no fundo, papel nos cartões,
+ * aço para o texto de apoio e a anilha um tom mais fechada para manter contraste.
+ * Os nomes ferro-* continuam sendo "camadas de superfície" (0 = fundo, 3 = mais alta).
+ */
+:root.light {
+  color-scheme: light;
+
+  --ferro-0: #f4f4f5;
+  --ferro-1: #ffffff;
+  --ferro-2: #f0f0f2;
+  --ferro-3: #e6e6e9;
+  --giz: #111113;
+  --aco: #5c5c64;
+  --aco-escuro: #8a8a92;
+  --anilha: #d61f25;
+  --anilha-clara: #c41d22;
+  --linha: rgba(17, 17, 19, 0.1);
+  --linha-forte: rgba(17, 17, 19, 0.18);
+
+  --popover: #ffffff;
+  --destructive: #c8242a;
+  --success: #1d8350;
+  --warning: #9a6200;
+  --chart-2: #6e6e76;
+  --chart-3: #f08a8d;
+  --chart-4: #b4b4ba;
+  --scroll-thumb: rgba(17, 17, 19, 0.18);
+  --scroll-thumb-hover: rgba(17, 17, 19, 0.28);
+  --overlay: rgb(17 17 19 / 0.45);
+}
+
+/* O logo foi desenhado claro sobre preto: no tema claro ele inverte a luz e mantém o vermelho. */
+:root.light .brand-art {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Sombras pensadas para o escuro ficam pesadas no claro: viram uma elevação suave. */
+:root.light [class*="shadow-black/"] {
+  --tw-shadow-color: rgb(17 17 19 / 0.1);
 }
 
 /* Vermelho de preenchimento é escuro demais para texto pequeno sobre o ferro. */
@@ -162,7 +201,6 @@
   }
 
   html {
-    color-scheme: dark;
     scroll-behavior: smooth;
   }
 
@@ -205,9 +243,9 @@
   /* Premium scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-  * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scroll-thumb, rgba(255,255,255,0.14)); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover, rgba(255,255,255,0.2)); }
+  * { scrollbar-width: thin; scrollbar-color: var(--scroll-thumb, rgba(255,255,255,0.1)) transparent; }
 
   /* Selection highlight */
   ::selection { background: color-mix(in oklab, var(--primary) 42%, transparent); color: #fff; }

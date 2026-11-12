@@ -8,7 +8,7 @@ export function BrandLogoMark({ className }: { className?: string }) {
     <img
       src={iconAsset.url}
       alt="TG — Gui Treinador"
-      className={cn("object-contain", className)}
+      className={cn("brand-art object-contain", className)}
     />
   );
 }
@@ -19,7 +19,7 @@ export function BrandLogoName({ className }: { className?: string }) {
     <img
       src={nameAsset.url}
       alt="Treinador GUI"
-      className={cn("object-contain", className)}
+      className={cn("brand-art object-contain", className)}
     />
   );
 }

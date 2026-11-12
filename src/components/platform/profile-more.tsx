@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CalendarCheck, ChevronRight, LogOut, Menu, type LucideIcon } from "lucide-react";
+import { BookOpen, CalendarCheck, ChevronRight, LogOut, Menu, Moon, Sun, type LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { floatingNavItemClass } from "@/lib/student-nav";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 export type MoreItem = { id: string; label: string; icon: LucideIcon };
@@ -20,6 +21,8 @@ const rowClass = "flex min-h-14 w-full items-center gap-3 px-1 text-left text-[1
 
 export function ProfileMore({ userEmail, activeTab, items, onTabChange, onGoToCheckin, onLogout }: ProfileMoreProps) {
   const [open, setOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const ThemeIcon = theme === "light" ? Moon : Sun;
   const active = activeTab === "cursos" || items.some((item) => item.id === activeTab);
 
   function pick(action: () => void) {
@@ -63,6 +66,10 @@ export function ProfileMore({ userEmail, activeTab, items, onTabChange, onGoToCh
             <span className="flex-1">Meus cursos</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
+          <button type="button" onClick={toggleTheme} className={rowClass}>
+            <ThemeIcon className="h-5 w-5 text-muted-foreground" />
+            <span className="flex-1">{theme === "light" ? "Usar tema escuro" : "Usar tema claro"}</span>
+          </button>
           <button type="button" onClick={() => pick(onLogout)} className={cn(rowClass, "text-primary")}>
             <LogOut className="h-5 w-5" />
             <span className="flex-1">Sair da conta</span>

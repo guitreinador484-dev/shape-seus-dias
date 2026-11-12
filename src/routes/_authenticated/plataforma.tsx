@@ -21,6 +21,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { defaultConfig, fetchPlatformHome, platformHomeKey } from "@/lib/platform-data";
 import { accountNavItems, PRIMARY_TABS } from "@/lib/student-nav";
 import { cn } from "@/lib/utils";
+import { setThemeFallback } from "@/lib/theme";
 
 // Cada aba só baixa o próprio código quando é aberta (o gráfico de Evolução e o player são pesados).
 const NutritionTab = lazy(() => import("@/components/platform/nutrition-tab").then((m) => ({ default: m.NutritionTab })));
@@ -133,17 +134,10 @@ function PlataformaPage() {
   const accessExpiresAt = home?.accessExpiresAt ?? null;
   const isExpired = accessExpiresAt !== null && new Date(accessExpiresAt).getTime() <= Date.now();
 
+  // O tema escolhido pelo admin vale como padrão até o aluno escolher o dele.
   useEffect(() => {
-    const root = document.documentElement;
-    const body = document.body;
-    if (config.theme === "light") {
-      root.classList.add("platform-light");
-      body.classList.add("platform-light");
-    }
-    return () => {
-      root.classList.remove("platform-light");
-      body.classList.remove("platform-light");
-    };
+    setThemeFallback(config.theme);
+    return () => setThemeFallback(null);
   }, [config.theme]);
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
   LogOut,
   Loader2,
@@ -191,6 +192,7 @@ function AdminLayout() {
             <div className="min-w-0 flex-1" />
             <AdminCommand pages={navItems} />
             <span className="hidden max-w-48 truncate text-xs text-muted-foreground xl:inline">{user?.email}</span>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={signOut} aria-label="Sair" className="text-muted-foreground">
               <LogOut /> <span className="hidden sm:inline">Sair</span>
             </Button>
