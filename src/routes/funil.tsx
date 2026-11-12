@@ -581,7 +581,7 @@ function FunnelPage() {
               <button
                 onClick={handleGoPlans}
                 disabled={!canSubmit}
-                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white transition hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cfg.ctaLabel} →
               </button>
@@ -677,7 +677,7 @@ function FunnelPage() {
                   key={p.id}
                   className={`relative rounded-lg border-2 bg-card p-5 flex flex-col transition ${
                     p.highlighted
-                      ? "border-primary shadow-lg shadow-primary/10"
+                      ? "border-primary"
                       : "border-border"
                   }`}
                 >
@@ -821,7 +821,7 @@ function FunnelPage() {
               <Button
                 onClick={handleFinish}
                 disabled={!contact.email || submitting || (method === 'card' && recurringEnabled && (!recurringConsent || !contact.name.trim())) || (unlockNutrition && (!nutrition.goal || !nutrition.routine))}
-                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-5 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -875,7 +875,7 @@ function FunnelPage() {
                     setPixCopied(false);
                   }
                 }}
-                className="mt-3 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 hover:bg-primary"
+                className="mt-3 w-full rounded-lg bg-primary py-3.5 text-sm font-semibold text-white hover:bg-primary"
               >
                 {pixCopied ? "Código copiado ✓" : "Copiar código PIX"}
               </button>

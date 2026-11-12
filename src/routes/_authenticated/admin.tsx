@@ -97,13 +97,6 @@ const settingsItem: NavItem = { title: "Configurações", url: "/admin/configura
 
 export const navItems: NavItem[] = [...navGroups.flatMap((group) => group.items), settingsItem];
 
-function currentPageTitle(pathname: string) {
-  const match = [...navItems]
-    .sort((a, b) => b.url.length - a.url.length)
-    .find((item) => (item.exact ? pathname === item.url : pathname === item.url || pathname.startsWith(item.url + "/")));
-  return match?.title ?? "Painel";
-}
-
 function AdminSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isMobile, setOpenMobile } = useSidebar();
@@ -195,7 +188,7 @@ function AdminLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-background px-3 sm:gap-3">
             <SidebarTrigger />
-            <h1 className="min-w-0 flex-1 truncate font-display text-xl leading-none">{currentPageTitle(pathname)}</h1>
+            <div className="min-w-0 flex-1" />
             <AdminCommand pages={navItems} />
             <span className="hidden max-w-48 truncate text-xs text-muted-foreground xl:inline">{user?.email}</span>
             <Button variant="ghost" size="sm" onClick={signOut} aria-label="Sair" className="text-muted-foreground">

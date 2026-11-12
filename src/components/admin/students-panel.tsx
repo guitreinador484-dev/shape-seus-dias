@@ -34,7 +34,7 @@ import {
 } from "@/lib/admin.functions";
 import { resolvePlanTier } from "@/lib/plan-tiers";
 import { generateStudentRegistrationPassword, generateTemporaryPassword } from "@/lib/temporary-password";
-import { AnamneseDialog, EvolutionDialog } from "@/components/admin/admin-panels";
+import { AnamneseDialog, EvolutionDialog } from "@/components/admin/panels/student-dialogs";
 import { adminStudentsKey, fetchStudents, formatCurrency, formatDate, purchaseStatusLabels, type Student } from "@/lib/admin-data";
 import { AdminPageHeader, ConfirmDialog, EmptyBox, ErrorBox, LoadingBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import { Badge } from "@/components/ui/badge";
@@ -220,7 +220,7 @@ export function AdminStudentsPanel() {
           </div>
         }
       >
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Total de alunos" value={counts.todos} icon={Users} tone="blue" />
           <MetricCard label="Com acesso ativo" value={counts.ativo} icon={CheckCircle2} tone="green" />
           <MetricCard label="Aguardando 1º acesso" value={counts.aguardando} icon={KeyRound} tone="amber" />
@@ -231,12 +231,13 @@ export function AdminStudentsPanel() {
       <CreateStudentDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => void reload()} />
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {FILTERS.map((f) => (
             <Button
               key={f.key}
               size="sm"
               variant={filter === f.key ? "default" : "outline"}
+              className="shrink-0"
               onClick={() => setFilter(f.key)}
             >
               {f.label}
@@ -287,8 +288,8 @@ export function AdminStudentsPanel() {
             const plan = studentPlanLabel(purchases, student);
             return (
               <Card key={student.id}>
-                <CardContent className="space-y-4 p-4">
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+                <CardContent className="space-y-3 p-3">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-foreground">{initials(student)}</span>
                     <div className="min-w-0">
                       <Link to="/admin/alunos/$id" params={{ id: student.id }} className="block truncate font-medium hover:underline">{student.full_name || "Sem nome"}</Link>
@@ -296,11 +297,11 @@ export function AdminStudentsPanel() {
                     </div>
                     <StudentActionsMenu student={student} blocked={!student.is_active} onToggleAccess={(liberado) => void setAccessFor(student, liberado)} onChanged={() => void reload()} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div><p className="text-xs text-muted-foreground">Plano</p><p className="mt-1 font-medium">{plan || "Sem plano"}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Último acesso</p><p className="mt-1 font-medium">{access[student.id]?.last_sign_in_at ? formatDate(access[student.id]?.last_sign_in_at) : "Nunca entrou"}</p></div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                    <StatusPill tone={state.tone}>{state.label}</StatusPill>
+                    <span>{plan || "Sem plano"}</span>
+                    <span>Acesso: {access[student.id]?.last_sign_in_at ? formatDate(access[student.id]?.last_sign_in_at) : "Nunca entrou"}</span>
                   </div>
-                  <StatusPill tone={state.tone}>{state.label}</StatusPill>
                 </CardContent>
               </Card>
             );

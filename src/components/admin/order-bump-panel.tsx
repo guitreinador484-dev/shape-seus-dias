@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { EmptyBox } from "@/components/admin/ui-kit";
+import { AdminPageHeader, EmptyBox } from "@/components/admin/ui-kit";
 
 type StudentRow = {
   id: string;
@@ -52,17 +52,15 @@ export function AdminOrderBumpPanel() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Ofertas extras</h1>
-        <p className="text-sm text-muted-foreground">
-          Ofertas extras no checkout que liberam as abas Dieta e Aulas em vídeo para os alunos online.
-        </p>
-      </div>
+    <div className="max-w-5xl mx-auto space-y-6">
+      <AdminPageHeader
+        title="Ofertas extras"
+        description="Ofertas no checkout que liberam as abas Dieta e Aulas em vídeo para os alunos online."
+      />
 
       <Card>
         <CardHeader><CardTitle>Ofertas no checkout</CardTitle></CardHeader>
-         <CardContent className="overflow-x-auto">
+         <CardContent>
           <OrderBumpEditor />
         </CardContent>
       </Card>

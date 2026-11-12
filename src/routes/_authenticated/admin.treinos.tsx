@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminTrainingPanel } from "@/components/admin/admin-panels";
+import { AdminTrainingPanel } from "@/components/admin/panels/training-panel";
 import { TestWorkoutCard } from "@/components/admin/test-workout-card";
 import { useState } from "react";
 

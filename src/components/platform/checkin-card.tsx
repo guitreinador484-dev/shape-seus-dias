@@ -164,7 +164,7 @@ export function CheckinCard({ userId }: { userId: string }) {
 
             {showForm ? (
               <div className="space-y-4">
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
                   <ToggleRow checked={treinoDone} onChange={() => setTreinoDone(!treinoDone)} icon={Dumbbell} label="Fiz meu treino" />
                   <ToggleRow checked={dietDone} onChange={() => setDietDone(!dietDone)} icon={Apple} label="Segui minha dieta" />
                 </div>

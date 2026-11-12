@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Loader2, Plus, Trash2, TrendingDown, TrendingUp, ImageIcon, Upload, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/admin/ui-kit";
+import { TrendChart } from "@/components/platform/trend-chart";
 type Measurement = Tables<"body_measurements">;
 
 const FIELDS: { key: "weight_kg" | "waist_cm" | "chest_cm" | "arm_cm" | "hip_cm" | "thigh_cm"; label: string; suffix: string }[] = [
@@ -132,21 +132,15 @@ export function EvolutionTab({ userId }: { userId: string }) {
           {chartData.length < 2 ? (
             <p className="text-sm text-muted-foreground">Registre pelo menos 2 medições para ver o gráfico.</p>
           ) : (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="date" stroke="var(--muted-foreground)" fontSize={11} />
-                  <YAxis stroke="var(--muted-foreground)" fontSize={11} domain={["auto", "auto"]} />
-                  <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--input)", borderRadius: 8, fontSize: 12 }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="peso" name="Peso (kg)" stroke="var(--primary)" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} connectNulls />
-                  {chartData.some((d) => d.cintura !== null) && (
-                    <Line type="monotone" dataKey="cintura" name="Cintura (cm)" stroke="var(--chart-2)" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} connectNulls />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <TrendChart
+              labels={chartData.map((d) => d.date)}
+              series={[
+                { key: "peso", label: "Peso", unit: "kg", color: "var(--primary)", values: chartData.map((d) => d.peso) },
+                ...(chartData.some((d) => d.cintura !== null)
+                  ? [{ key: "cintura", label: "Cintura", unit: "cm", color: "var(--chart-2)", values: chartData.map((d) => d.cintura) }]
+                  : []),
+              ]}
+            />
           )}
         </CardContent>
       </Card>
@@ -154,14 +148,14 @@ export function EvolutionTab({ userId }: { userId: string }) {
       <Card>
         <CardContent className="p-4 sm:p-6">
           <h3 className="mb-4 font-display text-2xl leading-none">Registrar nova medição</h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {FIELDS.map((f) => (
               <div key={f.key} className="space-y-1">
                 <Label>{f.label} ({f.suffix})</Label>
                 <Input type="number" inputMode="decimal" step="0.1" value={form[f.key] ?? ""} onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))} placeholder="0,0" />
               </div>
             ))}
-            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+            <div className="col-span-2 space-y-2 lg:col-span-3">
               <Label>Foto de progresso (opcional)</Label>
               <Input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
               {photo ? (

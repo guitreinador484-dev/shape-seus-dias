@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ConfirmDialog, EmptyBox, StatusPill } from "@/components/admin/ui-kit";
+import { AdminPageHeader, ConfirmDialog, EmptyBox, StatusPill } from "@/components/admin/ui-kit";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { Save, ExternalLink, Loader2, Trash2, ImagePlus, Mail, Phone } from "lucide-react";
+import { ChevronDown, Save, ExternalLink, Loader2, Trash2, ImagePlus, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -241,33 +241,26 @@ function AdminFunnelPage() {
   };
 
   return (
-    <div className="funnel-admin-scope mx-auto max-w-7xl space-y-6">
-      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Funil de Vendas</h1>
-          <p className="text-sm text-muted-foreground">
-            Configure o funil no estilo Nutri Inteligente para vender treinos.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <Button variant="outline" asChild>
-            <a href="/funil" target="_blank" rel="noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" /> Abrir funil
-            </a>
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
-            )}
-            Salvar e publicar
-          </Button>
-        </div>
-      </div>
+    <div className="funnel-admin-scope mx-auto max-w-5xl space-y-3">
+      <AdminPageHeader
+        title="Funil de vendas"
+        description="Edite cada parte do funil e publique quando estiver pronto."
+        action={
+          <>
+            <Button variant="outline" asChild>
+              <a href="/funil" target="_blank" rel="noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" /> Abrir funil
+              </a>
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Salvar e publicar
+            </Button>
+          </>
+        }
+      />
 
-      {/* Identidade */}
-      <Section title="Identidade">
+      <Section title="Identidade" defaultOpen>
         <Row>
           <Field label="Nome da marca">
             <Input value={cfg.brand} onChange={(e) => update("brand", e.target.value)} />
@@ -803,12 +796,15 @@ function normalizeLeadStage(status: string): LeadStage {
   return "lead";
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-4 space-y-3 sm:p-5">
-      <h2 className="text-base font-bold">{title}</h2>
-      {children}
-    </section>
+    <details open={defaultOpen} className="group rounded-lg border border-border bg-card">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 sm:px-5 [&::-webkit-details-marker]:hidden">
+        <h2 className="text-base font-semibold">{title}</h2>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180" />
+      </summary>
+      <div className="space-y-3 border-t border-border p-4 sm:p-5">{children}</div>
+    </details>
   );
 }
 

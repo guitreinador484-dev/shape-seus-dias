@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminSettingsPanel } from "@/components/admin/admin-panels";
+import { AdminSettingsPanel } from "@/components/admin/panels/settings-panel";
 
 export const Route = createFileRoute("/_authenticated/admin/configuracoes")({
   component: AdminSettingsPanel,

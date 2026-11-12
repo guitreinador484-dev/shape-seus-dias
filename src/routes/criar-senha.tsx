@@ -89,7 +89,7 @@ function CriarSenhaPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-background">
       <Card className="w-full max-w-md bg-popover border-border p-6">
-        <h1 className="text-2xl font-bold text-foreground">Crie sua senha de acesso</h1>
+        <h1 className="font-display text-3xl leading-none text-foreground">Crie sua senha de acesso</h1>
 
         {loading ? (
           <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">

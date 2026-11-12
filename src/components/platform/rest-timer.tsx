@@ -94,7 +94,7 @@ export function RestTimer({ initialSeconds, exerciseName, onClose }: RestTimerPr
     <div
       role="timer"
       aria-label="Descanso entre séries"
-      className="fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 animate-fade-up sm:left-auto sm:right-6 sm:w-96 lg:bottom-6"
+      className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 animate-fade-up sm:left-auto sm:right-6 sm:w-96 lg:bottom-6"
     >
       <div className="relative overflow-hidden rounded-lg border border-input bg-popover p-3 pt-4">
         <div className="absolute inset-x-0 top-0 h-1 bg-foreground/10">

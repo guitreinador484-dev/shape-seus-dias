@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, useMemo } from "react";
 import { isAdminEmail, useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -7,20 +7,19 @@ import {
   type Course, type ContinueItem, type RecommendedModule,
 } from "@/lib/courses-api";
 import { ContinueWatchingRail, RecommendedRail } from "@/components/platform/course-rails";
-import LeftSidebar from "@/components/ui/left-sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
-  BookOpen, Play, ChevronLeft, ChevronRight, Sparkles,
-  AlertTriangle, RotateCcw, Search, TrendingUp, Award, Clock,
-  Menu, X,
+  BookOpen, Play,
+  AlertTriangle, RotateCcw, Search, Award,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/_authenticated/plataforma/cursos")({
-  component: MyCoursesPage,
+  component: CoursesRoute,
   head: () => ({ meta: [{ title: "Meus cursos — Gui Treinador" }, { name: "description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:title", content: "Meus cursos — Gui Treinador" }, { property: "og:description", content: "Continue seus cursos, aulas e conteúdos de treinamento." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
@@ -31,42 +30,12 @@ type Row = {
   coverUrl: string | null;
 };
 
-/* ─── Mobile header ─────────────────────────────────────────────────────── */
-function MobileHeader({ onMenu, menuOpen }: { onMenu: () => void; menuOpen: boolean }) {
+/* ─── Stat ───────────────────────────────────────────────────────── */
+function Stat({ label, value, accent }: { label: string; value: string | number; accent?: boolean }) {
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 lg:hidden">
-      <BrandLogo className="h-7 w-auto" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={onMenu}
-        className="h-11 w-11 border border-border bg-secondary/70 text-foreground"
-        aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
-      >
-        {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </Button>
-    </header>
-  );
-}
-
-/* ─── Stat pill ──────────────────────────────────────────────────────────── */
-function StatPill({
-  icon: Icon, label, value, accent,
-}: { icon: React.ElementType; label: string; value: string | number; accent?: boolean }) {
-  return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
-      accent
-        ? "border-primary/30 bg-primary/10 text-primary shadow-md shadow-primary/10"
-        : "border-border bg-secondary text-foreground/80 hover:bg-surface-2"
-    }`}>
-      <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${accent ? "bg-primary/20 text-primary" : "bg-secondary text-foreground"}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.15em] opacity-60 font-medium">{label}</p>
-        <p className="font-display text-lg leading-none text-foreground">{value}</p>
-      </div>
+    <div className="rounded-lg border border-border bg-card p-3 sm:p-4">
+      <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={`mt-1 font-display text-3xl leading-none tabular-nums ${accent ? "text-primary" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
@@ -79,18 +48,18 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col w-[200px] sm:w-[220px] shrink-0 snap-start text-left"
+      className="group relative flex w-full flex-col text-left"
     >
       {/* Cover */}
-      <div className="glass-card relative aspect-[3/4] overflow-hidden rounded-3xl border border-border shadow-2xl transition duration-300 group-hover:-translate-y-2 group-hover:border-primary/50 group-hover:shadow-primary/25">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-lg border border-border bg-card transition-colors duration-150 group-hover:border-primary/40">
         {r.coverUrl ? (
           <img
             src={r.coverUrl}
             alt={r.course.title}
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-linear-to-br from-primary/20 via-card to-background text-primary/40">
+          <div className="absolute inset-0 grid place-items-center bg-card pb-20 text-muted-foreground/40">
             <BookOpen className="h-10 w-10" />
           </div>
         )}
@@ -99,33 +68,26 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
         <div className="absolute inset-0 bg-linear-to-t from-background/95 via-background/40 to-transparent" />
 
         {/* lesson badge */}
-        <span className="glass-pill absolute right-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold text-foreground">
+        <span className="absolute right-2 top-2 rounded-full bg-background/85 px-2 py-0.5 text-[11px] font-medium text-foreground">
           {r.totalLessons} {r.totalLessons === 1 ? "aula" : "aulas"}
         </span>
 
         {/* done badge */}
         {isDone && (
-          <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-success/90 px-2.5 py-0.5 text-[10px] font-semibold text-foreground shadow-md">
+          <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-success/90 px-2 py-0.5 text-[11px] font-medium text-foreground">
             <Award className="h-3 w-3" /> Concluído
           </span>
         )}
 
-        {/* play overlay */}
-        <div className="absolute inset-0 grid place-items-center opacity-0 transition duration-300 group-hover:opacity-100 scale-90 group-hover:scale-100">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-2xl shadow-primary/50 ring-4 ring-white/20">
-            <Play className="h-5 w-5 fill-current ml-0.5" />
-          </span>
-        </div>
-
         {/* title + progress */}
-        <div className="absolute inset-x-3.5 bottom-3.5 space-y-2 text-foreground">
+        <div className="absolute inset-x-3 bottom-3 space-y-2 text-foreground">
           {r.course.category && (
-            <p className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-medium">{r.course.category}</p>
+            <p className="truncate text-[11px] font-medium text-muted-foreground">{r.course.category}</p>
           )}
-          <p className="font-display text-xl leading-none line-clamp-2 uppercase text-foreground drop-shadow">{r.course.title}</p>
+          <p className="font-display text-xl leading-none line-clamp-2 uppercase text-foreground">{r.course.title}</p>
           <div>
             <Progress value={pct} className="h-1 bg-secondary" />
-            <p className="mt-1.5 text-[10px] text-muted-foreground font-medium">
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
               {r.completedLessons}/{r.totalLessons} concluídas · {pct}%
             </p>
           </div>
@@ -138,12 +100,10 @@ function CourseCard({ r, onClick }: { r: Row; onClick: () => void }) {
 /* ─── Skeleton cards ─────────────────────────────────────────────────────── */
 function SkeletonCards() {
   return (
-    <div className="flex gap-4 overflow-hidden">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="w-[200px] sm:w-[220px] shrink-0 space-y-2">
-          <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
-          <Skeleton className="h-2.5 w-3/4" />
-          <Skeleton className="h-2 w-1/2" />
+        <div key={i}>
+          <Skeleton className="aspect-[3/4] w-full rounded-lg" />
         </div>
       ))}
     </div>
@@ -151,6 +111,11 @@ function SkeletonCards() {
 }
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
+function CoursesRoute() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return pathname === "/plataforma/cursos" ? <MyCoursesPage /> : <Outlet />;
+}
+
 function MyCoursesPage() {
   const { user, role, loading: authLoading } = useAuth();
   const isAdmin = role === "admin" || isAdminEmail(user?.email);
@@ -164,8 +129,6 @@ function MyCoursesPage() {
   const [recommended, setRecommended] = useState<RecommendedModule[]>([]);
   const [railsLoading, setRailsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const railRef = useRef<HTMLDivElement>(null);
 
   const filteredRows = useMemo(
     () => rows.filter((r) => r.course.title.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -232,121 +195,61 @@ function MyCoursesPage() {
     })();
   }, [authLoading, user, isAdmin, reloadKey]);
 
-  const firstName =
-    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
-    user?.email?.split("@")[0] ?? "";
-
   const totalLessons = rows.reduce((s, r) => s + r.totalLessons, 0);
   const totalDone = rows.reduce((s, r) => s + r.completedLessons, 0);
   const globalPct = totalLessons ? Math.round((totalDone / totalLessons) * 100) : 0;
-  const featured = rows[0] ?? null;
 
-  const nextUp = continueItems[0] ?? null;
 
   return (
     <div className="relative flex min-h-screen overflow-x-hidden bg-background text-foreground">
 
-      {/* Left sidebar — desktop */}
-      <LeftSidebar />
-
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-background/80 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-            role="presentation"
-        >
-          <div
-            className="absolute bottom-0 left-0 top-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <LeftSidebar mobile onNavigate={() => setMobileMenuOpen(false)} />
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
       <div className="relative z-10 flex-1 min-w-0 flex flex-col">
-        <MobileHeader onMenu={() => setMobileMenuOpen((o) => !o)} menuOpen={mobileMenuOpen} />
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background px-3 sm:px-6 lg:hidden">
+          <BrandLogo className="h-7 w-auto max-w-[9rem]" />
+        </header>
 
-        <main className="flex-1">
-          {/* ── Hero band ─────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden border-b border-border">
-            {/* background cover blur */}
-            {featured?.coverUrl && (
-              <img
-                src={featured.coverUrl}
-                alt=""
-                aria-hidden
-                className="absolute inset-0 h-full w-full object-cover opacity-15 blur-md scale-105"
-              />
-            )}
-            {/* color halos */}
-            <div className="absolute -top-32 -left-20 h-[400px] w-[400px] rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
-            <div className="absolute -bottom-32 right-0 h-[300px] w-[300px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-background/60 via-background/85 to-background" />
-
-            <div className="relative px-5 py-10 sm:px-8 sm:py-14 max-w-5xl">
-              {/* Back link */}
-              <Link
-                to="/plataforma"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition mb-6 font-medium"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" /> Voltar à plataforma
-              </Link>
-
-              {/* Badge */}
-              <div className="glass-pill mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/15 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary shadow-md shadow-primary/20">
-                <Sparkles className="h-3 w-3" /> Área de membros
-              </div>
-
-              {/* Greeting */}
-              <h1 className="font-display text-4xl sm:text-6xl leading-none mb-2 text-foreground drop-shadow">
-                {firstName ? `Olá, ${firstName}` : "Bem-vindo"}
-              </h1>
-              <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
-                Todo o conteúdo da sua mentoria em um só lugar. Continue de onde parou.
+        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 flex-[1_1_16rem]">
+              <h1 className="font-display text-3xl leading-none text-foreground sm:text-4xl">Meus cursos</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Escolha um curso para continuar assistindo.
               </p>
-
-              {/* Stats row */}
-              {rows.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  <StatPill
-                    icon={TrendingUp}
-                    label="Progresso geral"
-                    value={`${globalPct}%`}
-                    accent
-                  />
-                  <StatPill
-                    icon={BookOpen}
-                    label="Aulas concluídas"
-                    value={`${totalDone}/${totalLessons}`}
-                  />
-                  {nextUp && (
-                    <StatPill
-                      icon={Clock}
-                      label="Próxima aula"
-                      value={nextUp.lessonTitle.length > 22 ? nextUp.lessonTitle.slice(0, 22) + "…" : nextUp.lessonTitle}
-                    />
-                  )}
-                </div>
-              )}
             </div>
+            {rows.length > 0 && (
+              <div className="relative w-full sm:w-64">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar curso..."
+                  aria-label="Buscar curso"
+                  className="pl-9"
+                />
+              </div>
+            )}
           </div>
+
+          {rows.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+              <Stat label="Progresso geral" value={`${globalPct}%`} accent />
+              <Stat label="Aulas concluídas" value={`${totalDone}/${totalLessons}`} />
+            </div>
+          )}
 
           {/* ── Continue Watching ────────────────────────────────────── */}
           {!loading && !error && continueItems.length > 0 && (
-            <div className="px-5 sm:px-8 pt-8 pb-2 max-w-5xl">
+            <div>
               {/* CTA to jump to next lesson */}
-              <div className="glass-block mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-3xl border border-primary/30 bg-primary/10 px-6 py-5 shadow-2xl shadow-primary/10">
+              <div className="mb-6 flex flex-col items-start gap-4 rounded-lg border border-primary/25 bg-primary/10 p-4 sm:flex-row sm:items-center">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold mb-0.5">Continuar de onde parou</p>
+                  <p className="mb-0.5 text-xs font-medium text-primary">Continuar de onde parou</p>
                   <p className="font-semibold text-base text-foreground truncate">{continueItems[0].lessonTitle}</p>
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{continueItems[0].courseTitle} · {continueItems[0].moduleTitle}</p>
                 </div>
                 <Button
-                  size="sm"
-                  className="rounded-full shrink-0 px-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/30"
+                  className="shrink-0"
                   onClick={() => {
                     const c = continueItems[0];
                     navigate({ to: "/plataforma/cursos/$slug", params: { slug: c.courseSlug }, search: { aula: c.lessonId } as never });
@@ -361,36 +264,14 @@ function MyCoursesPage() {
           )}
 
           {/* ── My Courses ───────────────────────────────────────────── */}
-          <section className="px-5 sm:px-8 py-8 max-w-5xl">
-            {/* Section header + search */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
-              <div className="flex-1">
-                <h2 className="font-display text-2xl sm:text-4xl text-foreground">Meus cursos</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Escolha um curso para continuar assistindo.</p>
-              </div>
-              {/* Inline search */}
-              {rows.length > 0 && (
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar curso..."
-                    aria-label="Buscar curso"
-                    className="min-h-11 w-full rounded-full border border-border bg-secondary/70 py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-              )}
-            </div>
-
+          <section>
             {/* Content */}
             {loading ? (
               <SkeletonCards />
             ) : error ? (
-              <Card className="border-destructive/30 bg-card/40">
+              <Card className="border-destructive/30">
                 <CardContent className="space-y-3 py-16 text-center">
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-destructive/10 text-destructive">
                     <AlertTriangle className="h-6 w-6" />
                   </div>
                   <p className="font-display text-2xl">Erro ao carregar cursos</p>
@@ -401,9 +282,9 @@ function MyCoursesPage() {
                 </CardContent>
               </Card>
             ) : rows.length === 0 ? (
-              <Card className="border-border/30 bg-card/30">
+              <Card>
                 <CardContent className="py-20 text-center space-y-3">
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-primary/10 text-primary">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <p className="font-display text-2xl">
@@ -424,45 +305,21 @@ function MyCoursesPage() {
                 Nenhum curso encontrado para "<span className="text-primary">{searchTerm}</span>".
               </div>
             ) : (
-              <div className="relative">
-                {/* Nav arrows */}
-                <button
-                  type="button"
-                  aria-label="Anterior"
-                  onClick={() => railRef.current?.scrollBy({ left: -460, behavior: "smooth" })}
-                  className="absolute -left-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg transition hover:bg-card sm:grid"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Próximo"
-                  onClick={() => railRef.current?.scrollBy({ left: 460, behavior: "smooth" })}
-                  className="absolute -right-4 top-1/3 z-10 hidden h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border/50 bg-card/80 shadow-lg transition hover:bg-card sm:grid"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-
-                <div
-                  ref={railRef}
-                  className="flex gap-4 overflow-x-auto pb-4 pr-10 snap-x scroll-px-5 scrollbar-none"
-                  aria-label="Lista de cursos. Deslize para ver mais."
-                >
-                  {filteredRows.map((r) => (
-                    <CourseCard
-                      key={r.course.id}
-                      r={r}
-                      onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug }, search: { aula: undefined } })}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {filteredRows.map((r) => (
+                  <CourseCard
+                    key={r.course.id}
+                    r={r}
+                    onClick={() => navigate({ to: "/plataforma/cursos/$slug", params: { slug: r.course.slug }, search: { aula: undefined } })}
+                  />
+                ))}
               </div>
             )}
           </section>
 
           {/* ── Recommended ──────────────────────────────────────────── */}
           {!loading && !error && (
-            <div className="px-5 sm:px-8 pb-16 max-w-5xl">
+            <div>
               <RecommendedRail items={recommended} loading={railsLoading} />
             </div>
           )}

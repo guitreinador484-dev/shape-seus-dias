@@ -82,7 +82,7 @@ function ContinueCard({ item, onOpen }: { item: ContinueItem; onOpen: () => void
   const cover = useSignedCover(item.thumbnailPath ?? item.coverPath);
   return (
     <button onClick={onOpen} className="group w-[280px] shrink-0 snap-start text-left sm:w-[320px]">
-      <div className="relative aspect-video overflow-hidden rounded-2xl border border-border/50 bg-muted shadow-lg transition duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-primary/20">
+      <div className="relative aspect-video overflow-hidden rounded-lg border border-border bg-muted transition-colors duration-150 group-hover:border-primary/40 group-hover:border-primary/50 group-hover:shadow-primary/20">
         {cover ? (
           <img src={cover} alt={item.lessonTitle} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
