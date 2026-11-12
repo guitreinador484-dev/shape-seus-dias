@@ -29,6 +29,13 @@
       "when": 1793323514157,
       "tag": "0003_subscription_claim_and_period_safety",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794515144593,
+      "tag": "0004_tighten_workouts_and_storage_reads",
+      "breakpoints": true
     }
   ]
 }
