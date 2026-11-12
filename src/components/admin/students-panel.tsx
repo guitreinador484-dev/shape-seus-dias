@@ -34,7 +34,7 @@ import {
 } from "@/lib/admin.functions";
 import { resolvePlanTier } from "@/lib/plan-tiers";
 import { generateStudentRegistrationPassword, generateTemporaryPassword } from "@/lib/temporary-password";
-import { AnamneseDialog, EvolutionDialog } from "@/components/admin/admin-panels";
+import { AnamneseDialog, EvolutionDialog } from "@/components/admin/panels/student-dialogs";
 import { adminStudentsKey, fetchStudents, formatCurrency, formatDate, purchaseStatusLabels, type Student } from "@/lib/admin-data";
 import { AdminPageHeader, ConfirmDialog, EmptyBox, ErrorBox, LoadingBox, MetricCard, RowActions, StatusPill } from "@/components/admin/ui-kit";
 import { Badge } from "@/components/ui/badge";

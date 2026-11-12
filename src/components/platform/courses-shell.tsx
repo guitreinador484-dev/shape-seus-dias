@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { LogoutConfirmation } from "@/components/platform/logout-confirmation";
 import { MobileNav } from "@/components/platform/mobile-nav";
 import { StudentSidebar } from "@/components/platform/student-sidebar";
-import { fetchPlatformHome, platformHomeKey } from "@/lib/platform-data";
+import { platformHomeKey, type PlatformHome } from "@/lib/platform-data";
 import { accountNavItems } from "@/lib/student-nav";
 
 /** Cursos ficam em rotas próprias, mas usam o mesmo menu da plataforma: as abas abrem por `?aba=`. */
@@ -15,11 +15,9 @@ export function CoursesShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const { data: home } = useQuery({
-    queryKey: platformHomeKey(user?.id ?? ""),
-    queryFn: () => fetchPlatformHome(user!.id),
-    enabled: Boolean(user),
-  });
+  // Só o nome para o menu: reaproveita o que a plataforma já carregou em vez de buscar os treinos de novo.
+  const cachedName = queryClient.getQueryData<PlatformHome>(platformHomeKey(user?.id ?? ""))?.fullName;
+  const userName = cachedName || (user?.user_metadata?.full_name as string | undefined);
 
   const openTab = (aba: string) => void navigate({ to: "/plataforma", search: { aba } });
 
@@ -39,7 +37,7 @@ export function CoursesShell({ children }: { children: ReactNode }) {
         onTabChange={openTab}
         onGoToCheckin={() => openTab("checkin")}
         onLogout={() => setLogoutOpen(true)}
-        userName={home?.fullName}
+        userName={userName}
         userEmail={user?.email}
       />
       <div className="pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">{children}</div>
